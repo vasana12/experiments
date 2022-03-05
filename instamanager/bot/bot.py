@@ -189,7 +189,8 @@ class Bot(object):
         loglevel_file=logging.DEBUG,
         loglevel_stream=logging.INFO,
         log_follow_unfollow=True,
-        db_conn: pymongo.MongoClient = None
+        db_conn: pymongo.MongoClient = None,
+        account_setting_info = None
     ):
         self.api = API(
             device=device,
@@ -198,7 +199,8 @@ class Bot(object):
             log_filename=log_filename,
             loglevel_file=loglevel_file,
             loglevel_stream=loglevel_stream,
-            db_conn = db_conn
+            db_conn = db_conn,
+            account_setting_info= account_setting_info
         )
         self.db_conn = db_conn
         self.log_follow_unfollow = log_follow_unfollow
@@ -449,12 +451,12 @@ class Bot(object):
             args["proxy"] = self.proxy
         if self.api.login(**args) is False:
             return False
-        self.prepare()
-        atexit.register(self.print_counters)
-        if "is_threaded" in args:
-            if args["is_threaded"]:
-                return True
-        signal.signal(signal.SIGTERM, self.print_counters)
+        # self.prepare()
+        # atexit.register(self.print_counters)
+        # if "is_threaded" in args:
+        #     if args["is_threaded"]:
+        #         return True
+        # signal.signal(signal.SIGTERM, self.print_counters)
         return True
 
     def prepare(self):

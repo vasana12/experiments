@@ -1,63 +1,44 @@
 import hashlib
 import hmac
 import json
-import time
-
+try:
+    from json.decoder import JSONDecodeError
+except ImportError:
+    JSONDecodeError = ValueError
 import six.moves.urllib as urllib
-from datetime import datetime
-from datetime import timedelta
 import logging
 import requests
+import requests.utils
 from db import m_instagram
 from session_save.setting import config
-from session_save.setting.botAccount_setting_read import read_account_setting_info_from_db
-from session_save.util import generate_uuid
-
+from session_save.setting.botAccount_setting_db import read_account_setting_info_from_db, save_uuid_and_session_info
 
 insta_db = m_instagram.InstaDB(db_name="account")
 account_collection = insta_db.account_collection
 
-FORMAT = 'INSTAGRAM_TARGETING_BOTs %(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s - %(message)s'
-logging.basicConfig(format=FORMAT)
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-
-JIN_INSTAGRAM = m_instagram.InstaDB(db_name="instagram_analysis").db
-JIN_ACCOUNT = JIN_INSTAGRAM["account"]
-
-SERVICE_INSTAGRAM = m_instagram.InstaDB(db_name="service_instagram").db
-INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(client_name="admin", channel_name="instagram").db
-ACCOUNT_COLLECTION = INSTA_ACCOUNT_OBJ['account']
-BAND_ACCOUNT, HASHTAG_AND_USER, PROJECT_COLLECTION, ITEM_HASHTAG_COLLECTION, ITEM_USER_COLLECTION, ITEM_LOCATION_COLLECTION, INFO_COLLECTION, TASK_COLLECTION, POST_COLLECTION, SEARCH_COLLECTION, SETTING_COLLECTION = \
-    SERVICE_INSTAGRAM["account_instagram"], SERVICE_INSTAGRAM["hashtag_and_user"], SERVICE_INSTAGRAM["project"], SERVICE_INSTAGRAM["hashtag"], \
-    SERVICE_INSTAGRAM["user"], SERVICE_INSTAGRAM["location"], SERVICE_INSTAGRAM["info"], SERVICE_INSTAGRAM["task"], \
-    SERVICE_INSTAGRAM["post"], SERVICE_INSTAGRAM["search"], SERVICE_INSTAGRAM["setting"]
-
-tmp = "http://customer-yxha19913701-asn-9158-sessid-TnHj-sesstime-30:ywiB*20dC@residential.ipb.cloud:7777"
 
 class loginSession():
-    def __init__(self,username, password, session= None):
+    def __init__(self,username, password, proxy=None, session= None):
         self.username =username
         self.password =password
         self.setting_info = read_account_setting_info_from_db(username, password)
         self.session = requests.Session() if not session else session
+        FORMAT = 'INSTAGRAM_TARGETING_BOTs %(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s - %(message)s'
+        logging.basicConfig(format=FORMAT)
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
         host = "texas1.thesocialproxy.com"
         port = "10000"
         mobile_proxy_username = "5rfpjo4evhm0c8dx"
         mobile_proxy_password = "ihzoneqam4p3vt2b"
         username = 'sp22064497'
         password = 'amdc2580!'
-        proxy = tmp
-
-        self.proxy = proxy
-        # self.proxy = f"http://{config.PROXY_USER}:{config.PROXY_USER}@{config.PROXY_HOST}:{config.PROXY_PORT}"
+        self.last_response = None
+        self.last_json = None
+        self.proxy = f"http://{config.PROXY_USER}:{config.PROXY_USER}@{config.PROXY_HOST}:{config.PROXY_PORT}" if proxy == None else proxy
         self.set_proxy()
         self.session.headers.update(config.REQUEST_HEADERS)
         self.session.headers.update({"User-Agent": self.setting_info["user_agent"]})
-
-
-
 
 
     @staticmethod
@@ -72,12 +53,16 @@ class loginSession():
         signature = "signed_body={body}&ig_sig_key_version={sig_key}"
 
         return signature.format(sig_key=config.SIG_KEY_VERSION, body=body)
+
     def set_proxy(self):
         if getattr(self, "proxy", None):
             parsed = urllib.parse.urlparse(self.proxy)
             scheme = "http://" if not parsed.scheme else ""
             self.session.proxies["http"] = scheme + self.proxy
             self.session.proxies["https"] = scheme + self.proxy
+
+    def delete_credentials(self):
+        pass
 
     def get_prefill_candidates(self):
         data = {
@@ -86,7 +71,6 @@ class loginSession():
             "usages": '["account_recovery_omnibox"]',
             "device_id": self.setting_info["uuids"]["device_id"],
         }
-        print(data)
         data = json.dumps(data)
         return self.send_request(f"{config.API_URL}accounts/get_prefill_candidates/", post=data,with_signature=True)
 
@@ -97,7 +81,21 @@ class loginSession():
     def token(self):
         return self.cookie_dict["csrftoken"]
 
+    def login_success(self):
+        setting_info = read_account_setting_info_from_db(self.username, self.password)
+        cookie = requests.utils.dict_from_cookiejar(self.session.cookies)
+        setting_info["username"], setting_info["password"], setting_info["cookie"] = self.username, self.password, cookie
+        self.logger.info(f"{self.username}/{self.password} success - > account collection")
+        msg = f"SETTING INFO : COOKIE \n- {cookie} - " \
+              f"TIMING, DEVICE and ...\n- user-agent={setting_info['user_agent']}\n- phone_id={setting_info['uuids']['phone_id']}\n- " \
+              f"uuid={setting_info['uuids']['uuid']}\n- client_session_id={setting_info['uuids']['client_session_id']}\n- device_id={setting_info['uuids']['device_id']}"
+        self.logger.info(msg)
+        save_uuid_and_session_info(setting_info)
+        self.logger.info(f"{self.username}/{self.password}")
+        return True
+
     def login(self):
+        self.logger.info(f"login_trial")
         data = json.dumps({
             "jazoest": "22264",
             "country_codes": '[{"country_code":"1","source":["default"]}]',
@@ -113,27 +111,40 @@ class loginSession():
             "login_attempt_count": "0",
         })
         response = self.send_request(f"{config.API_URL}accounts/login/", post=data, with_signature=True)
-        return response
 
-    def send_request(self, url, post, with_signature,extra_sig=None):
+        if response:
+            return self.login_success()
+        else:
+            return False
+
+    def send_request(self, url, post, with_signature, extra_sig=None,timeout=120,waiting_429=None):
+        method = "POST" if post else "GET"
         if post is not None:  # POST
             if with_signature:
                 post = self.generate_signature(post)  #
                 if extra_sig is not None and extra_sig != []:
                     post += "&".join(extra_sig)
-
-            print(self.session.proxies)
-            response = self.session.post(url, data=post)
-            print(self.session.cookies.get_dict())
-            print(response.text, response.status_code)
-            return response
+            try:
+                response = self.session.post(url, data=post,timeout=timeout)
+            except Exception as e:
+                self.logger.debug(f"error:{e}")
+                return False
         else:
-            response = self.session.post(url, data=post)
-# #
-# login_session = loginSession(username="alenaromanova1790", password="FZbjLE2QcS")
-# login_session.get_prefill_candidates()
-# time.sleep(1)
-# response = login_session.login()
-# print(response, response.text)
+            response = self.session.get(url,timeout=timeout)
+            return response
+
+        self.last_response = response
+        self.logger.info(f"{method} to endpoint:{url} returned response: {response.status_code}")
+        if response.status_code == 200:
+            try:
+                self.last_json = json.loads(response.text)
+                return True
+            except JSONDecodeError:
+                self.logger.debug(f"response.status_code - {response.status_code}:JSONDecodeError")
+                return False
+        else:
+            self.logger.debug(f"Responsecode indicated error; returned response : {response.status_code} response content: {response.content[0:100]}")
+            return False
+
 
 

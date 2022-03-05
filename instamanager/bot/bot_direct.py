@@ -53,7 +53,6 @@ def send_messages(self, text, user_ids):
             self.error_delay()
             broken_items = user_ids[user_ids.index(user) :]
             break
-
         if send_message_response:
             if isinstance(send_message_response, NoUserIdException):
                 self.logger.error(f"no user id, remove it and continue:{user}")

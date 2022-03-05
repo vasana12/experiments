@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from datetime import timedelta
 import logging
@@ -20,8 +21,6 @@ stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
-JIN_INSTAGRAM = m_instagram.InstaDB(db_name="instagram_analysis").db
-JIN_ACCOUNT = JIN_INSTAGRAM["account"]
 
 SERVICE_INSTAGRAM = m_instagram.InstaDB(db_name="service_instagram").db
 INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(client_name="admin", channel_name="instagram").db
@@ -32,7 +31,7 @@ BAND_ACCOUNT, HASHTAG_AND_USER, PROJECT_COLLECTION, ITEM_HASHTAG_COLLECTION, ITE
     SERVICE_INSTAGRAM["post"], SERVICE_INSTAGRAM["search"], SERVICE_INSTAGRAM["setting"]
 
 def calcuate_check_point_deadline():
-    check_point_deadline = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=3)
+    check_point_deadline = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=4)
     return check_point_deadline
 
 def read_account_info_from_db():
@@ -40,6 +39,62 @@ def read_account_info_from_db():
     filter_old = {"status":"available", "client_name":"admin_test","last_login":{"$lte":calcuate_check_point_deadline()}}
     setting_account_doc = list(ACCOUNT_COLLECTION.find({"$or":[filter_new, filter_old]}))
     return setting_account_doc
+
+def save_uuid_and_session_info(setting_info):
+    account_info = account_collection.find_one(filter={"username":setting_info["username"]})
+    ## when account_already exist
+    if account_info:
+        _id = account_info["_id"]
+        account_collection.update_one(
+            filter={
+                "_id": _id
+            },
+            update={
+                "$set": {
+                    "usage.hashtag": 0,
+                    "usage.dm": 0,
+                    "last_login": datetime.now(),
+                    "status": "available",
+                    "uuids": setting_info["uuids"],
+                    "timing_value.last_login": time.time(),
+                    "timing_value.last_experiments": time.time(),
+                    "device_settings": setting_info["device_settings"],
+                    "user_agent": setting_info["user_agent"],
+                    "session": setting_info["cookie"],
+                    "mobile_session": True
+                }
+            }
+        )
+        return
+    ### new account setting info insert
+    insert_info = {
+        "username": setting_info["username"],
+        "password": setting_info["password"],
+        "client_name": setting_info["client_name"],
+        "channel": "instagram",
+        "status":"available",
+        "limit": {
+            "dm": setting_info["limit"]["dm"],
+            "hashtag": setting_info["limit"]["hashtag"]
+        },
+        "usage": {
+            "dm": 0,
+            "hashtag": 0
+        },
+        "uuids":setting_info["uuids"]
+            ,
+        "timing_value":
+            {
+                "last_login": time.time(),
+                "last_experiments": time.time()
+            },
+        "device_settings": setting_info["device_settings"],
+        "user_agent": setting_info["user_agent"],
+        "session": setting_info["cookie"],
+        "mobile_session" :True,
+        "last_login": datetime.now(),
+    }
+    account_collection.insert_one(insert_info)
 
 def read_account_setting_info_from_db(username, password):
     uuids = generate_uuid.generate_all_uuids(username, password)

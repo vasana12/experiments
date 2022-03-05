@@ -20,7 +20,7 @@ class InstaDB:
         self.conn = pymongo.MongoClient("mongodb+srv://datacast:amdc7025!@cluster0.egbmu.mongodb.net/admin?retryWrites=true&w=majority", tlsCAFile=ca,unicode_decode_error_handler='ignore')
         self.db = self.conn[self.db_name] if db_name else None
         self.account_collection = self.conn['account']['account']
-        FORMAT = 'INSTAGRAM_TARGETING_BOTs %(asctime)s - %(levelname)s - %(name)s - %(funcName)s - %(message)s'
+        FORMAT = 'INSTAGRAM_TARGETING_BOTs %(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s - %(message)s'
         logging.basicConfig(format=FORMAT)
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
@@ -65,7 +65,7 @@ class InstaBotClient(InstaDB):
         self.subscription_end = None
         self.concurrency_usage = None
         self.concurrency_limit = None
-        FORMAT = 'INSTAGRAM_TARGETING_BOTs %(asctime)s - %(levelname)s - %(name)s - %(funcName)s - %(message)s'
+        FORMAT = 'INSTAGRAM_TARGETING_BOTs %(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s - %(message)s'
         logging.basicConfig(format=FORMAT)
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
@@ -106,10 +106,10 @@ class InstaAccount(InstaDB):
         self.channel_name = channel_name
         self.account_crawl_max_num = account_crawl_max_num
         self.account_crawl_num = 0
-        FORMAT = 'INSTAGRAM_TARGETING_BOTs %(asctime)s - %(levelname)s - %(name)s - %(funcName)s - %(message)s'
+        FORMAT = 'INSTAGRAM_TARGETING_BOTs %(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s - %(message)s'
         logging.basicConfig(format=FORMAT)
         logger = logging.getLogger(__name__)
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
         self.logger = logger
         self.dm_limit = 10
     def select_user_and_update_status_to_login(self,username=None):
@@ -239,13 +239,15 @@ class InstaAccount(InstaDB):
             self.logger.debug(f"available_account is None")
             return None
         return available_account
+
     def load_cookie_user_and_update_status_to_login_dm(self,username=None):
         ###login 을 위해 따로 선택할 계정이 없는 경우
         self.logger.debug(f"db:{self.db_name}/collection:{self.collection.name}/client_name:{self.client_name}/channel_name:{self.channel_name}")
         if username == None:
             if self.client_name != "admin":
                 filter_raw = {
-                "cookie" : {"$exists":1},
+                "session" : {"$exists":1},
+                "mobile_session" : True,
                 "status": "available",
                 "client_name": self.client_name,
                 "channel": self.channel_name,
@@ -253,7 +255,8 @@ class InstaAccount(InstaDB):
                 }
             else:
                 filter_raw = {
-                    "cookie": {"$exists": 1},
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
                     "status": "available",
                     "channel": self.channel_name,
                     "usage.dm": {"$lte": self.dm_limit}
@@ -274,7 +277,8 @@ class InstaAccount(InstaDB):
         else:
             if self.client_name != "admin":
                 filter_raw = {
-                    "cookie": {"$exists": 1},
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
                     "client_name": self.client_name,
                     "username": username,
                     "status": "available",
@@ -283,7 +287,8 @@ class InstaAccount(InstaDB):
                 }
             else:
                 filter_raw = {
-                    "cookie": {"$exists": 1},
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
                     "username": username,
                     "status": "available",
                     "channel": self.channel_name,
@@ -292,14 +297,34 @@ class InstaAccount(InstaDB):
             self.logger.debug(f"filter_raw:{filter_raw}")
             available_account = self.collection.find_one_and_update(
                 filter_raw,
-                {
+                update={
                     "$set": {
                         "status": "login",
                           "last_login": datetime.now()
                     }
-                })
-
-        self.logger.info(f"available_account:{available_account}")
+                },
+                projection={
+                    "_id": 1,
+                    "username": 1,
+                    "channel": 1,
+                    "client_name": 1,
+                    "last_login": 1,
+                    "limit": 1,
+                    "password": 1,
+                    "status": 1,
+                    "usage": 1,
+                    "device_settings":1,
+                    "session.csrftoken": 1,
+                    "session.ds_user_id": 1,
+                    "session.mid": 1,
+                    "session.rur":1,
+                    "session.sessionid":1,
+                    "timing_value":1,
+                    "user_agent":1,
+                    "uuids":1,
+                    "mobile_session":1
+                }
+            )
 
         if available_account is not None:
             self.username = available_account["username"]

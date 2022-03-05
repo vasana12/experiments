@@ -3,17 +3,17 @@ import time
 import zipfile
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-
+from session_save.setting import config
 
 # PROXY_HOST = 'us.smartproxy.com'  # rotating proxy or host
 # PROXY_PORT = 10001 # port
 # PROXY_USER = 'user-sp22064497-sessionduration-10' # username
 # PROXY_PASS = 'amdc2580!' # password
 
-PROXY_HOST = 'residential.ipb.cloud'  # rotating proxy or host
-PROXY_PORT = 7777 # port
-PROXY_USER = 'customer-yxha19913701-asn-7018-sessid-IbDC-sesstime-30' # username
-PROXY_PASS = 'ywiB*20dC' # password
+PROXY_HOST = config.PROXY_HOST  # rotating proxy or host
+PROXY_PORT = config.PROXY_PORT # port
+PROXY_USER = config.PROXY_USER # username
+PROXY_PASS = config.PROXY_PASS # password
 
 manifest_json = """
 {
@@ -70,7 +70,6 @@ def get_chromedriver(use_proxy=False, user_agent=None):
     path = os.path.dirname(os.path.abspath(__file__))
     chrome_options = Options()
 
-
     if use_proxy == False:
         user_agent = "Mozilla/5.0 (Linux; Android 9; SM-G975F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.83 Mobile Safari/537.36"
     if use_proxy:
@@ -93,11 +92,3 @@ def get_chromedriver(use_proxy=False, user_agent=None):
 
     driver = webdriver.Chrome(os.path.join(path, 'chromedriver'), options=chrome_options)
     return driver
-
-def main():
-    driver = get_chromedriver(use_proxy=True)
-    #driver.get('https://www.google.com/search?q=my+ip+address')
-    driver.get('https://httpbin.org/ip')
-    time.sleep(1000)
-if __name__ == '__main__':
-    main()
