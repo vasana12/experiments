@@ -11,7 +11,7 @@ import requests
 import requests.utils
 from db import m_instagram
 from session_save.setting import config
-from session_save.setting.botAccount_setting_db import read_account_setting_info_from_db, save_uuid_and_session_info
+from session_save.setting.botAccount_setting_db import read_account_setting_info_from_db, save_uuid_and_session_info, update_account_unavailable
 
 insta_db = m_instagram.InstaDB(db_name="account")
 account_collection = insta_db.account_collection
@@ -23,10 +23,14 @@ class loginSession():
         self.password =password
         self.setting_info = read_account_setting_info_from_db(username, password)
         self.session = requests.Session() if not session else session
-        FORMAT = 'INSTAGRAM_TARGETING_BOTs %(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s - %(message)s'
+        FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
         logging.basicConfig(format=FORMAT)
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
+        logger = logging.getLogger(__name__)
+        if logger.hasHandlers():
+            # Logger is already configured, remove all handlers
+            logger.handlers = []
+        logger.setLevel(logging.INFO)
+        self.logger = logger
         host = "texas1.thesocialproxy.com"
         port = "10000"
         mobile_proxy_username = "5rfpjo4evhm0c8dx"
@@ -81,6 +85,8 @@ class loginSession():
     def token(self):
         return self.cookie_dict["csrftoken"]
 
+
+
     def login_success(self):
         setting_info = read_account_setting_info_from_db(self.username, self.password)
         cookie = requests.utils.dict_from_cookiejar(self.session.cookies)
@@ -89,10 +95,13 @@ class loginSession():
         msg = f"SETTING INFO : COOKIE \n- {cookie} - " \
               f"TIMING, DEVICE and ...\n- user-agent={setting_info['user_agent']}\n- phone_id={setting_info['uuids']['phone_id']}\n- " \
               f"uuid={setting_info['uuids']['uuid']}\n- client_session_id={setting_info['uuids']['client_session_id']}\n- device_id={setting_info['uuids']['device_id']}"
-        self.logger.info(msg)
+        self.logger.debug(msg)
         save_uuid_and_session_info(setting_info)
-        self.logger.info(f"{self.username}/{self.password}")
         return True
+
+    def login_failed(self):
+        self.logger.info(f"request login failed {self.username}/{self.password} update unavailable")
+        update_account_unavailable(username=self.username)
 
     def login(self):
         self.logger.info(f"login_trial")
@@ -115,9 +124,10 @@ class loginSession():
         if response:
             return self.login_success()
         else:
+            self.login_failed()
             return False
 
-    def send_request(self, url, post, with_signature, extra_sig=None,timeout=120,waiting_429=None):
+    def send_request(self, url, post, with_signature, extra_sig=None,timeout=30,waiting_429=None):
         method = "POST" if post else "GET"
         if post is not None:  # POST
             if with_signature:

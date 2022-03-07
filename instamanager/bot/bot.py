@@ -451,12 +451,12 @@ class Bot(object):
             args["proxy"] = self.proxy
         if self.api.login(**args) is False:
             return False
-        # self.prepare()
-        # atexit.register(self.print_counters)
-        # if "is_threaded" in args:
-        #     if args["is_threaded"]:
-        #         return True
-        # signal.signal(signal.SIGTERM, self.print_counters)
+        self.prepare()
+        atexit.register(self.print_counters)
+        if "is_threaded" in args:
+            if args["is_threaded"]:
+                return True
+        signal.signal(signal.SIGTERM, self.print_counters)
         return True
 
     def prepare(self):

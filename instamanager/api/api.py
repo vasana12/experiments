@@ -90,11 +90,14 @@ class API(object):
         # Setup logging
         # instabot_version = Bot.version()
         # self.logger = logging.getLogger("[instamanager_{}]".format(instamanager_version))
-        FORMAT = 'INSTAGRAM_TARGETING_BOT %(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s - %(message)s'
+        FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
         logging.basicConfig(format=FORMAT)
-        self.logger = logging.getLogger("instamanager version: " + version)
-        self.logger.setLevel(logging.DEBUG)
-
+        logger = logging.getLogger(__name__)
+        if logger.hasHandlers():
+            # Logger is already configured, remove all handlers
+            logger.handlers = []
+        logger.setLevel(logging.DEBUG)
+        self.logger = logger
         # if not os.path.exists(base_path):
         #     os.makedirs(base_path)  # create base_path if not exists
         #
@@ -129,6 +132,7 @@ class API(object):
     def set_user(self, username, password, generate_all_uuids=True, set_device=True):
         self.username = username
         self.password = password
+
 
         if set_device is True:
             self.set_device()
@@ -211,6 +215,8 @@ class API(object):
         return save_uuid_and_cookie(self)
 
     def login(self, username, password, account_setting_info, proxy=None):
+
+        self.account_collection = self.db_conn["account"]["account"]
         self.account_setting_info = account_setting_info
         self.set_user(username, password)
         self.session = requests.Session()
@@ -218,7 +224,7 @@ class API(object):
         self.set_proxy()
         if self.load_uuid_and_cookie():
             self.save_successful_login()
-
+            self.account_collection.update_one({"username":self.username},{"$set":{"status":"login"}})
 
     def two_factor_auth(self):
         self.logger.info("Two-factor authentication required")
@@ -263,7 +269,7 @@ class API(object):
     def save_successful_login(self):
         self.is_logged_in = True
         self.last_login = time.time()
-        self.logger.info("Logged-in successfully as '{}'!".format(self.username))
+        self.logger.info(f"Logged-in successfully as '{self.username} : {self.password}'!")
 
     def save_failed_login(self):
         self.logger.info("Username or password is incorrect.")
@@ -431,6 +437,10 @@ class API(object):
                 )
             try:
                 response_data = json.loads(response.text)
+                if response_data.get("payload") is not None:
+                    payload = response_data.get("payload")
+                    if payload.get("message") is not None and "Unloadable participant" in str(payload.get("message").encode("utf-8")):
+                        return "Unloadable participant"
                 if response_data.get(
                     "message"
                 ) is not None and "feedback_required" in str(
@@ -1224,8 +1234,8 @@ class API(object):
             print("Users must be an list")
             return False
         users = list(filter(None, users))
+        users = list(map(lambda x: str(x), users))
 
-        print(users)
         if len(users) == 0:
             return False
         result = {"users": "[[{}]]".format(",".join(users))}
@@ -1824,9 +1834,13 @@ class API(object):
     def send_direct_item(self, item_type, users, **options):
         data = {"client_context": self.generate_UUID(True), "action": "send_item"}
         headers = {}
-        recipients = self._prepare_recipients(users, options.get("thread"), use_quotes=False)
+        try:
+            recipients = self._prepare_recipients(users, options.get("thread"), use_quotes=False)
+        except:
+            recipients = None
         if not recipients:
             return False
+
         data["recipient_users"] = recipients.get("users")
         if recipients.get("thread"):
             data["thread_ids"] = recipients.get("thread")

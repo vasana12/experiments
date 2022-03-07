@@ -1,7 +1,12 @@
 """
     Instabot Checkpoint methods.
 """
+from __future__ import annotations
 
+import time
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import instamanager
 import os
 import pickle
 from datetime import datetime
@@ -19,7 +24,6 @@ class Checkpoint(object):
             .followers (list of user_ids)
             .date (of checkpoint creation)
     """
-
     def __init__(self, bot):
         self.total = {}
         for k in bot.total:
@@ -42,27 +46,44 @@ class Checkpoint(object):
         return (self.total, self.blocked_actions, self.total_requests, self.start_time)
 
 
-def save_checkpoint(self):
-    checkpoint = Checkpoint(self)
-    fname = CHECKPOINT_PATH.format(fname=self.api.username)
-    fname = os.path.join(self.base_path, fname)
-    self.logger.debug("Saving Checkpoint file to: {}".format(fname))
-    with open(fname, "wb") as f:
-        pickle.dump(checkpoint, f, -1)
-    return True
-
-
-def load_checkpoint(self):
+def load_checkpoint(self:instamanager.Bot):
     try:
-        fname = CHECKPOINT_PATH.format(fname=self.api.username)
-        fname = os.path.join(self.base_path, fname)
-        self.logger.debug("Loading Checkpoint file from: {}".format(fname))
-        with open(fname, "rb") as f:
-            checkpoint = pickle.load(f)
-        if isinstance(checkpoint, Checkpoint):
-            return checkpoint.dump()
-        else:
-            os.remove(fname)
+        checkpoint = self.db_conn["account"]["checkpoint"].find_one({"username":self.api.username})
+        return (checkpoint["total"], checkpoint["blocked_actions"], checkpoint["total_requests"], checkpoint["start_time"])
     except Exception:
         pass
     return None
+
+def save_checkpoint(self:instamanager.Bot):
+    checkpoint = Checkpoint(self)
+    total, blocked_actions, total_requests, start_time = checkpoint.dump()
+
+    checkpoint_collection = self.db_conn["account"]["checkpoint"]
+
+    if checkpoint_collection.count({"username":self.api.username}) > 0:
+        checkpoint_collection.update_one(filter={"username": self.api.username},
+                                         update={"$set":
+                                             {
+                                                 "username": self.api.username,
+                                                 "total": total,
+                                                 "blocked_actions": blocked_actions,
+                                                 "total_requests": total_requests,
+                                                 "start_time": start_time
+                                             }}, upsert=True
+                                         )
+
+        return True
+
+    checkpoint_collection.insert(
+        {
+            "username": self.api.username,
+            "total": total,
+            "blocked_actions": blocked_actions,
+            "total_requests": total_requests,
+            "start_time": start_time
+        }
+    )
+    return True
+
+
+

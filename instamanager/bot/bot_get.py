@@ -4,7 +4,7 @@
 """
 
 from tqdm import tqdm
-
+from dm.engine import get_target_user_info
 # STORY
 
 
@@ -203,22 +203,36 @@ def get_geotag_users(self, geotag):
 
 
 def get_user_id_from_username(self, username):
-
-    user_doc = self.db_conn["service_instagram"]["hashtag_and_user_search"].find_one({"username": username}, {"_id": 1, "userid": 1})
-    if user_doc and "userid" in user_doc.keys() and user_doc["userid"] is not None:
-
-        self._usernames[username] = user_doc["userid"]
+    ###username is in cache
+    if username in self._usernames:
         return self._usernames[username]
 
+    ###username is not in cache
     if username not in self._usernames:
+
+        ##when userpk info in our db
+        user_doc = self.db_conn["service_instagram"]["hashtag_and_user_search"].find_one({"username": username}, {"_id": 1, "userid": 1})
+        if user_doc and "userid" in user_doc.keys() and user_doc["userid"] is not None:
+            self._usernames[username] = str(user_doc["userid"])
+            return self._usernames[username]
+
+        ##when userpk not in our db, we invoke lambda session to get target user info
+        get_user_info_response = get_target_user_info.lambda_get_target_user_info(username=username)
+        if get_user_info_response:
+            userpk = get_user_info_response["user_id"]
+            self._usernames[username] = str(userpk)
+            return self._usernames[username]
+
+        ##when lambda session can't return , we user proxy to get userpk
         self.api.search_username(username)
         self.very_small_delay()
         if "user" in self.api.last_json:
             self._usernames[username] = str(self.api.last_json["user"]["pk"])
-        else:
-            return None
+            return self._usernames[username]
+        ##when all those method return nothing, we return None
+        return None
 
-    return self._usernames[username]
+
 
 
 def get_username_from_user_id(self, user_id):

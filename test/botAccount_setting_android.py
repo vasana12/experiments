@@ -1,36 +1,29 @@
 import uuid
 from datetime import datetime
 import requests
-from setting.get_residential_driver import get_chromedriver
+from session_save.setting.get_residential_driver import get_chromedriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 import time
 from db import m_instagram
 import logging
-from setting.botAccount_setting_read import read_account_info_from_db, read_account_setting_info_from_db
-from setting import config
+from session_save.setting.botAccount_setting_db import read_account_info_from_db, read_account_setting_info_from_db
+from session_save.setting import config
 import json
 import requests.utils
 
 insta_db = m_instagram.InstaDB(db_name="account")
 account_collection = insta_db.account_collection
 
+FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
+
+logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
-
-# 로그의 출력 기준 설정
+if logger.hasHandlers():
+    # Logger is already configured, remove all handlers
+    logger.handlers = []
 logger.setLevel(logging.DEBUG)
-
-# log 출력 형식
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s %(funcName)s - %(message)s')
-
-# log 출력
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(formatter)
-logger.addHandler(stream_handler)
-
-JIN_INSTAGRAM = m_instagram.InstaDB(db_name="instagram_analysis").db
-JIN_ACCOUNT = JIN_INSTAGRAM["account"]
 
 SERVICE_INSTAGRAM = m_instagram.InstaDB(db_name="service_instagram").db
 INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(channel_name="instagram").db

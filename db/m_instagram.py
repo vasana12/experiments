@@ -20,10 +20,13 @@ class InstaDB:
         self.conn = pymongo.MongoClient("mongodb+srv://datacast:amdc7025!@cluster0.egbmu.mongodb.net/admin?retryWrites=true&w=majority", tlsCAFile=ca,unicode_decode_error_handler='ignore')
         self.db = self.conn[self.db_name] if db_name else None
         self.account_collection = self.conn['account']['account']
-        FORMAT = 'INSTAGRAM_TARGETING_BOTs %(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s - %(message)s'
+        FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
         logging.basicConfig(format=FORMAT)
         logger = logging.getLogger(__name__)
-        logger.setLevel(logging.DEBUG)
+        if logger.hasHandlers():
+            # Logger is already configured, remove all handlers
+            logger.handlers = []
+        logger.setLevel(logging.INFO)
         self.logger = logger
 
     def update_batch_next_page_info(self,batch_id,instagram_crawl_instance):
@@ -68,7 +71,7 @@ class InstaBotClient(InstaDB):
         FORMAT = 'INSTAGRAM_TARGETING_BOTs %(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s - %(message)s'
         logging.basicConfig(format=FORMAT)
         logger = logging.getLogger(__name__)
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
         self.logger = logger
 
     def set_client(self, client_name):
@@ -109,9 +112,10 @@ class InstaAccount(InstaDB):
         FORMAT = 'INSTAGRAM_TARGETING_BOTs %(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s - %(message)s'
         logging.basicConfig(format=FORMAT)
         logger = logging.getLogger(__name__)
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
         self.logger = logger
         self.dm_limit = 10
+
     def select_user_and_update_status_to_login(self,username=None):
         ###login 을 위해 따로 선택할 계정이 없는 경우
         self.logger.debug(f"db:{self.db_name}/collection:{self.collection.name}/client_name:{self.client_name}/channel_name:{self.channel_name}")
@@ -240,7 +244,7 @@ class InstaAccount(InstaDB):
             return None
         return available_account
 
-    def load_cookie_user_and_update_status_to_login_dm(self,username=None):
+    def select_cookie_user(self,username=None):
         ###login 을 위해 따로 선택할 계정이 없는 경우
         self.logger.debug(f"db:{self.db_name}/collection:{self.collection.name}/client_name:{self.client_name}/channel_name:{self.channel_name}")
         if username == None:
@@ -267,7 +271,6 @@ class InstaAccount(InstaDB):
                 {
                     "$set":
                         {
-                            "status": "login",
                             "last_login": datetime.now()
                         }
                 },
@@ -299,7 +302,6 @@ class InstaAccount(InstaDB):
                 filter_raw,
                 update={
                     "$set": {
-                        "status": "login",
                           "last_login": datetime.now()
                     }
                 },

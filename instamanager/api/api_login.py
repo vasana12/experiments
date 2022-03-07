@@ -227,9 +227,9 @@ def load_uuid_and_cookie(self):
         self.last_login = self.account_setting_info["timing_value"]["last_login"]
         self.last_experiments = self.account_setting_info["timing_value"]["last_experiments"]
 
-        self.logger.debug("Loading session cookies")
+        self.logger.info("Loading session cookies")
         self.session.cookies = requests.utils.cookiejar_from_dict(self.account_setting_info["session"])
-        self.logger.info(f"self.session_info['session']:{self.account_setting_info['session']}")
+        self.logger.debug(f"self.session_info['session']:{self.account_setting_info['session']}")
 
         self.logger.debug("Loading uuids")
         self.phone_id = self.account_setting_info["uuids"]["phone_id"]
@@ -241,8 +241,8 @@ def load_uuid_and_cookie(self):
         self.device_settings = self.account_setting_info["device_settings"]
         self.user_agent = self.account_setting_info["user_agent"]
     except Exception as e:
-        self.logger.debug(f"load uuid and cookie error: {e}")
-    self.logger.debug(f"load uuid and cookie success")
+        self.logger.error(f"load uuid and cookie error: {e}")
+    self.logger.info(f"load uuid and cookie success")
     return True
 
 def save_uuid_and_cookie(self):

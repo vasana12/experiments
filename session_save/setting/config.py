@@ -40,6 +40,12 @@ PROXY_HOST = 'residential.ipb.cloud'  # rotating proxy or host
 PROXY_PORT = 7777 # port
 PROXY_USER = 'customer-yxha19913701-asn-7018-sessid-IbDC-sesstime-30' # username
 PROXY_PASS = 'ywiB*20dC' # password
+#
+# PROXY_HOST = 'texas1.thesocialproxy.com'  # rotating proxy or host
+# PROXY_PORT = 10000 # port
+# PROXY_USER = '5rfpjo4evhm0c8dx' # username
+# PROXY_PASS = 'ihzoneqam4p3vt2b' # password
+
 
 PROXY={
         'http': f'http://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}',

@@ -1,4 +1,9 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import instamanager
 import os
+import time
 from mimetypes import guess_type
 import types
 from tqdm import tqdm
@@ -17,46 +22,75 @@ def send_message(self, text, user_ids, thread_id=None):
     """
     user_ids = _get_user_ids(self, user_ids)
     user_ids = list(filter(None,user_ids))
+    user_ids= list(map(lambda x: str(x), user_ids))
     if len(user_ids) == 0:
         return NoUserIdException()
-
-    if not isinstance(text, str) and isinstance(user_ids, (list, str)):
-        self.logger.error("Text must be an string, user_ids must be an list or string")
-        return False
     
     if self.reached_limit("messages"):
         self.logger.info("Out of messages for today.")
-        return False
+        return MessageLimitToday()
 
-    # self.delay("message")
     urls = self.extract_urls(text)
     item_type = "link" if urls else "text"
     send_direct_item_response = self.api.send_direct_item(item_type, user_ids, text=text, thread=thread_id, urls=urls)
+
+    if send_direct_item_response == "Unloadable participant":
+        self.logger.info("Unloadable participant")
+        return UnloadableParticipant()
+
+    if send_direct_item_response == "feedback_required":
+        self.logger.info("feedback_required")
+        return FeedbackRequired()
+
     if send_direct_item_response:
         self.total["messages"] += 1
-        return True
+        return 200
 
     self.logger.info("Message to {user_ids} wasn't sent".format(user_ids=user_ids))
     return False
 
 
-def send_messages(self, text, user_ids):
+def send_messages(self:instamanager.Bot, text, user_ids):
     broken_items = []
     if not user_ids:
         self.logger.info("User must be at least one.")
         return broken_items
     self.logger.info("Going to send %d messages." % (len(user_ids)))
     for user in tqdm(user_ids):
-        self.very_small_delay()
+        self.small_delay()
+
+        self.logger.info(f"Going to send messages. to ->  {user}")
         send_message_response = self.send_message(text, user)
         self.logger.info(f"send_message_response:{send_message_response}")
+
         if not send_message_response:
+            self.db_conn["account"]["account"].update_one({"username": self.username}, {"$set": {"status": "unavailable"}})
+            self.logger.error(f"send_message_response:{send_message_response}, break iteration and restart new account  ")
             self.error_delay()
             broken_items = user_ids[user_ids.index(user) :]
-            break
-        if send_message_response:
-            if isinstance(send_message_response, NoUserIdException):
-                self.logger.error(f"no user id, remove it and continue:{user}")
+            return broken_items
+
+        if isinstance(send_message_response, MessageLimitToday):
+            self.db_conn["account"]["account"].update_one({"username":self.username},{"$set":{"status":"available"}})
+            self.logger.error(f"message limit today, break iteration and restart new account  ")
+            self.error_delay()
+            broken_items = user_ids[user_ids.index(user):]
+            return broken_items
+
+        if isinstance(send_message_response, FeedbackRequired):
+            self.db_conn["account"]["account"].update_one({"username": self.username}, {"$set": {"status": "challenge_required"}})
+            self.logger.error(f"feedback required, break iteration and restart new account  ")
+            self.error_delay()
+            broken_items = user_ids[user_ids.index(user):]
+            return broken_items
+
+        if isinstance(send_message_response, NoUserIdException):
+            self.logger.error(f"no user id, can't message to {user} , continue next iteration")
+            continue
+
+        if isinstance(send_message_response, UnloadableParticipant):
+            self.logger.error(f"unloadable participant {user}, continue next iteration ")
+            self.error_delay()
             continue
     return broken_items
 

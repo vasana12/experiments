@@ -8,18 +8,13 @@ from session_save.util import generate_uuid
 insta_db = m_instagram.InstaDB(db_name="account")
 account_collection = insta_db.account_collection
 
+FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
+logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
-
-# 로그의 출력 기준 설정
+if logger.hasHandlers():
+    # Logger is already configured, remove all handlers
+    logger.handlers = []
 logger.setLevel(logging.DEBUG)
-
-# log 출력 형식
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s %(funcName)s - %(message)s')
-
-# log 출력
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(formatter)
-logger.addHandler(stream_handler)
 
 
 SERVICE_INSTAGRAM = m_instagram.InstaDB(db_name="service_instagram").db
@@ -34,9 +29,15 @@ def calcuate_check_point_deadline():
     check_point_deadline = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=4)
     return check_point_deadline
 
+def update_account_unavailable(username):
+    update_filter = {"username":username}
+    update = {"$set":{"status":"unavailable"}}
+    ACCOUNT_COLLECTION.update_one(filter=update_filter,update=update)
+
 def read_account_info_from_db():
     filter_new = {"status": "new", "client_name": "admin_test"}
     filter_old = {"status":"available", "client_name":"admin_test","last_login":{"$lte":calcuate_check_point_deadline()}}
+
     setting_account_doc = list(ACCOUNT_COLLECTION.find({"$or":[filter_new, filter_old]}))
     return setting_account_doc
 

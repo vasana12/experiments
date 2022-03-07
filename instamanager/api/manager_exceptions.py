@@ -8,6 +8,12 @@ class ChallengeRequiredException(ManagerException):
 
 class NoUserIdException(ManagerException):
     pass
+class FeedbackRequired(ManagerException):
+    pass
+class UnloadableParticipant(ManagerException):
+    pass
+class MessageLimitToday(ManagerException):
+    pass
 
 class WaitUntilException(ManagerException):
     pass
