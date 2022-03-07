@@ -186,8 +186,8 @@ def login_flow(self, just_logged_in=False, app_refresh_interval=1800):
 def set_device(self):
     # self.device_settings = devices.DEVICES[self.device]
     # self.user_agent = config.USER_AGENT_BASE.format(**self.device_settings)
-    self.device_settings = self.session_info["device_settings"]
-    self.user_agent = self.session_info["user_agent"]
+    self.device_settings = self.account_setting_info["device_settings"]
+    self.user_agent = self.account_setting_info["user_agent"]
 
 def generate_all_uuids(self):
     # self.phone_id = self.generate_UUID(uuid_type=True)
@@ -197,11 +197,11 @@ def generate_all_uuids(self):
     # self.device_id = self.generate_device_id(
     #     self.get_seed(self.username, self.password)
     # )
-    self.phone_id = self.session_info["uuids"]["phone_id"]
-    self.uuid = self.session_info["uuids"]["uuid"]
-    self.client_session_id = self.session_info["uuids"]["client_session_id"]
-    self.advertising_id = self.session_info["uuids"]["phone_id"]
-    self.device_id = self.session_info["uuids"]["phone_id"]
+    self.phone_id = self.account_setting_info["uuids"]["phone_id"]
+    self.uuid = self.account_setting_info["uuids"]["uuid"]
+    self.client_session_id = self.account_setting_info["uuids"]["client_session_id"]
+    self.advertising_id = self.account_setting_info["uuids"]["phone_id"]
+    self.device_id = self.account_setting_info["uuids"]["phone_id"]
 
 def reinstall_app_simulation(self):
     self.logger.info("Reinstall app simulation, generating new `phone_id`...")
@@ -221,90 +221,29 @@ def change_device_simulation(self):
     self.logger.info("New android_device_id: {}".format(self.device_id))
 
 
-def load_uuid_and_cookie(self, load_uuid=True, load_cookie=True):
+def load_uuid_and_cookie(self):
 
-    # self.last_login = self.session_info["timing_value"]["last_login"]
-    # self.last_experiments = self.session_info["timing_value"]["last_experiments"]
-    #
-    # if load_cookie:
-    #     self.logger.debug("Loading cookies")
-    #     self.session.cookies = requests.utils.cookiejar_from_dict(self.session_info["cookie"])
-    #     self.logger.info(f"self.session_info['cookie']:{self.session_info['cookie']}")
-    # if load_uuid:
-    #     self.logger.debug("Loading uuids")
-    #     self.phone_id = self.session_info["uuids"]["phone_id"]
-    #     self.uuid = self.session_info["uuids"]["uuid"]
-    #     self.client_session_id = self.session_info["uuids"]["client_session_id"]
-    #     self.advertising_id = self.session_info["uuids"]["advertising_id"]
-    #     self.device_id = self.session_info["uuids"]["device_id"]
-    #
-    #     self.device_settings = self.session_info["device_settings"]
-    #     self.user_agent = self.session_info["user_agent"]
+    try:
+        self.last_login = self.account_setting_info["timing_value"]["last_login"]
+        self.last_experiments = self.account_setting_info["timing_value"]["last_experiments"]
 
-    if self.cookie_fname is None:
-        fname = "{}_uuid_and_cookie.json".format(self.username)
-        self.cookie_fname = os.path.join(self.base_path, fname)
-        print(os.path.join(self.base_path, fname))
+        self.logger.debug("Loading session cookies")
+        self.session.cookies = requests.utils.cookiejar_from_dict(self.account_setting_info["session"])
+        self.logger.info(f"self.session_info['session']:{self.account_setting_info['session']}")
 
-    if os.path.isfile(self.cookie_fname) is False:
-        return False
+        self.logger.debug("Loading uuids")
+        self.phone_id = self.account_setting_info["uuids"]["phone_id"]
+        self.uuid = self.account_setting_info["uuids"]["uuid"]
+        self.client_session_id = self.account_setting_info["uuids"]["client_session_id"]
+        self.advertising_id = self.account_setting_info["uuids"]["advertising_id"]
+        self.device_id = self.account_setting_info["uuids"]["device_id"]
 
-    with open(self.cookie_fname, "r") as f:
-        data = json.load(f)
-        if "cookie" in data:
-            self.last_login = data["timing_value"]["last_login"]
-            self.last_experiments = data["timing_value"]["last_experiments"]
-
-            if load_cookie:
-                self.logger.debug("Loading cookies")
-                self.session.cookies = requests.utils.cookiejar_from_dict(
-                    data["cookie"]
-                )
-
-
-            if load_uuid:
-                self.logger.debug("Loading uuids")
-                self.phone_id = data["uuids"]["phone_id"]
-                self.uuid = data["uuids"]["uuid"]
-                self.client_session_id = data["uuids"]["client_session_id"]
-                self.advertising_id = data["uuids"]["advertising_id"]
-                self.device_id = data["uuids"]["device_id"]
-
-                self.device_settings = data["device_settings"]
-                self.user_agent = data["user_agent"]
-
-            msg = (
-                "Recovery from {}: COOKIE {} - UUIDs {} - TIMING, DEVICE "
-                "and ...\n- user-agent={}\n- phone_id={}\n- uuid={}\n- "
-                "client_session_id={}\n- device_id={}"
-            )
-
-            self.logger.info(
-                msg.format(
-                    self.cookie_fname,
-                    load_cookie,
-                    load_uuid,
-                    self.user_agent,
-                    self.phone_id,
-                    self.uuid,
-                    self.client_session_id,
-                    self.device_id,
-                )
-            )
-        else:
-            self.logger.info(
-                "The cookie seems to be the with the older structure. "
-                "Load and init again all uuids"
-            )
-            self.session.cookies = requests.utils.cookiejar_from_dict(data)
-            self.last_login = time.time()
-            self.last_experiments = time.time()
-            self.set_device()
-            self.generate_all_uuids()
-
-    self.is_logged_in = True
+        self.device_settings = self.account_setting_info["device_settings"]
+        self.user_agent = self.account_setting_info["user_agent"]
+    except Exception as e:
+        self.logger.debug(f"load uuid and cookie error: {e}")
+    self.logger.debug(f"load uuid and cookie success")
     return True
-
 
 def save_uuid_and_cookie(self):
     if self.cookie_fname is None:

@@ -173,7 +173,7 @@ def upload_photo(
     )
     if response.status_code != 200:
         self.logger.error(
-            "Photo Upload failed with the following response: {}".format(response)
+            "Photo Upload failed with the following response: {}".format(response.text)
         )
         return False
     if from_video:

@@ -69,7 +69,8 @@ class API(object):
         log_filename=None,
         loglevel_file=logging.DEBUG,
         loglevel_stream=logging.INFO,
-        db_conn = None
+        db_conn = None,
+        account_setting_info = None
     ):
         # Setup device and user_agent
 
@@ -84,39 +85,44 @@ class API(object):
         self.last_response = None
         self.total_requests = 0
         self.db_conn: pymongo.MongoClient = db_conn
+        self.account_setting_info = account_setting_info
+
         # Setup logging
         # instabot_version = Bot.version()
         # self.logger = logging.getLogger("[instamanager_{}]".format(instamanager_version))
+        FORMAT = 'INSTAGRAM_TARGETING_BOT %(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s - %(message)s'
+        logging.basicConfig(format=FORMAT)
         self.logger = logging.getLogger("instamanager version: " + version)
-
-        if not os.path.exists(base_path):
-            os.makedirs(base_path)  # create base_path if not exists
-
-        if not os.path.exists(base_path + "/log/"):
-            os.makedirs(base_path + "/log/")  # create log folder if not exists
-
-        if save_logfile is True:
-            if log_filename is None:
-                log_filename = os.path.join(
-                    base_path, "log/instabot_{}.log".format(id(self))
-                )
-
-            fh = logging.FileHandler(filename=log_filename)
-            fh.setLevel(loglevel_file)
-            fh.setFormatter(
-                logging.Formatter(
-                    "%(asctime)s - %(name)s (%(module)s) - %(levelname)s - %(message)s"
-                )
-            )
-
-            self.logger.addHandler(fh)
-
-        ch = logging.StreamHandler()
-        ch.setLevel(loglevel_stream)
-        ch.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
-
-        self.logger.addHandler(ch)
         self.logger.setLevel(logging.DEBUG)
+
+        # if not os.path.exists(base_path):
+        #     os.makedirs(base_path)  # create base_path if not exists
+        #
+        # if not os.path.exists(base_path + "/log/"):
+        #     os.makedirs(base_path + "/log/")  # create log folder if not exists
+
+        # if save_logfile is True:
+        #     if log_filename is None:
+        #         log_filename = os.path.join(
+        #             base_path, "log/instabot_{}.log".format(id(self))
+        #         )
+        #
+        #     fh = logging.FileHandler(filename=log_filename)
+        #     fh.setLevel(loglevel_file)
+        #     fh.setFormatter(
+        #         logging.Formatter(
+        #             "%(asctime)s - %(name)s (%(module)s) - %(levelname)s - %(message)s"
+        #         )
+        #     )
+        #
+        #     self.logger.addHandler(fh)
+
+        # ch = logging.StreamHandler()
+        # ch.setLevel(loglevel_stream)
+        # ch.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+        #
+        # self.logger.addHandler(ch)
+        # self.logger.setLevel(logging.DEBUG)
 
         self.last_json = None
 
@@ -198,107 +204,21 @@ class API(object):
     def change_device_simulation(self):
         return change_device_simulation(self)
 
-    def load_uuid_and_cookie(self, load_uuid=True, load_cookie=True):
-        return load_uuid_and_cookie(self, load_uuid=load_uuid, load_cookie=load_cookie)
+    def load_uuid_and_cookie(self):
+        return load_uuid_and_cookie(self)
 
     def save_uuid_and_cookie(self):
         return save_uuid_and_cookie(self)
 
-    def login(
-        self,
-        username=None,
-        password=None,
-        force=False,
-        proxy=None,
-        use_cookie=True,
-        use_uuid=True,
-        cookie_fname=None,
-        ask_for_code=False,
-        set_device=True,
-        generate_all_uuids=True,
-        is_threaded=False
-    ):
-
-        set_device = generate_all_uuids = True
+    def login(self, username, password, account_setting_info, proxy=None):
+        self.account_setting_info = account_setting_info
         self.set_user(username, password)
         self.session = requests.Session()
-
         self.proxy = proxy
-        self.set_proxy()  # Only happens if `self.proxy`
+        self.set_proxy()
+        if self.load_uuid_and_cookie():
+            self.save_successful_login()
 
-        self.cookie_fname = cookie_fname
-
-        if self.cookie_fname is None:
-            fmt = "{username}_uuid_and_cookie.json"
-            cookie_fname = fmt.format(username=username)
-            self.cookie_fname = os.path.join(self.base_path, cookie_fname)
-
-        cookie_is_loaded = False
-        msg = "Login flow failed, the cookie is broken. Relogin again."
-
-        if use_cookie is True:
-            # try:
-            if (
-                self.load_uuid_and_cookie(load_cookie=use_cookie, load_uuid=use_uuid)
-                is True
-            ):
-                # Check if the token loaded is valid.
-                if self.login_flow(False) is True:
-                    cookie_is_loaded = True
-                    self.save_successful_login()
-                else:
-                    self.logger.info(msg)
-                    set_device = generate_all_uuids = False
-                    force = True
-
-        if not cookie_is_loaded and (not self.is_logged_in or force):
-            self.session = requests.Session()
-            if use_uuid is True:
-                if (
-                    self.load_uuid_and_cookie(
-                        load_cookie=use_cookie, load_uuid=use_uuid
-                    )
-                    is False
-                ):
-                    if set_device is True:
-                        self.set_device()
-                    if generate_all_uuids is True:
-                        self.generate_all_uuids()
-            self.pre_login_flow()
-            data = json.dumps(
-                {
-                    "jazoest": "22264",
-                    "country_codes": '[{"country_code":"1","source":["default"]}]',
-                    "phone_id": self.phone_id,
-                    "_csrftoken": self.token,
-                    "username": self.username,
-                    "adid": "",
-                    "guid": self.uuid,
-                    "device_id": self.device_id,
-                    "google_tokens": "[]",
-                    "password": self.password,
-                    # "enc_password:" "#PWD_INSTAGRAM:4:TIME:ENCRYPTED_PASSWORD"
-                    "login_attempt_count": "0",
-                }
-            )
-
-            if self.send_request("accounts/login/", data, True):
-                self.save_successful_login()
-                self.login_flow(True)
-                return True
-
-            elif (self.last_json.get("error_type", "") == "checkpoint_challenge_required"):
-                    return False
-
-            elif self.last_json.get("two_factor_required"):
-                    return False
-            else:
-                self.logger.error(
-                    "Failed to login go to instagram and change your password"
-                )
-                self.save_failed_login()
-                delete_credentials()
-                return False
 
     def two_factor_auth(self):
         self.logger.info("Two-factor authentication required")
