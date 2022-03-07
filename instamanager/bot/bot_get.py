@@ -206,7 +206,8 @@ def get_user_id_from_username(self, username):
 
     user_doc = self.db_conn["service_instagram"]["hashtag_and_user_search"].find_one({"username": username}, {"_id": 1, "userid": 1})
     if user_doc and "userid" in user_doc.keys() and user_doc["userid"] is not None:
-        self._usernames[username] = str(self.api.last_json["user"]["pk"])
+
+        self._usernames[username] = user_doc["userid"]
         return self._usernames[username]
 
     if username not in self._usernames:

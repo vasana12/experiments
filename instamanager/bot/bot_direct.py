@@ -47,6 +47,7 @@ def send_messages(self, text, user_ids):
         return broken_items
     self.logger.info("Going to send %d messages." % (len(user_ids)))
     for user in tqdm(user_ids):
+        self.very_small_delay()
         send_message_response = self.send_message(text, user)
         self.logger.info(f"send_message_response:{send_message_response}")
         if not send_message_response:

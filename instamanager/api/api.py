@@ -1224,6 +1224,8 @@ class API(object):
             print("Users must be an list")
             return False
         users = list(filter(None, users))
+        users =
+        print(users)
         if len(users) == 0:
             return False
         result = {"users": "[[{}]]".format(",".join(users))}
