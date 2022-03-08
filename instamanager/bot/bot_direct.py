@@ -102,6 +102,15 @@ def send_messages(self:instamanager.Bot, text, user_ids):
             save_checkpoint(self)
             return broken_items
 
+        if isinstance(send_message_response, OopsException):
+            self.logger.error(f"Ooops Exception, can't message to {user} , continue next iteration")
+            continue
+
+
+        if isinstance(send_message_response, NoUserIdException):
+            self.logger.error(f"no user id, can't message to {user} , continue next iteration")
+            continue
+
         if isinstance(send_message_response, NoUserIdException):
             self.logger.error(f"no user id, can't message to {user} , continue next iteration")
             continue

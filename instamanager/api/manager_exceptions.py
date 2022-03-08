@@ -8,6 +8,9 @@ class ChallengeRequiredException(ManagerException):
 
 class NoUserIdException(ManagerException):
     pass
+class OopsException(ManagerException):
+    pass
+
 class FeedbackRequired(ManagerException):
     pass
 class RequestTimeOut(ManagerException):

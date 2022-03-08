@@ -435,9 +435,14 @@ class API(object):
                     response.content
                 )
             )
+
             if response.status_code == 408 or response.status_code == "408":
                 self.logger.error(f"Request returns {408} error!")
                 return "requestTimeOut"
+            if response.status_code == 500 or response.status_code == "500":
+                self.logger.error(f"Request returns {500} error!")
+                return "OopsError"
+
             if response.status_code != 404 and response.status_code != "404":
                 self.logger.error(
                     "Request returns {} error!".format(response.status_code)

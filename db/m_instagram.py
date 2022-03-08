@@ -104,6 +104,7 @@ class InstaAccount(InstaDB):
     def __init__(self,client_name=None,channel_name= None,username= None,account_crawl_max_num =200):
         super().__init__(db_name="account")
         self.collection = self.db["account"]
+        self.account_checkpoint_collection = self.db["account_checkpoint"]
         self.username = username
         self.client_name = client_name
         self.channel_name = channel_name
@@ -244,7 +245,30 @@ class InstaAccount(InstaDB):
             return None
         return available_account
 
-    def select_cookie_user(self,username=None):
+    def select_cookie_user(self,username=None, max_messages_per_day=None):
+        if not max_messages_per_day:
+            max_messages_per_day = 5
+        projection = {
+                    "_id": 1,
+                    "username": 1,
+                    "channel": 1,
+                    "client_name": 1,
+                    "last_login": 1,
+                    "limit": 1,
+                    "password": 1,
+                    "status": 1,
+                    "usage": 1,
+                    "device_settings":1,
+                    "session.csrftoken": 1,
+                    "session.ds_user_id": 1,
+                    "session.mid": 1,
+                    "session.rur":1,
+                    "session.sessionid":1,
+                    "timing_value":1,
+                    "user_agent":1,
+                    "uuids":1,
+                    "mobile_session":1
+                }
         ###login 을 위해 따로 선택할 계정이 없는 경우
         self.logger.debug(f"db:{self.db_name}/collection:{self.collection.name}/client_name:{self.client_name}/channel_name:{self.channel_name}")
         if username == None:
@@ -255,7 +279,7 @@ class InstaAccount(InstaDB):
                 "status": "available",
                 "client_name": self.client_name,
                 "channel": self.channel_name,
-                "usage.dm": {"$lte":self.dm_limit}
+                "checkpoint.total.messages": {"$lt": max_messages_per_day}
                 }
             else:
                 filter_raw = {
@@ -263,19 +287,11 @@ class InstaAccount(InstaDB):
                     "session": {"$exists": 1},
                     "status": "available",
                     "channel": self.channel_name,
-                    "usage.dm": {"$lte": self.dm_limit}
+                    "checkpoint.total.messages": {"$lt": max_messages_per_day}
                 }
             self.logger.debug(f"filter_raw:{filter_raw}")
-            available_account = self.collection.find_one_and_update(
-                filter_raw,
-                {
-                    "$set":
-                        {
-                            "last_login": datetime.now()
-                        }
-                },
-                sort=[('last_login', 1)]
-            )
+            available_account = self.account_checkpoint_collection.find_one(filter_raw,projection,sort=[('last_login', 1)])
+
         ##login 을 위해 따로 선택할 계정이 있는 경우
         else:
             if self.client_name != "admin":
@@ -298,35 +314,7 @@ class InstaAccount(InstaDB):
                     "usage.dm": {"$lte": self.dm_limit}
                 }
             self.logger.debug(f"filter_raw:{filter_raw}")
-            available_account = self.collection.find_one_and_update(
-                filter_raw,
-                update={
-                    "$set": {
-                          "last_login": datetime.now()
-                    }
-                },
-                projection={
-                    "_id": 1,
-                    "username": 1,
-                    "channel": 1,
-                    "client_name": 1,
-                    "last_login": 1,
-                    "limit": 1,
-                    "password": 1,
-                    "status": 1,
-                    "usage": 1,
-                    "device_settings":1,
-                    "session.csrftoken": 1,
-                    "session.ds_user_id": 1,
-                    "session.mid": 1,
-                    "session.rur":1,
-                    "session.sessionid":1,
-                    "timing_value":1,
-                    "user_agent":1,
-                    "uuids":1,
-                    "mobile_session":1
-                }
-            )
+            available_account = self.account_checkpoint_collection.find_one(filter_raw,projection)
 
         if available_account is not None:
             self.username = available_account["username"]
