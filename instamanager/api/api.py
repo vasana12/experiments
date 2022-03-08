@@ -15,6 +15,7 @@ import pytz
 import requests
 import requests.utils
 import six.moves.urllib as urllib
+from requests.exceptions import ProxyError
 from requests_toolbelt import MultipartEncoder
 from tqdm import tqdm
 
@@ -402,11 +403,14 @@ class API(object):
                     if extra_sig is not None and extra_sig != []:
                         post += "&".join(extra_sig)
                 # time.sleep(random.randint(1, 2))
-                response = self.session.post(config.API_URL + endpoint, data=post)
+                response = self.session.post(config.API_URL + endpoint, data=post,timeout=50)
             else:  # GET
                 # time.sleep(random.randint(1, 2))
-                response = self.session.get(config.API_URL + endpoint)
+                response = self.session.get(config.API_URL + endpoint,timeout=50)
         except Exception as e:
+            if isinstance(e,ProxyError):
+                self.logger.warning(str(e))
+                return 'RequestProxyError'
             self.logger.warning(str(e))
             return False
 
@@ -424,13 +428,16 @@ class API(object):
                 self.last_json = json.loads(response.text)
                 return True
             except JSONDecodeError:
-                return False
+                return True
         else:
             self.logger.debug(
                 "Responsecode indicates error; response content: {}".format(
                     response.content
                 )
             )
+            if response.status_code == 408 or response.status_code == "408":
+                self.logger.error(f"Request returns {408} error!")
+                return "requestTimeOut"
             if response.status_code != 404 and response.status_code != "404":
                 self.logger.error(
                     "Request returns {} error!".format(response.status_code)
@@ -494,7 +501,11 @@ class API(object):
                     timeout_minutes,
                 )
             if response.status_code == 400:
-                response_data = json.loads(response.text)
+                try:
+                    response_data = json.loads(response.text)
+                except JSONDecodeError:
+                    self.logger.error("JSONDecodeError")
+                    return False
                 if response_data.get("challenge_required"):
                     # Try and fix the challenge required error by totally restarting
                     self.logger.error(

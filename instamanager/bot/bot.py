@@ -286,8 +286,8 @@ class Bot(object):
         if self.logger.hasHandlers():
             # Logger is already configured, remove all handlers
             self.logger.handlers = []
-        self.logger.info("Instabot version: " + version + " Started")
-        self.logger.debug("Bot imported from {}".format(__file__))
+        # self.logger.info("Instabot version: " + version + " Started")
+        # self.logger.debug("Bot imported from {}".format(__file__))
     @property
     def user_id(self):
         # For compatibility
@@ -488,7 +488,7 @@ class Bot(object):
         for key, val in self.blocked_actions.items():
             if val:
                 self.logger.info("Blocked {}".format(key))
-        self.logger.info("Total requests: {}".format(self.api.total_requests))
+        self.logger.info(f"{self.api.username} - Total requests: {self.api.total_requests}")
 
     def delay(self, key):
         """
@@ -503,7 +503,7 @@ class Bot(object):
         self.last[key] = time.time()
 
     def error_delay(self):
-        time.sleep(10)
+        time.sleep(5)
 
     def small_delay(self):
         time.sleep(random.uniform(0.75, 3.75))

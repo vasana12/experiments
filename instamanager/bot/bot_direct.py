@@ -1,5 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
+from .bot_checkpoint import save_checkpoint
+
 if TYPE_CHECKING:
     import instamanager
 import os
@@ -33,6 +36,11 @@ def send_message(self, text, user_ids, thread_id=None):
     urls = self.extract_urls(text)
     item_type = "link" if urls else "text"
     send_direct_item_response = self.api.send_direct_item(item_type, user_ids, text=text, thread=thread_id, urls=urls)
+    if send_direct_item_response == "RequestTimeOut":
+        return RequestTimeOut()
+
+    if send_direct_item_response == "RequestProxyError":
+        return RequestProxyError()
 
     if send_direct_item_response == "Unloadable participant":
         self.logger.info("Unloadable participant")
@@ -61,20 +69,29 @@ def send_messages(self:instamanager.Bot, text, user_ids):
 
         self.logger.info(f"Going to send messages. to ->  {user}")
         send_message_response = self.send_message(text, user)
-        self.logger.info(f"send_message_response:{send_message_response}")
 
         if not send_message_response:
             self.db_conn["account"]["account"].update_one({"username": self.username}, {"$set": {"status": "unavailable"}})
             self.logger.error(f"send_message_response:{send_message_response}, break iteration and restart new account  ")
             self.error_delay()
             broken_items = user_ids[user_ids.index(user) :]
+            save_checkpoint(self)
             return broken_items
 
         if isinstance(send_message_response, MessageLimitToday):
             self.db_conn["account"]["account"].update_one({"username":self.username},{"$set":{"status":"available"}})
-            self.logger.error(f"message limit today, break iteration and restart new account  ")
+            self.logger.warning(f"message limit today, break iteration and restart new account  ")
+            # self.error_delay()
+            broken_items = user_ids[user_ids.index(user):]
+            save_checkpoint(self)
+            return broken_items
+
+        if isinstance(send_message_response, RequestTimeOut):
+            self.db_conn["account"]["account"].update_one({"username":self.username},{"$set":{"status":"available"}})
+            self.logger.error(f"RequestTimeOut , break iteration and restart new account")
             self.error_delay()
             broken_items = user_ids[user_ids.index(user):]
+            save_checkpoint(self)
             return broken_items
 
         if isinstance(send_message_response, FeedbackRequired):
@@ -82,6 +99,7 @@ def send_messages(self:instamanager.Bot, text, user_ids):
             self.logger.error(f"feedback required, break iteration and restart new account  ")
             self.error_delay()
             broken_items = user_ids[user_ids.index(user):]
+            save_checkpoint(self)
             return broken_items
 
         if isinstance(send_message_response, NoUserIdException):
@@ -92,6 +110,12 @@ def send_messages(self:instamanager.Bot, text, user_ids):
             self.logger.error(f"unloadable participant {user}, continue next iteration ")
             self.error_delay()
             continue
+
+        if isinstance(send_message_response, RequestProxyError):
+            self.logger.error(f"proxy Connection Error, can't message to {user} , continue next iteration")
+            continue
+
+    save_checkpoint(self)
     return broken_items
 
 

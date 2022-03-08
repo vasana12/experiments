@@ -33,7 +33,6 @@ BAND_ACCOUNT, HASHTAG_AND_USER, PROJECT_COLLECTION, ITEM_HASHTAG_COLLECTION, ITE
 
 
 def select_cookie_user(username):
-
     filter_raw = {
         "username" : username,
         "session": {"$exists": 1},

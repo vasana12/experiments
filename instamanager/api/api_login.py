@@ -227,11 +227,10 @@ def load_uuid_and_cookie(self):
         self.last_login = self.account_setting_info["timing_value"]["last_login"]
         self.last_experiments = self.account_setting_info["timing_value"]["last_experiments"]
 
-        self.logger.info("Loading session cookies")
         self.session.cookies = requests.utils.cookiejar_from_dict(self.account_setting_info["session"])
-        self.logger.debug(f"self.session_info['session']:{self.account_setting_info['session']}")
+        # self.logger.debug(f"self.session_info['session']:{self.account_setting_info['session']}")
 
-        self.logger.debug("Loading uuids")
+
         self.phone_id = self.account_setting_info["uuids"]["phone_id"]
         self.uuid = self.account_setting_info["uuids"]["uuid"]
         self.client_session_id = self.account_setting_info["uuids"]["client_session_id"]

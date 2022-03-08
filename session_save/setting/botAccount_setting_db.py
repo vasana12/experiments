@@ -105,6 +105,6 @@ def read_account_setting_info_from_db(username, password):
     return device_doc
 
 def read_challenge_required_account_info_from_db():
-    filter_challenge = {"status": "challenge_required", "client_name": "admin_test"}
+    filter_challenge = {"status": "challenge_required"}
     account_doc = list(ACCOUNT_COLLECTION.find(filter_challenge))
     return account_doc

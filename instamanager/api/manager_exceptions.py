@@ -10,6 +10,10 @@ class NoUserIdException(ManagerException):
     pass
 class FeedbackRequired(ManagerException):
     pass
+class RequestTimeOut(ManagerException):
+    pass
+class RequestProxyError(ManagerException):
+    pass
 class UnloadableParticipant(ManagerException):
     pass
 class MessageLimitToday(ManagerException):
