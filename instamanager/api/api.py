@@ -18,7 +18,7 @@ import six.moves.urllib as urllib
 from requests.exceptions import ProxyError
 from requests_toolbelt import MultipartEncoder
 from tqdm import tqdm
-
+from urllib3.exceptions import MaxRetryError
 
 from . import config, devices
 from .api_login import (
@@ -409,7 +409,11 @@ class API(object):
                 response = self.session.get(config.API_URL + endpoint,timeout=50)
         except Exception as e:
             if isinstance(e,ProxyError):
-                self.logger.warning(str(e))
+                self.logger.warning(f"ProxyError {str(e)}")
+                return 'RequestProxyError'
+
+            if isinstance(e, MaxRetryError):
+                self.logger.warning(f"MaxRetryError {str(e)}")
                 return 'RequestProxyError'
             self.logger.warning(str(e))
             return False
@@ -510,7 +514,7 @@ class API(object):
                     response_data = json.loads(response.text)
                 except JSONDecodeError:
                     self.logger.error("JSONDecodeError")
-                    return False
+                    return "InstaJSONDecodeError"
                 if response_data.get("challenge_required"):
                     # Try and fix the challenge required error by totally restarting
                     self.logger.error(

@@ -36,6 +36,10 @@ def send_message(self, text, user_ids, thread_id=None):
     urls = self.extract_urls(text)
     item_type = "link" if urls else "text"
     send_direct_item_response = self.api.send_direct_item(item_type, user_ids, text=text, thread=thread_id, urls=urls)
+
+    if send_direct_item_response == "InstaJSONDecodeError":
+        return InstaJSONDecodeError()
+
     if send_direct_item_response == "RequestTimeOut":
         return RequestTimeOut()
 
@@ -108,20 +112,20 @@ def send_messages(self:instamanager.Bot, text, user_ids):
 
 
         if isinstance(send_message_response, NoUserIdException):
-            self.logger.error(f"no user id, can't message to {user} , continue next iteration")
+            self.logger.error(f"NoUserIdException, no user id, can't message to {user} , continue next iteration")
             continue
 
-        if isinstance(send_message_response, NoUserIdException):
-            self.logger.error(f"no user id, can't message to {user} , continue next iteration")
+        if isinstance(send_message_response, InstaJSONDecodeError):
+            self.logger.error(f"InstaJSONDecodeError , can't message to {user} , continue next iteration")
             continue
 
         if isinstance(send_message_response, UnloadableParticipant):
-            self.logger.error(f"unloadable participant {user}, continue next iteration ")
+            self.logger.error(f"unloadable participant , can't message to {user}, continue next iteration ")
             self.error_delay()
             continue
 
         if isinstance(send_message_response, RequestProxyError):
-            self.logger.error(f"proxy Connection Error, can't message to {user} , continue next iteration")
+            self.logger.error(f"RequestProxyError Connection Error, can't message to {user} , continue next iteration")
             continue
 
     save_checkpoint(self)

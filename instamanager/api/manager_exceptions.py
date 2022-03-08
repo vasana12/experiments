@@ -13,6 +13,9 @@ class OopsException(ManagerException):
 
 class FeedbackRequired(ManagerException):
     pass
+
+class InstaJSONDecodeError(ManagerException):
+    pass
 class RequestTimeOut(ManagerException):
     pass
 class RequestProxyError(ManagerException):
