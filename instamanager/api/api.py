@@ -71,10 +71,11 @@ class API(object):
         loglevel_file=logging.DEBUG,
         loglevel_stream=logging.INFO,
         db_conn = None,
-        account_setting_info = None
+        account_setting_info = None,
+        project_info = None
     ):
         # Setup device and user_agent
-
+        self.project_info = project_info
         self.device = device or devices.DEFAULT_DEVICE
 
         self.cookie_fname = None
@@ -215,8 +216,8 @@ class API(object):
     def save_uuid_and_cookie(self):
         return save_uuid_and_cookie(self)
 
-    def login(self, username, password, account_setting_info, proxy=None):
-
+    def login(self, username, password, account_setting_info, proxy=None,project_info=None):
+        self.project_info = project_info
         self.account_collection = self.db_conn["account"]["account"]
         self.account_setting_info = account_setting_info
         self.set_user(username, password)

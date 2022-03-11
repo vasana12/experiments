@@ -190,7 +190,8 @@ class Bot(object):
         loglevel_stream=logging.INFO,
         log_follow_unfollow=True,
         db_conn: pymongo.MongoClient = None,
-        account_setting_info = None
+        account_setting_info = None,
+        project_info = None
     ):
         self.api = API(
             device=device,
@@ -200,7 +201,8 @@ class Bot(object):
             loglevel_file=loglevel_file,
             loglevel_stream=loglevel_stream,
             db_conn = db_conn,
-            account_setting_info= account_setting_info
+            account_setting_info= account_setting_info,
+            project_info = None
         )
         self.db_conn = db_conn
         self.log_follow_unfollow = log_follow_unfollow

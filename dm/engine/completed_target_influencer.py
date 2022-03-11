@@ -41,7 +41,7 @@ def push_influencer_completed(project_name, start_date, influencer_completed):
     filter = {"project": project_name, "start_date": start_date}
 
     ### when project already exist
-    if PROJECT_DM.find_one_and_update_one(filter=filter, update={"$push": {"influencer":influencer_completed}}):
+    if PROJECT_DM.find_one_and_update(filter=filter, update={"$push": {"influencer":influencer_completed}}):
         logger.info(f"push :{influencer_completed}")
         return
 

@@ -38,7 +38,7 @@ def run():
     search_hashtag = get_dm_source.get_source_hashtag("taewha.txt")
     search_filter = {"user_followed_by": {"$gte": 4000, "$lte": 10000}}
 
-    file_name, skip, limit, only_username,  =  search_hashtag, 0, 3000, False
+    file_name, skip, limit, only_username,  =  search_hashtag, 1000, 3000, False
     target_username_list = get_influencer.main(search_filter=search_filter, file_name=file_name, skip=skip, limit=limit, only_username=only_username)
     target_username_list = list(map(lambda x: x["username"], target_username_list))
 
@@ -58,7 +58,7 @@ def run():
         logger.info(f"select - {username}:{password}")
 
         bot = Bot(db_conn=db_conn, max_messages_per_day=max_messages_per_day)
-        bot.login(username=username, password=password, account_setting_info=account_setting_info, proxy=proxy)aaa
+        bot.login(username=username, password=password, account_setting_info=account_setting_info, proxy=proxy)
         broken_items = bot.send_messages(text, target_username_list)
         target_username_list = broken_items
         if not broken_items:
