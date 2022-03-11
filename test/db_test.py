@@ -31,9 +31,12 @@ BAND_ACCOUNT, HASHTAG_AND_USER, PROJECT_COLLECTION, ITEM_HASHTAG_COLLECTION, ITE
     SERVICE_INSTAGRAM["user"], SERVICE_INSTAGRAM["location"], SERVICE_INSTAGRAM["info"], SERVICE_INSTAGRAM["task"], \
     SERVICE_INSTAGRAM["post"], SERVICE_INSTAGRAM["search"], SERVICE_INSTAGRAM["setting"]
 
+filter = {"user":True,"account":True}
+filter.update(test=1)
+print(filter)
+
 
 def select_cookie_user(username):
-
     filter_raw = {
         "username" : username,
         "session": {"$exists": 1},
@@ -53,5 +56,5 @@ def select_cookie_user(username):
     }
     doc = ACCOUNT_COLLECTION.find_one(filter_raw)
     return doc
-doc = select_cookie_user("ivujlamintaziva")
-print(doc)
+# doc = select_cookie_user("ivujlamintaziva")
+# print(doc)

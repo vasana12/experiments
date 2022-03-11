@@ -3,6 +3,8 @@ import time
 import zipfile
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from session_save.setting import config
 
 # PROXY_HOST = 'us.smartproxy.com'  # rotating proxy or host
@@ -89,6 +91,17 @@ def get_chromedriver(use_proxy=False, user_agent=None):
     if user_agent:
         chrome_options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15")
         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+    try:
+        driver = webdriver.Chrome(os.path.join(path, 'chromedriver'), options=chrome_options)
+    except:
+        driver = None
 
-    driver = webdriver.Chrome(os.path.join(path, 'chromedriver'), options=chrome_options)
+    if driver is None:
+        try:
+            driver = webdriver.Chrome(os.path.join(path, 'chromedriver.exe'), options=chrome_options)
+        except:
+            driver = None
+
+    if driver is None:
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     return driver

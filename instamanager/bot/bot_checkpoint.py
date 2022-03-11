@@ -60,7 +60,7 @@ def save_checkpoint(self:instamanager.Bot):
 
     checkpoint_collection = self.db_conn["account"]["checkpoint"]
 
-    if checkpoint_collection.count({"username":self.api.username}) > 0:
+    if checkpoint_collection.count_documents({"username":self.api.username}) > 0:
         checkpoint_collection.update_one(filter={"username": self.api.username},
                                          update={"$set":
                                              {
@@ -74,7 +74,7 @@ def save_checkpoint(self:instamanager.Bot):
 
         return True
 
-    checkpoint_collection.insert(
+    checkpoint_collection.insert_one(
         {
             "username": self.api.username,
             "total": total,

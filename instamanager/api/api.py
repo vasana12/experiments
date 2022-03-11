@@ -9,15 +9,15 @@ import random
 import sys
 import time
 import uuid
-
 import pymongo
 import pytz
 import requests
 import requests.utils
 import six.moves.urllib as urllib
+from requests.exceptions import ProxyError
 from requests_toolbelt import MultipartEncoder
 from tqdm import tqdm
-
+from urllib3.exceptions import MaxRetryError
 
 from . import config, devices
 from .api_login import (
@@ -70,10 +70,11 @@ class API(object):
         loglevel_file=logging.DEBUG,
         loglevel_stream=logging.INFO,
         db_conn = None,
-        account_setting_info = None
+        account_setting_info = None,
+        project_info = None
     ):
         # Setup device and user_agent
-
+        self.project_info = project_info
         self.device = device or devices.DEFAULT_DEVICE
 
         self.cookie_fname = None
@@ -214,9 +215,10 @@ class API(object):
     def save_uuid_and_cookie(self):
         return save_uuid_and_cookie(self)
 
-    def login(self, username, password, account_setting_info, proxy=None):
+    def login(self, username, password, account_setting_info, proxy=None, project_info = None):
 
         self.account_collection = self.db_conn["account"]["account"]
+        self.project_info = project_info
         self.account_setting_info = account_setting_info
         self.set_user(username, password)
         self.session = requests.Session()
@@ -224,7 +226,7 @@ class API(object):
         self.set_proxy()
         if self.load_uuid_and_cookie():
             self.save_successful_login()
-            self.account_collection.update_one({"username":self.username},{"$set":{"status":"login"}})
+            self.account_collection.update_one({"username":self.username},{"$set":{"status":"login", "last_login":datetime.datetime.now()}})
 
     def two_factor_auth(self):
         self.logger.info("Two-factor authentication required")
@@ -402,11 +404,18 @@ class API(object):
                     if extra_sig is not None and extra_sig != []:
                         post += "&".join(extra_sig)
                 # time.sleep(random.randint(1, 2))
-                response = self.session.post(config.API_URL + endpoint, data=post)
+                response = self.session.post(config.API_URL + endpoint, data=post,timeout=50)
             else:  # GET
                 # time.sleep(random.randint(1, 2))
-                response = self.session.get(config.API_URL + endpoint)
+                response = self.session.get(config.API_URL + endpoint,timeout=50)
         except Exception as e:
+            if isinstance(e,ProxyError):
+                self.logger.warning(f"ProxyError {str(e)}")
+                return 'RequestProxyError'
+
+            if isinstance(e, MaxRetryError):
+                self.logger.warning(f"MaxRetryError {str(e)}")
+                return 'RequestProxyError'
             self.logger.warning(str(e))
             return False
 
@@ -424,13 +433,21 @@ class API(object):
                 self.last_json = json.loads(response.text)
                 return True
             except JSONDecodeError:
-                return False
+                return True
         else:
             self.logger.debug(
                 "Responsecode indicates error; response content: {}".format(
                     response.content
                 )
             )
+
+            if response.status_code == 408 or response.status_code == "408":
+                self.logger.error(f"Request returns {408} error!")
+                return "requestTimeOut"
+            if response.status_code == 500 or response.status_code == "500":
+                self.logger.error(f"Request returns {500} error!")
+                return "OopsError"
+
             if response.status_code != 404 and response.status_code != "404":
                 self.logger.error(
                     "Request returns {} error!".format(response.status_code)
@@ -494,7 +511,11 @@ class API(object):
                     timeout_minutes,
                 )
             if response.status_code == 400:
-                response_data = json.loads(response.text)
+                try:
+                    response_data = json.loads(response.text)
+                except JSONDecodeError:
+                    self.logger.error("JSONDecodeError")
+                    return "InstaJSONDecodeError"
                 if response_data.get("challenge_required"):
                     # Try and fix the challenge required error by totally restarting
                     self.logger.error(

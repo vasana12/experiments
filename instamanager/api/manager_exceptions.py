@@ -8,7 +8,17 @@ class ChallengeRequiredException(ManagerException):
 
 class NoUserIdException(ManagerException):
     pass
+class OopsException(ManagerException):
+    pass
+
 class FeedbackRequired(ManagerException):
+    pass
+
+class InstaJSONDecodeError(ManagerException):
+    pass
+class RequestTimeOut(ManagerException):
+    pass
+class RequestProxyError(ManagerException):
     pass
 class UnloadableParticipant(ManagerException):
     pass

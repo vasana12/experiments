@@ -190,7 +190,8 @@ class Bot(object):
         loglevel_stream=logging.INFO,
         log_follow_unfollow=True,
         db_conn: pymongo.MongoClient = None,
-        account_setting_info = None
+        account_setting_info = None,
+        project_info = None
     ):
         self.api = API(
             device=device,
@@ -200,7 +201,8 @@ class Bot(object):
             loglevel_file=loglevel_file,
             loglevel_stream=loglevel_stream,
             db_conn = db_conn,
-            account_setting_info= account_setting_info
+            account_setting_info= account_setting_info,
+            project_info = project_info
         )
         self.db_conn = db_conn
         self.log_follow_unfollow = log_follow_unfollow
@@ -271,13 +273,13 @@ class Bot(object):
         whitelist_file = os.path.join(base_path, whitelist_file)
 
         # Database files
-        self.followed_file = utils.file(followed_file)
-        self.unfollowed_file = utils.file(unfollowed_file)
-        self.skipped_file = utils.file(skipped_file)
-        self.friends_file = utils.file(friends_file)
-        self.comments_file = utils.file(comments_file)
-        self.blacklist_file = utils.file(blacklist_file)
-        self.whitelist_file = utils.file(whitelist_file)
+        # self.followed_file = utils.file(followed_file)
+        # self.unfollowed_file = utils.file(unfollowed_file)
+        # self.skipped_file = utils.file(skipped_file)
+        # self.friends_file = utils.file(friends_file)
+        # self.comments_file = utils.file(comments_file)
+        # self.blacklist_file = utils.file(blacklist_file)
+        # self.whitelist_file = utils.file(whitelist_file)
 
         self.proxy = proxy
         self.verbosity = verbosity
@@ -286,8 +288,8 @@ class Bot(object):
         if self.logger.hasHandlers():
             # Logger is already configured, remove all handlers
             self.logger.handlers = []
-        self.logger.info("Instabot version: " + version + " Started")
-        self.logger.debug("Bot imported from {}".format(__file__))
+        # self.logger.info("Instabot version: " + version + " Started")
+        # self.logger.debug("Bot imported from {}".format(__file__))
     @property
     def user_id(self):
         # For compatibility
@@ -452,11 +454,11 @@ class Bot(object):
         if self.api.login(**args) is False:
             return False
         self.prepare()
-        atexit.register(self.print_counters)
-        if "is_threaded" in args:
-            if args["is_threaded"]:
-                return True
-        signal.signal(signal.SIGTERM, self.print_counters)
+        # atexit.register(self.print_counters)
+        # if "is_threaded" in args:
+        #     if args["is_threaded"]:
+        #         return True
+        # signal.signal(signal.SIGTERM, self.print_counters)
         return True
 
     def prepare(self):
@@ -488,7 +490,7 @@ class Bot(object):
         for key, val in self.blocked_actions.items():
             if val:
                 self.logger.info("Blocked {}".format(key))
-        self.logger.info("Total requests: {}".format(self.api.total_requests))
+        self.logger.info(f"{self.api.username} - Total requests: {self.api.total_requests}")
 
     def delay(self, key):
         """
@@ -503,7 +505,7 @@ class Bot(object):
         self.last[key] = time.time()
 
     def error_delay(self):
-        time.sleep(10)
+        time.sleep(5)
 
     def small_delay(self):
         time.sleep(random.uniform(0.75, 3.75))
