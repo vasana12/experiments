@@ -224,11 +224,11 @@ def get_user_id_from_username(self, username):
             return self._usernames[username]
 
         ##when lambda session can't return , we user proxy to get userpk
-        self.api.search_username(username)
-        self.very_small_delay()
-        if "user" in self.api.last_json:
-            self._usernames[username] = str(self.api.last_json["user"]["pk"])
-            return self._usernames[username]
+        # self.api.search_username(username)
+        # self.very_small_delay()
+        # if "user" in self.api.last_json:
+        #     self._usernames[username] = str(self.api.last_json["user"]["pk"])
+        #     return self._usernames[username]
         ##when all those method return nothing, we return None
         return None
 
