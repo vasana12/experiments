@@ -58,7 +58,7 @@ def run():
         logger.info(f"select - {username}:{password}")
 
         bot = Bot(db_conn=db_conn, max_messages_per_day=max_messages_per_day)
-        bot.login(username=username, password=password, account_setting_info=account_setting_info, proxy=proxy)
+        bot.login(username=username, password=password, account_setting_info=account_setting_info, proxy=proxy)aaa
         broken_items = bot.send_messages(text, target_username_list)
         target_username_list = broken_items
         if not broken_items:
