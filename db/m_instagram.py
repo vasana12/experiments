@@ -117,18 +117,23 @@ class InstaAccount(InstaDB):
         self.logger = logger
         self.dm_limit = 10
 
-    def select_user_and_update_status_to_login(self,username=None):
+    def select_user_and_update_status_to_login(self, username=None):
         ###login 을 위해 따로 선택할 계정이 없는 경우
-        self.logger.debug(f"db:{self.db_name}/collection:{self.collection.name}/client_name:{self.client_name}/channel_name:{self.channel_name}")
+        self.logger.debug(
+            f"db:{self.db_name}/collection:{self.collection.name}/client_name:{self.client_name}/channel_name:{self.channel_name}")
         if username == None:
-            if self.client_name != "admin":
+            if self.client_name != "admin_test":
                 filter_raw = {
-                "status": "available",
-                "client_name": self.client_name,
-                "channel": self.channel_name
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
+                    "status": "available",
+                    "client_name": self.client_name,
+                    "channel": self.channel_name
                 }
             else:
                 filter_raw = {
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
                     "status": "available",
                     "channel": self.channel_name
                 }
@@ -146,8 +151,10 @@ class InstaAccount(InstaDB):
             )
         ##login 을 위해 따로 선택할 계정이 있는 경우
         else:
-            if self.client_name != "admin":
+            if self.client_name != "admin_test":
                 filter_raw = {
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
                     "client_name": self.client_name,
                     "username": username,
                     "status": "available",
@@ -155,6 +162,8 @@ class InstaAccount(InstaDB):
                 }
             else:
                 filter_raw = {
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
                     "username": username,
                     "status": "available",
                     "channel": self.channel_name
@@ -165,7 +174,7 @@ class InstaAccount(InstaDB):
                 {
                     "$set": {
                         "status": "login",
-                          "last_login": datetime.now()
+                        "last_login": datetime.now()
                     }
                 })
 
@@ -177,6 +186,7 @@ class InstaAccount(InstaDB):
             self.logger.debug(f"available_account is None")
             return None
         return available_account
+
     def update_dm_usage_0(self):
         two_days_ago = datetime.now()-timedelta(days=2)
         self.collection.update_many({"last_login":{"$lte":two_days_ago}},{"$set":{"usage.dm": 0}})
@@ -245,6 +255,112 @@ class InstaAccount(InstaDB):
             return None
         return available_account
 
+    def select_all_cookie_user(self,username=None, max_messages_per_day=None):
+        if not max_messages_per_day:
+            max_messages_per_day = 5
+        projection = {
+                    "_id": 1,
+                    "username": 1,
+                    "channel": 1,
+                    "client_name": 1,
+                    "last_login": 1,
+                    "limit": 1,
+                    "password": 1,
+                    "status": 1,
+                    "usage": 1,
+                    "device_settings":1,
+                    "session.csrftoken": 1,
+                    "session.ds_user_id": 1,
+                    "session.mid": 1,
+                    "session.rur":1,
+                    "session.sessionid":1,
+                    "timing_value":1,
+                    "user_agent":1,
+                    "uuids":1,
+                    "mobile_session":1,
+                    "checkpoint":1
+                }
+        ###login 을 위해 따로 선택할 계정이 없는 경우
+        self.logger.debug(f"db:{self.db_name}/collection:{self.collection.name}/client_name:{self.client_name}/channel_name:{self.channel_name}")
+        if username == None:
+            if self.client_name != "admin":
+                filter_raw = {
+                "session" : {"$exists":1},
+                "mobile_session" : True,
+                "status": "available",
+                "client_name": self.client_name,
+                "channel": self.channel_name,
+                "checkpoint.total.messages": {"$lt": max_messages_per_day}
+                }
+                filter_plus = {
+                "session" : {"$exists":1},
+                "mobile_session" : True,
+                "status": "available",
+                "client_name": self.client_name,
+                "channel": self.channel_name,
+                "checkpoint": {"$exists": False}
+                }
+            else:
+                filter_raw = {
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
+                    "status": "available",
+                    "channel": self.channel_name,
+                    "checkpoint.total.messages": {"$lt": max_messages_per_day}
+                }
+                filter_plus = {
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
+                    "status": "available",
+                    "channel": self.channel_name,
+                    "checkpoint": {"$exists": False}
+                }
+            self.logger.debug(f"filter_raw:{filter_raw}")
+            available_account_list = list(self.account_checkpoint_collection.find({"$or":[filter_raw,filter_plus]}, projection, sort=[('last_login', 1)]))
+
+        ##login 을 위해 따로 선택할 계정이 있는 경우
+        else:
+            if self.client_name != "admin":
+                filter_raw = {
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
+                    "client_name": self.client_name,
+                    "username": username,
+                    "status": "available",
+                    "channel": self.channel_name,
+                    "checkpoint.total.messages": {"$lt": max_messages_per_day}
+                },
+                filter_plus = {
+                    "session": {"$exists": 1},
+                    "mobile_session": True,
+                    "status": "available",
+                    "username": username,
+                    "client_name": self.client_name,
+                    "channel": self.channel_name,
+                    "checkpoint": {"$exists": False}
+                }
+            else:
+                filter_raw = {
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
+                    "username": username,
+                    "status": "available",
+                    "channel": self.channel_name,
+                    "checkpoint.total.messages": {"$lt": max_messages_per_day},
+                }
+                filter_plus = {
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
+                    "username": username,
+                    "status": "available",
+                    "channel": self.channel_name,
+                    "checkpoint": {"$exists": False}
+                }
+            self.logger.debug(f"filter_raw:{filter_raw}")
+            available_account_list = list(self.account_checkpoint_collection.find({"$or":[filter_raw,filter_plus]}, projection))
+
+        return available_account_list
+
     def select_cookie_user(self,username=None, max_messages_per_day=None):
         if not max_messages_per_day:
             max_messages_per_day = 5
@@ -274,12 +390,20 @@ class InstaAccount(InstaDB):
         if username == None:
             if self.client_name != "admin":
                 filter_raw = {
-                "session" : {"$exists":1},
-                "mobile_session" : True,
-                "status": "available",
-                "client_name": self.client_name,
-                "channel": self.channel_name,
-                "checkpoint.total.messages": {"$lt": max_messages_per_day}
+                    "session": {"$exists": 1},
+                    "mobile_session": True,
+                    "status": "available",
+                    "client_name": self.client_name,
+                    "channel": self.channel_name,
+                    "checkpoint.total.messages": {"$lt": max_messages_per_day}
+                }
+                filter_plus = {
+                    "session": {"$exists": 1},
+                    "mobile_session": True,
+                    "status": "available",
+                    "client_name": self.client_name,
+                    "channel": self.channel_name,
+                    "checkpoint": {"$exists": False}
                 }
             else:
                 filter_raw = {
@@ -289,10 +413,15 @@ class InstaAccount(InstaDB):
                     "channel": self.channel_name,
                     "checkpoint.total.messages": {"$lt": max_messages_per_day}
                 }
+                filter_plus = {
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
+                    "status": "available",
+                    "channel": self.channel_name,
+                    "checkpoint": {"$exists": False}
+                }
             self.logger.debug(f"filter_raw:{filter_raw}")
-            available_account = self.account_checkpoint_collection.find_one(filter_raw,projection,sort=[('last_login', 1)])
-
-        ##login 을 위해 따로 선택할 계정이 있는 경우
+            available_account = self.account_checkpoint_collection.find_one({"$or":[filter_raw,filter_plus]},projection)
         else:
             if self.client_name != "admin":
                 filter_raw = {
@@ -302,7 +431,16 @@ class InstaAccount(InstaDB):
                     "username": username,
                     "status": "available",
                     "channel": self.channel_name,
-                    "usage.dm": {"$lte": self.dm_limit}
+                    "checkpoint.total.messages": {"$lt": max_messages_per_day}
+                },
+                filter_plus = {
+                    "session": {"$exists": 1},
+                    "mobile_session": True,
+                    "status": "available",
+                    "username": username,
+                    "client_name": self.client_name,
+                    "channel": self.channel_name,
+                    "checkpoint": {"$exists": False}
                 }
             else:
                 filter_raw = {
@@ -311,17 +449,25 @@ class InstaAccount(InstaDB):
                     "username": username,
                     "status": "available",
                     "channel": self.channel_name,
-                    "usage.dm": {"$lte": self.dm_limit}
+                    "checkpoint.total.messages": {"$lt": max_messages_per_day},
+                }
+                filter_plus = {
+                    "mobile_session": True,
+                    "session": {"$exists": 1},
+                    "username": username,
+                    "status": "available",
+                    "channel": self.channel_name,
+                    "checkpoint": {"$exists": False}
                 }
             self.logger.debug(f"filter_raw:{filter_raw}")
-            available_account = self.account_checkpoint_collection.find_one(filter_raw,projection)
-
+            available_account = self.account_checkpoint_collection.find_one({"$or": [filter_raw, filter_plus]}, projection)
         if available_account is not None:
             self.username = available_account["username"]
         else:
             self.logger.debug(f"available_account is None")
             return None
         return available_account
+
     def logout(self):
         ##logout 하는 경우에는 계정의 상태를 available 로 변경하고 last_login 을 현재시간으로 업데이트 시켜준다.
 
