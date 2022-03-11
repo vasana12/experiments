@@ -69,11 +69,15 @@ def send_messages(self:instamanager.Bot, text, user_ids):
         self.logger.info("User must be at least one.")
         return broken_items
     self.logger.info("Going to send %d messages." % (len(user_ids)))
+
+
+    project_name = self.api.project_info.get("project_name") if self.api.project_info else None
+    project_start_date = self.api.project_info.get("start_date") if self.api.project_info else None
+
     for user in tqdm(user_ids):
         self.small_delay()
 
-        project_name = self.api.project_info.get("project_name")
-        project_start_date = self.api.project_info.get("start_date")
+
 
         self.logger.info(f"Going to send messages. to ->  {user}")
         send_message_response = self.send_message(text, user)
@@ -132,7 +136,7 @@ def send_messages(self:instamanager.Bot, text, user_ids):
             self.logger.error(f"RequestProxyError Connection Error, can't message to {user} , continue next iteration")
             continue
 
-        if project_name:
+        if self.api.project_info:
             self.logger.info(f"{project_name}/{project_start_date}/{user}")
             completed_target_influencer.push_influencer_completed(project_name=project_name , start_date= project_start_date,influencer_completed=user)
 

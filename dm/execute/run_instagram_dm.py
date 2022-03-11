@@ -30,6 +30,8 @@ def run():
 
     ### 0. 세팅 : 프로젝트, 프록시
     project = "taewha"
+    start_date = "2022-03-11"
+    project_info = {"project_name": project, "start_date": start_date}
     host,port, mobile_proxy_username,mobile_proxy_password = "residential.ipb.cloud", "7777", "customer-lsgr20040901-asn-20057-sessid-pCMf-sesstime-30", "UG2xaDXxC"
     # proxy = f"http://{mobile_proxy_username}:{mobile_proxy_password}@{host}:{port}"
     #
@@ -38,7 +40,7 @@ def run():
     search_hashtag = get_dm_source.get_source_hashtag("taewha.txt")
     search_filter = {"user_followed_by": {"$gte": 4000, "$lte": 10000}}
 
-    file_name, skip, limit, only_username,  =  search_hashtag, 1000, 3000, False
+    file_name, skip, limit, only_username,  =  search_hashtag, 7000, 3000, False
     target_username_list = get_influencer.main(search_filter=search_filter, file_name=file_name, skip=skip, limit=limit, only_username=only_username)
     target_username_list = list(map(lambda x: x["username"], target_username_list))
 
@@ -58,7 +60,7 @@ def run():
         logger.info(f"select - {username}:{password}")
 
         bot = Bot(db_conn=db_conn, max_messages_per_day=max_messages_per_day)
-        bot.login(username=username, password=password, account_setting_info=account_setting_info, proxy=proxy)
+        bot.login(username=username, password=password, account_setting_info=account_setting_info, proxy=proxy, project_info =project_info)
         broken_items = bot.send_messages(text, target_username_list)
         target_username_list = broken_items
         if not broken_items:
