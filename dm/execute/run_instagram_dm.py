@@ -30,8 +30,6 @@ def run():
 
     ### 0. 세팅 : 프로젝트, 프록시
     project = "taewha"
-    start_date = "2022-03-11"
-    project_info = {"project_name": project, "start_date": start_date}
     host,port, mobile_proxy_username,mobile_proxy_password = "residential.ipb.cloud", "7777", "customer-lsgr20040901-asn-20057-sessid-pCMf-sesstime-30", "UG2xaDXxC"
     # proxy = f"http://{mobile_proxy_username}:{mobile_proxy_password}@{host}:{port}"
     #
@@ -60,7 +58,7 @@ def run():
         logger.info(f"select - {username}:{password}")
 
         bot = Bot(db_conn=db_conn, max_messages_per_day=max_messages_per_day)
-        bot.login(username=username, password=password, account_setting_info=account_setting_info, proxy=proxy, project_info =project_info)
+        bot.login(username=username, password=password, account_setting_info=account_setting_info, proxy=proxy)
         broken_items = bot.send_messages(text, target_username_list)
         target_username_list = broken_items
         if not broken_items:
