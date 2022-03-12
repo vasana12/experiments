@@ -202,7 +202,7 @@ class Bot(object):
             loglevel_stream=loglevel_stream,
             db_conn = db_conn,
             account_setting_info= account_setting_info,
-            project_info = project_info
+            project_info = None
         )
         self.db_conn = db_conn
         self.log_follow_unfollow = log_follow_unfollow

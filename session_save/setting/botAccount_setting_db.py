@@ -36,10 +36,10 @@ def update_account_unavailable(username):
 
 def read_account_info_from_db():
     filter_new = {"status": "new", "client_name": "admin_test"}
-    filter_old = {"status":"available", "client_name":"admin_test","last_login":{"$lte":calcuate_check_point_deadline()}}
-    filter_checkpoint = {"status":"checkpoint_required"}
+    # filter_old = {"status":"available", "client_name":"admin_test","last_login":{"$lte":calcuate_check_point_deadline()}}
+    # filter_checkpoint = {"status":"checkpoint_required"}
 
-    setting_account_doc = list(ACCOUNT_COLLECTION.find({"$or":[filter_new, filter_old, filter_checkpoint]}))
+    setting_account_doc = list(ACCOUNT_COLLECTION.find({"$or":[filter_new]}))
     return setting_account_doc
 
 def save_uuid_and_session_info(setting_info):

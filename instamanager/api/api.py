@@ -9,6 +9,7 @@ import random
 import sys
 import time
 import uuid
+
 import pymongo
 import pytz
 import requests
@@ -215,10 +216,9 @@ class API(object):
     def save_uuid_and_cookie(self):
         return save_uuid_and_cookie(self)
 
-    def login(self, username, password, account_setting_info, proxy=None, project_info = None):
-
-        self.account_collection = self.db_conn["account"]["account"]
+    def login(self, username, password, account_setting_info, proxy=None,project_info=None):
         self.project_info = project_info
+        self.account_collection = self.db_conn["account"]["account"]
         self.account_setting_info = account_setting_info
         self.set_user(username, password)
         self.session = requests.Session()
@@ -226,7 +226,7 @@ class API(object):
         self.set_proxy()
         if self.load_uuid_and_cookie():
             self.save_successful_login()
-            self.account_collection.update_one({"username":self.username},{"$set":{"status":"login", "last_login":datetime.datetime.now()}})
+            self.account_collection.update_one({"username":self.username},{"$set":{"status":"login"}})
 
     def two_factor_auth(self):
         self.logger.info("Two-factor authentication required")

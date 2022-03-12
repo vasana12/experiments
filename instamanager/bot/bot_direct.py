@@ -71,13 +71,17 @@ def send_messages(self:instamanager.Bot, text, user_ids):
     self.logger.info("Going to send %d messages." % (len(user_ids)))
 
 
-    project_name = self.api.project_info.get("project_name")
-    project_start_date = self.api.project_info.get("start_date")
+    project_name = self.api.project_info.get("project_name") if self.api.project_info else None
+    project_start_date = self.api.project_info.get("start_date") if self.api.project_info else None
+
     for user in tqdm(user_ids):
         self.small_delay()
 
+
+
         self.logger.info(f"Going to send messages. to ->  {user}")
         send_message_response = self.send_message(text, user)
+
         if not send_message_response:
             self.db_conn["account"]["account"].update_one({"username": self.username}, {"$set": {"status": "unavailable"}})
             self.logger.error(f"send_message_response:{send_message_response}, break iteration and restart new account  ")
@@ -132,7 +136,9 @@ def send_messages(self:instamanager.Bot, text, user_ids):
             self.logger.error(f"RequestProxyError Connection Error, can't message to {user} , continue next iteration")
             continue
 
-        completed_target_influencer.push_influencer_completed(project_name=project_name, start_date=project_start_date, influencer_completed=user)
+        if self.api.project_info:
+            self.logger.info(f"{project_name}/{project_start_date}/{user}")
+            completed_target_influencer.push_influencer_completed(project_name=project_name , start_date= project_start_date,influencer_completed=user)
 
     save_checkpoint(self)
     return broken_items

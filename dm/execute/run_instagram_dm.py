@@ -40,7 +40,7 @@ def run():
     search_hashtag = get_dm_source.get_source_hashtag("taewha.txt")
     search_filter = {"user_followed_by": {"$gte": 4000, "$lte": 10000}}
 
-    file_name, skip, limit, only_username,  =  search_hashtag, 0, 3000, False
+    file_name, skip, limit, only_username,  =  search_hashtag, 10000, 3000, False
     target_username_list = get_influencer.main(search_filter=search_filter, file_name=file_name, skip=skip, limit=limit, only_username=only_username)
     target_username_list = list(map(lambda x: x["username"], target_username_list))
 

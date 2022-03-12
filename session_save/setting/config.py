@@ -38,10 +38,11 @@ REQUEST_HEADERS = {
     "X-FB-HTTP-Engine": "Liger",
     "Connection": "close",
 }
+
 PROXY_HOST = 'residential.ipb.cloud'  # rotating proxy or host
 PROXY_PORT = 7777 # port
-PROXY_USER = 'customer-yxha19913701-asn-7018-sessid-IbDC-sesstime-30' # username
-PROXY_PASS = 'ywiB*20dC' # password
+PROXY_USER = 'customer-lsgr20040901-asn-20057-sessid-pCMf-sesstime-1' # username
+PROXY_PASS = 'UG2xaDXxC' # password
 #
 # PROXY_HOST = 'texas1.thesocialproxy.com'  # rotating proxy or host
 # PROXY_PORT = 10000 # port

@@ -70,7 +70,7 @@ class botAccountSetting():
 
         login_account_info_list = botAccount_setting_db.read_account_info_from_db()
 
-        for idx, login_account_info in enumerate(login_account_info_list):
+        for idx, login_account_info in enumerate(login_account_info_list[0:1]):
             if idx%20 == 0:
                 try:
                     self.driver.close()

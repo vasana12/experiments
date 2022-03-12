@@ -29,7 +29,7 @@ BAND_ACCOUNT, HASHTAG_AND_USER, PROJECT_COLLECTION, ITEM_HASHTAG_COLLECTION, ITE
 
 def read_account_info_from_text():
     parent = Path.cwd().parent
-    source_path = parent.joinpath("source", "login_test_account.txt")
+    source_path = parent.joinpath("source", "login_test_account_cookie.txt")
     login_account_file = source_path.open("r")
     login_account_info_list = login_account_file.read().splitlines()
 
@@ -46,37 +46,32 @@ def insert_account():
             continue
 
         try:
-            info = login_account_info.split("||")
+            info = login_account_info.split("|")
             info_login = info[0].split(":")
-
             username, password = info_login[0], info_login[1]
-            info_cookie = info[1]
-            info_cookie = info_cookie.split(" ")
-            device_id = info_cookie[0].split(";;")[0]
-            advertising_id = info_cookie[0].split(";;")[1].split(";")[0]
-            phone_id = info_cookie[0].split(";;")[1].split(";")[1].split("|")[0]
+            user_agent = info[1]
+            cookie = info[2]
+
+
 
             setting_info = read_account_setting_info_from_db(username=username,password=password)
 
             setting_info["username"] = username
             setting_info["password"] = password
-            setting_info["uuids"]["phone_id"] = phone_id
-            setting_info["uuids"]["device_id"] = device_id
-            setting_info["uuids"]["advertising_id"] = advertising_id
-
+            setting_info["user_agent"] = user_agent
             setting_info["cookie"] = {}
-            setting_info["cookie"]["ig_did"] = info[1].split("ig_did=")[1].split(";")[0]
-            setting_info["cookie"]["ig_nrcb"] = info[1].split("ig_nrcb=")[1].split(";")[0]
-            setting_info["cookie"]["mid"] = info[1].split("mid=")[1].split(";")[0]
-            setting_info["cookie"]["csrftoken"] = info[1].split("csrftoken=")[1].split(";")[0]
-            setting_info["cookie"]["sessionid"] = info[1].split("sessionid=")[1].split(";")[0]
-            setting_info["cookie"]["ds_user_id"] = info[1].split("ds_user_id=")[1].split(";")[0]
-            setting_info["cookie"]["rur"] = info[1].split("rur=")[1].split(";")[0]
+            setting_info["cookie"]["ig_did"] = cookie.split("ig_did=")[1].split(";")[0]
+            setting_info["cookie"]["mid"] = cookie.split("mid=")[1].split(";")[0]
+            setting_info["cookie"]["csrftoken"] = cookie.split("csrftoken=")[1].split(";")[0]
+            setting_info["cookie"]["sessionid"] = cookie.split("sessionid=")[1].split(";")[0]
+            setting_info["cookie"]["ds_user_id"] = cookie.split("ds_user_id=")[1].split(";")[0]
+            print(setting_info)
+
         except Exception as e:
             logger.error(f"insert error - {e}/ {idx} - username:{username}/password:{password} registered error")
         else:
             logger.info(f"{idx} - username:{username}/password:{password} registered new!")
             save_uuid_and_session_info(setting_info=setting_info)
-
+            input()
 if __name__ == "__main__":
     insert_account()

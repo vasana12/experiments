@@ -18,7 +18,7 @@ class botAccountSetting():
         if logger.hasHandlers():
             # Logger is already configured, remove all handlers
             logger.handlers = []
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
         self.logger = logger
         self.proxy = f"http://{config.PROXY_USER}:{config.PROXY_PASS}@{config.PROXY_HOST}:{config.PROXY_PORT}"
         self.is_ssfErrorAlert = False
@@ -49,13 +49,14 @@ class botAccountSetting():
         self.first_page_iterate_count = 0
         while True:
             self.logger.debug(f"first_page_iterate_count:{self.first_page_iterate_count}")
-            if (self.is_ssfErrorAlert == True) or (self.first_page_iterate_count >=2):
+            if (self.is_ssfErrorAlert == True) or (self.first_page_iterate_count >=1):
+                self.logger.debug(f"fself.is_ssfErrorAlert:{self.is_ssfErrorAlert}/self.first_page_iterate_count:{self.first_page_iterate_count}")
                 self.driver.close()
                 self.driver = self.driver_setting()
                 self.login_page_redirect = False
                 self.is_ssfErrorAlert = False
-                engine_selenium_login.loading_page(self)
-                return False
+                if engine_selenium_login.loading_page(self):
+                    break
 
             if engine_selenium_login.loading_page(self):
                 break
@@ -65,6 +66,7 @@ class botAccountSetting():
         ###1. 로그인 정보 입력하기
         self.logger.info(f"input login info {self.username}/{self.password}")
         if not engine_selenium_login.input_login_info(self):
+
             return False
 
         ###2. 로그인 버튼 클릭
@@ -95,11 +97,19 @@ class botAccountSetting():
             ### 로봇으로 감지됐을 경우 로그아웃을 해준다.
             if engine_selenium_login.is_detected_robot(self):
                 self.logger.info(f"selenium login - {login_status} : bot_detected")
-                logout_response = engine_selenium_login.detected_robot_logout(self)
-                if logout_response:
-                    self.login_page_redirect = True
-                    return False
+                is_logout_btn = engine_selenium_login.detected_robot_logout(self)
 
+                if is_logout_btn:
+                    logout_response = engine_selenium_login.detected_robot_logout_click(self)
+                    if logout_response:
+                        self.login_page_redirect = True
+                        return False
+                    else:
+                        self.login_page_redirect = False
+                        return False
+                else:
+                    self.login_page_redirect = False
+                    return False
         ###로그인이 성공했을 경우 session 정보 저장해준다.
         else:
             self.logger.info(f"check selenium login status")
@@ -113,6 +123,9 @@ class botAccountSetting():
             try:
                 self.username = login_account_info["username"]
                 self.password = login_account_info["password"]
+                # self.username = "cendrocdanilova8dobryakova"
+                # self.password = "s3BdrMcD"
+
                 self.logger.info(f"{idx}/{self.username}/{self.password} 로그인 시도")
 
                 selenium_login_response = self.instagram_selenium_login()
