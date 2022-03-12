@@ -387,80 +387,34 @@ class InstaAccount(InstaDB):
                 }
         ###login 을 위해 따로 선택할 계정이 없는 경우
         self.logger.debug(f"db:{self.db_name}/collection:{self.collection.name}/client_name:{self.client_name}/channel_name:{self.channel_name}")
-        if username == None:
-            if self.client_name != "admin":
-                filter_raw = {
-                    "session": {"$exists": 1},
-                    "mobile_session": True,
-                    "status": "available",
-                    "client_name": self.client_name,
-                    "channel": self.channel_name,
-                    "checkpoint.total.messages": {"$lt": max_messages_per_day}
-                }
-                filter_plus = {
-                    "session": {"$exists": 1},
-                    "mobile_session": True,
-                    "status": "available",
-                    "client_name": self.client_name,
-                    "channel": self.channel_name,
-                    "checkpoint": {"$exists": False}
-                }
-            else:
-                filter_raw = {
-                    "mobile_session": True,
-                    "session": {"$exists": 1},
-                    "status": "available",
-                    "channel": self.channel_name,
-                    "checkpoint.total.messages": {"$lt": max_messages_per_day}
-                }
-                filter_plus = {
-                    "mobile_session": True,
-                    "session": {"$exists": 1},
-                    "status": "available",
-                    "channel": self.channel_name,
-                    "checkpoint": {"$exists": False}
-                }
-            self.logger.debug(f"filter_raw:{filter_raw}")
-            available_account = self.account_checkpoint_collection.find_one({"$or":[filter_raw,filter_plus]},projection)
-        else:
-            if self.client_name != "admin":
-                filter_raw = {
-                    "mobile_session": True,
-                    "session": {"$exists": 1},
-                    "client_name": self.client_name,
-                    "username": username,
-                    "status": "available",
-                    "channel": self.channel_name,
-                    "checkpoint.total.messages": {"$lt": max_messages_per_day}
-                },
-                filter_plus = {
-                    "session": {"$exists": 1},
-                    "mobile_session": True,
-                    "status": "available",
-                    "username": username,
-                    "client_name": self.client_name,
-                    "channel": self.channel_name,
-                    "checkpoint": {"$exists": False}
-                }
-            else:
-                filter_raw = {
-                    "mobile_session": True,
-                    "session": {"$exists": 1},
-                    "username": username,
-                    "status": "available",
-                    "channel": self.channel_name,
-                    "checkpoint.total.messages": {"$lt": max_messages_per_day},
-                }
-                filter_plus = {
-                    "mobile_session": True,
-                    "session": {"$exists": 1},
-                    "username": username,
-                    "status": "available",
-                    "channel": self.channel_name,
-                    "checkpoint": {"$exists": False}
-                }
-            self.logger.debug(f"filter_raw:{filter_raw}")
-            available_account = self.account_checkpoint_collection.find_one({"$or": [filter_raw, filter_plus]}, projection)
+
+
+        filter_raw = {
+            "mobile_session": True,
+            "session": {"$exists": 1},
+            "status": "available",
+            "channel": self.channel_name,
+            "checkpoint.total.messages": {"$lt": max_messages_per_day}
+        }
+
+        filter_plus = {
+            "mobile_session": True,
+            "session": {"$exists": 1},
+            "status": "available",
+            "channel": self.channel_name,
+            "checkpoint": {"$exists": False}
+        }
+        if username:
+            filter_raw.update(username=username)
+            filter_plus.update(username=username)
+
+        if self.client_name:
+            filter_raw.update(client_name=self.client_name)
+            filter_plus.update(client_name=self.client_name)
+
+        self.logger.debug(f"filter_raw:{filter_raw}")
+        available_account = self.account_checkpoint_collection.find_one({"$or":[filter_raw,filter_plus]}, projection, sort=[('last_login', 1)])
+
         if available_account is not None:
             self.username = available_account["username"]
         else:
