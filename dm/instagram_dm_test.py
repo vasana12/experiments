@@ -64,7 +64,7 @@ def main():
     target_username_2 = ['send_direct_items']
 
     while True:
-        account_setting_info = select_user(username="azbrrilmxobchnevul")
+        account_setting_info = select_user(username="krasnoselskihblestkin")
         if not account_setting_info:
             logger.info("no account available")
             break
