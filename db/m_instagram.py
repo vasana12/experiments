@@ -105,6 +105,7 @@ class InstaAccount(InstaDB):
         super().__init__(db_name="account")
         self.collection = self.db["account"]
         self.account_checkpoint_collection = self.db["account_checkpoint"]
+        self.checkpoint_collection = self.db["checkpoint"]
         self.username = username
         self.client_name = client_name
         self.channel_name = channel_name
@@ -360,6 +361,151 @@ class InstaAccount(InstaDB):
             available_account_list = list(self.account_checkpoint_collection.find({"$or":[filter_raw,filter_plus]}, projection))
 
         return available_account_list
+
+    def select_cookie_user_many_v1(self, username=None, max_messages_per_day=None):
+        projection = {
+            "_id": 1,
+            "username": 1,
+            "channel": 1,
+            "client_name": 1,
+            "last_login": 1,
+            "limit": 1,
+            "password": 1,
+            "status": 1,
+            "usage": 1,
+            "device_settings": 1,
+            "session.csrftoken": 1,
+            "session.ds_user_id": 1,
+            "session.mid": 1,
+            "session.rur": 1,
+            "session.sessionid": 1,
+            "timing_value": 1,
+            "user_agent": 1,
+            "uuids": 1
+        }
+
+        if self.client_name != "admin":
+            filter_raw = {
+                "session": {"$exists": 1},
+                "mobile_session": True,
+                "status": "available",
+                "client_name": self.client_name,
+                "channel": self.channel_name,
+                "checkpoint.total.messages": {"$lt": max_messages_per_day}
+            }
+            filter_plus = {
+                "session": {"$exists": 1},
+                "mobile_session": True,
+                "status": "available",
+                "client_name": self.client_name,
+                "channel": self.channel_name,
+                "checkpoint": {"$exists": False}
+            }
+        else:
+            filter_raw = {
+                "mobile_session": True,
+                "session": {"$exists": 1},
+                "status": "available",
+                "channel": self.channel_name,
+                "checkpoint.total.messages": {"$lt": max_messages_per_day}
+            }
+            filter_plus = {
+                "mobile_session": True,
+                "session": {"$exists": 1},
+                "status": "available",
+                "channel": self.channel_name,
+                "checkpoint": {"$exists": False}
+            }
+        if username:
+            filter_raw.update(username=username)
+            filter_plus.update(username=username)
+
+        if self.client_name:
+            filter_raw.update(client_name=self.client_name)
+            filter_plus.update(client_name=self.client_name)
+
+        self.logger.debug(f"filter_raw:{filter_raw}")
+        available_account = self.account_collection.find({"$or": [filter_raw, filter_plus]}, projection,
+                                                                        sort=[('last_login', 1)])
+        available_account = list(available_account)
+        if available_account is None:
+            return None
+        return available_account
+
+    def select_cookie_user_v1(self, username=None, max_messages_per_day=None):
+        if not max_messages_per_day:
+            max_messages_per_day = 5
+        projection = {
+            "_id": 1,
+            "username": 1,
+            "channel": 1,
+            "client_name": 1,
+            "last_login": 1,
+            "limit": 1,
+            "password": 1,
+            "status": 1,
+            "usage": 1,
+            "device_settings": 1,
+            "session.csrftoken": 1,
+            "session.ds_user_id": 1,
+            "session.mid": 1,
+            "session.rur": 1,
+            "session.sessionid": 1,
+            "timing_value": 1,
+            "user_agent": 1,
+            "uuids": 1
+        }
+
+        if self.client_name != "admin":
+            filter_raw = {
+            "session" : {"$exists":1},
+            "mobile_session" : True,
+            "status": "available",
+            "client_name": self.client_name,
+            "channel": self.channel_name,
+            "checkpoint.total.messages": {"$lt": max_messages_per_day}
+            }
+            filter_plus = {
+            "session" : {"$exists":1},
+            "mobile_session" : True,
+            "status": "available",
+            "client_name": self.client_name,
+            "channel": self.channel_name,
+            "checkpoint": {"$exists": False}
+            }
+
+        else:
+            filter_raw = {
+                "mobile_session": True,
+                "session": {"$exists": 1},
+                "status": "available",
+                "channel": self.channel_name,
+                "checkpoint.total.messages": {"$lt": max_messages_per_day}
+            }
+            filter_plus = {
+                "mobile_session": True,
+                "session": {"$exists": 1},
+                "status": "available",
+                "channel": self.channel_name,
+                "checkpoint": {"$exists": False}
+            }
+        if username:
+            filter_raw.update(username=username)
+            filter_plus.update(username=username)
+
+        if self.client_name:
+            filter_raw.update(client_name=self.client_name)
+            filter_plus.update(client_name=self.client_name)
+
+        self.logger.debug(f"filter_raw:{filter_raw}")
+        available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_raw, filter_plus]}, update={"$set":{"status":"login"}}, projection=projection ,sort=[('last_login', 1)])
+
+        if available_account is not None:
+            self.username = available_account["username"]
+        else:
+            self.logger.debug(f"available_account is None")
+            return None
+        return available_account
 
     def select_cookie_user(self,username=None, max_messages_per_day=None):
         if not max_messages_per_day:

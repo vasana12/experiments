@@ -38,13 +38,16 @@ def insert_account():
     logger.debug("insert_account_start")
     login_account_info_list = read_account_info_from_text()
     for idx, login_account_info in enumerate(login_account_info_list):
+        if login_account_info == "":
+            continue
+
         username = None
         password = None
 
         try:
-            info = login_account_info.split(";")
+            info = login_account_info.split(":")
             username = info[0]
-            password = info[1]
+            password = info[1].split("|")[0]
             filter = {"username": username}
             update_data = {
                             "$set":

@@ -47,13 +47,13 @@ INSTA_ACCOUNT_OBJ.client_name = "admin_test"
 
 
 def select_user(username):
-    account_setting_info = INSTA_ACCOUNT_OBJ.select_cookie_user(username=username)
+    account_setting_info = INSTA_ACCOUNT_OBJ.select_cookie_user_v1(username=username)
     return account_setting_info
 
 def main():
     host = "residential.ipb.cloud"
     port = "7777"
-    mobile_proxy_username = "customer-lsgr20040901-asn-20057-sessid-pCMf-sesstime-1"
+    mobile_proxy_username = "customer-lsgr20040901-asn-22394-sessid-zmmT-sesstime-1"
     mobile_proxy_password = "UG2xaDXxC"
     proxy = f"http://{mobile_proxy_username}:{mobile_proxy_password}@{host}:{port}"
 
@@ -64,15 +64,17 @@ def main():
     target_username_2 = ['send_direct_items']
 
     while True:
-        account_setting_info = select_user(username="krasnoselskihblestkin")
+
+        account_setting_info = select_user(username="s9kennethevans2010")
+
         if not account_setting_info:
             logger.info("no account available")
             break
 
         username = account_setting_info["username"]
         password = account_setting_info["password"]
-        print(username, password)
-
+        print(f"username:{username}/password:{password}")
+        input()
         # username = "azbrrilmxobchnevul"
         # password = "g7jlI5h"
 

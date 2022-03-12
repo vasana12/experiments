@@ -9,21 +9,30 @@ def loading_page(self:BotAccountSetting):
     if not self.login_page_redirect:
         self.driver.get("https://www.instagram.com")
         ####로딩할 때까지 기다려준다 (10초 지나면 에러처리)
-        self.driver.implicitly_wait(10)
         try:
             WebDriverWait(self.driver, 20).until(
                 EC.visibility_of_all_elements_located(
                     (By.XPATH, "//*[@id='loginForm']/div/div[1]/div/label/input")))
         except Exception as e:
             self.logger.debug(f"error_message:{e}")
+            self.login_page_redirect = False
             return False
         else:
             return True
 
     ### when we don't need to make driver go to https://www.instagram.com
     elif self.login_page_redirect:
-        self.driver.implicitly_wait(10)
-        return True
+        try:
+            WebDriverWait(self.driver, 20).until(
+                EC.visibility_of_all_elements_located(
+                    (By.XPATH, "//*[@id='loginForm']/div/div[1]/div/label/input")))
+        except Exception as e:
+            self.logger.debug(f"error_message:{e}")
+            self.login_page_redirect = False
+            return False
+        else:
+            return True
+
 def input_login_info(self:BotAccountSetting):
     # try:
     #### 1.1 인스타그램 로그인 페이지로 이동하기
@@ -60,6 +69,7 @@ def check_ssfErrorAlert(self):
     else:
         self.logger.debug(f"ssfErrorAlert")
         return True
+
 def check_cache_modal(self):
     try:
         WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
@@ -71,6 +81,7 @@ def check_cache_modal(self):
         WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
             (By.XPATH, "//button[@class='aOOlW   HoLwm '] | /html/body/div[4]/div/div/div/div[3]/button[2]"))).cilck()
         return True
+
 def check_login_success(self):
     try:
         WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sqdOP  L3NKy   y3zKF     '] | //*[@id='react-root']/section/main/div/div/div/section/div/button")))
@@ -102,6 +113,18 @@ def detected_robot_logout(self):
         self.logger.debug(f"error_message:{e}")
         return False
     else:
+        return True
+
+def detected_robot_logout_click(self):
+    try:
+
+        WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH,
+                                                                         "/html/body/div[7]/div/div/div/div[2]/button[1] | //button[@class='aOOlW  bIiDR  ']")))
+    except Exception as e:
+        self.logger.debug(f"error_message:{e}")
+        return False
+    else:
+        self.driver.find_element(By.XPATH, "/html/body/div[7]/div/div/div/div[2]/button[1] | //button[@class='aOOlW  bIiDR  ']").click()
         return True
 
 def success_bot_account_logout(self):
