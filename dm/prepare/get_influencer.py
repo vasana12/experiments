@@ -42,6 +42,7 @@ def get_influencers(search_filter,influencer_skip=0 ,influencer_limit=0, only_us
         influencer_list = list(map(lambda x: x["username"], influencer_list))
         return influencer_list
     return influencer_list
+
 def main(search_filter=None, file_name=None, skip=None, limit=None, only_username=None):
     influencer_data_list = get_influencers(search_filter=search_filter, influencer_skip=skip, influencer_limit=limit, only_username=only_username)
     if file_name:

@@ -13,15 +13,28 @@ if logger.hasHandlers():
 logger.setLevel(logging.INFO)
 
 
-INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(channel_name="instagram")
-INSTA_ACCOUNT_OBJ.client_name = "admin_test"
 
-username = None
-max_messages_per_day = 5
-account_setting_info_list = INSTA_ACCOUNT_OBJ.select_all_cookie_user(username=username, max_messages_per_day= max_messages_per_day)
-for account in account_setting_info_list:
-    print(account["username"], account["password"], account["last_login"])
-
+skip = 0
+limit = 3000
+only_username = False
+search_hashtag = get_dm_source.get_source_hashtag("puzzle_shake_paper.txt")
+filename = f"cook_{search_hashtag}"
+search_filter = \
+        {
+            "user_followed_by":
+                {
+                    "$gte": 2000, "$lte":5000
+                },
+            "avg_like":
+                {
+                    "$gte": 50
+                },
+            "$text":
+                {
+                    "$search": search_hashtag
+                }
+        }
+target_username_list = get_influencer.main(search_filter=search_filter, file_name=filename, skip=0, limit=limit, only_username=only_username)
 
 
 

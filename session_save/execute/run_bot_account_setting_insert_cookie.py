@@ -1,9 +1,11 @@
+import json
 from datetime import datetime
 from pathlib import Path
 import logging
 from db import m_instagram
+import base64
 from session_save.setting.botAccount_setting_db import read_account_setting_info_from_db, save_uuid_and_session_info, update_account_unavailable
-
+import ast
 insta_db = m_instagram.InstaDB(db_name="account")
 account_collection = insta_db.account_collection
 
@@ -46,11 +48,21 @@ def insert_account():
             continue
 
         try:
-            info = login_account_info.split("|")
-            info_login = info[0].split(":")
-            username, password = info_login[0], info_login[1]
-            user_agent = info[1]
-            cookie = info[2]
+            info = login_account_info.split(";")
+            username = info[0]
+            password = info[1]
+            cookie_bytes = base64.b64decode(info[4])
+            cookie_string = cookie_bytes.decode("ascii")
+            cookie_list = json.loads(cookie_string)
+
+
+
+            ig_did = list(filter(lambda x : x.get("name")=="ig_did" , cookie_list))[0]["value"]
+            mid = list(filter(lambda x : x.get("name")=="mid" , cookie_list))[0]["value"]
+            csrftoken = list(filter(lambda x: x.get("name") == "csrftoken", cookie_list))[0]["value"]
+            sessionid = list(filter(lambda x: x.get("name") == "sessionid", cookie_list))[0]["value"]
+            ds_user_id = list(filter(lambda x : x.get("name")=="ds_user_id" , cookie_list))[0]["value"]
+
 
 
 
@@ -58,20 +70,18 @@ def insert_account():
 
             setting_info["username"] = username
             setting_info["password"] = password
-            setting_info["user_agent"] = user_agent
             setting_info["cookie"] = {}
-            setting_info["cookie"]["ig_did"] = cookie.split("ig_did=")[1].split(";")[0]
-            setting_info["cookie"]["mid"] = cookie.split("mid=")[1].split(";")[0]
-            setting_info["cookie"]["csrftoken"] = cookie.split("csrftoken=")[1].split(";")[0]
-            setting_info["cookie"]["sessionid"] = cookie.split("sessionid=")[1].split(";")[0]
-            setting_info["cookie"]["ds_user_id"] = cookie.split("ds_user_id=")[1].split(";")[0]
-            print(setting_info)
+            setting_info["cookie"]["ig_did"] = ig_did
+            setting_info["cookie"]["mid"] = mid
+            setting_info["cookie"]["csrftoken"] = csrftoken
+            setting_info["cookie"]["sessionid"] = sessionid
+            setting_info["cookie"]["ds_user_id"] = ds_user_id
+
 
         except Exception as e:
             logger.error(f"insert error - {e}/ {idx} - username:{username}/password:{password} registered error")
         else:
             logger.info(f"{idx} - username:{username}/password:{password} registered new!")
             save_uuid_and_session_info(setting_info=setting_info)
-            input()
 if __name__ == "__main__":
     insert_account()

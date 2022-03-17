@@ -48,8 +48,8 @@ class Checkpoint(object):
 
 def load_checkpoint(self:instamanager.Bot):
     try:
-        checkpoint = self.db_conn["account"]["checkpoint"].find_one({"username":self.api.username})
-        return (checkpoint["total"], checkpoint["blocked_actions"], checkpoint["total_requests"], checkpoint["start_time"])
+        account = self.db_conn["account"].find_one({"username":self.api.username})
+        return (account["checkpoint"]["total"], account["checkpoint"]["blocked_actions"], account["checkpoint"]["total_requests"], account["checkpoint"]["start_time"])
     except Exception:
         pass
     return None
@@ -58,31 +58,21 @@ def save_checkpoint(self:instamanager.Bot):
     checkpoint = Checkpoint(self)
     total, blocked_actions, total_requests, start_time = checkpoint.dump()
 
-    checkpoint_collection = self.db_conn["account"]["checkpoint"]
+    account_collection = self.db_conn["account"]["account"]
 
-    if checkpoint_collection.count_documents({"username":self.api.username}) > 0:
-        checkpoint_collection.update_one(filter={"username": self.api.username},
+
+    account_collection.update_one(filter={"username": self.api.username},
                                          update={"$set":
                                              {
-                                                 "username": self.api.username,
-                                                 "total": total,
-                                                 "blocked_actions": blocked_actions,
-                                                 "total_requests": total_requests,
-                                                 "start_time": start_time
-                                             }}, upsert=True
+                                                 "checkpoint.username": self.api.username,
+                                                 "checkpoint.total": total,
+                                                 "checkpoint.blocked_actions": blocked_actions,
+                                                 "checkpoint.total_requests": total_requests,
+                                                 "checkpoint.start_time": start_time
+                                             }
+                                         }
                                          )
 
-        return True
-
-    checkpoint_collection.insert_one(
-        {
-            "username": self.api.username,
-            "total": total,
-            "blocked_actions": blocked_actions,
-            "total_requests": total_requests,
-            "start_time": start_time
-        }
-    )
     return True
 
 

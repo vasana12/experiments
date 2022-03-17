@@ -1,22 +1,6 @@
-# import instaloader
-#
-# bot = instaloader.Instaloader()
-# bot.login(user="sauprivesel19751974", passwd="ahfmsek2!")
-# for i in instaloader.Hashtag.from_name(context=bot.context, name="감자").get_posts():
-#     print(i.shortcode)
+import instaloader
 
-s= """안녕하세요.
-<제철 농수산물 산지 직배송 태화농수산>에서 공동구매 제안드립니다.
-저희는 전국 15만 회원이 이용하는 온라인 쇼핑몰으로써, 공동구매 전용몰도 함께 운영을 하고 있습니다.
-산지보다 더욱 저렴한 도매가로 홍게, 반값 한우 투플, 방어, 무늬오징어, 참치 등 다양한 품목을 보유하고 있습니다, 대량 판매가 가능한 품목으로 마진력 좋게 구성하여 순차적으로 공동구매 제안을 드리고 있습니다.
-<수율 80%이내 정품 A급 홍게 10~12미>
-마진울 : 50%
-약 2만건 이상 판매, 1,500개 가량의 후기 중 구매평점 5점 만점 기준 4.5점을 기록하고 있는 만족도 높은 상품임과 동시에 수율보장제 100% A/S까지 진행되고 있는 상품입니다.
-세종호에서 조업한 홍게로 수율이 좋고 속살이 달며, 게장이 녹진하기로 유명한 홍게로 지정된 수율 미달 시 100% 환불 조건을 걸고 있습니다.
-시장 홍게 가격의 반값도 안되는 가격으로 정품 홍게를 산지 직배송으로 보내드립니다
-또한 태화농수산만의 앞도적인 판매량을 바탕으로 공동구매 진행 시 많은 판매율을 기록하실 것으로 보고있습니다.
-공동구매를 진행하게 되면서 글 작성에 필요한 이미지의 경우 저희 측에서 최대한 제공해 드리며, 홍게 샘플의 경우 공동구매 진행 여부 확인 후 송부드리고 있습니다.
-자세한 내용은 https://taehwasea.imweb.me/23/?idx=143 에서 확인 가능하시며,
-관심 있으시다면 jgrace1013@naver.com으로 문의 주시거나 원활한 진행을 위해 카카오톡 ID : oddook2 (오뚝2)를 통해 연락 주시면 보다 빠르게 안내 도와드리겠습니다."""
-
-print(len(s))
+bot = instaloader.Instaloader()
+bot.login(user="sauprivesel19751974", passwd="ahfmsek2!")
+for i in instaloader.Hashtag.from_name(context=bot.context, name="감자").get_posts():
+    print(i.shortcode)

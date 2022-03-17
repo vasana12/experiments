@@ -107,7 +107,7 @@ def send_messages(self:instamanager.Bot, text, user_ids):
             return broken_items
 
         if isinstance(send_message_response, FeedbackRequired):
-            self.db_conn["account"]["account"].update_one({"username": self.username}, {"$set": {"status": "challenge_required"}})
+            self.db_conn["account"]["account"].update_one({"username": self.username}, {"$set": {"status": "available"}})
             self.logger.error(f"feedback required, break iteration and restart new account  ")
             self.error_delay()
             broken_items = user_ids[user_ids.index(user):]
@@ -117,7 +117,6 @@ def send_messages(self:instamanager.Bot, text, user_ids):
         if isinstance(send_message_response, OopsException):
             self.logger.error(f"Ooops Exception, can't message to {user} , continue next iteration")
             continue
-
 
         if isinstance(send_message_response, NoUserIdException):
             self.logger.error(f"NoUserIdException, no user id, can't message to {user} , continue next iteration")

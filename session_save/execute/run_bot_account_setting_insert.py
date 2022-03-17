@@ -48,6 +48,7 @@ def insert_account():
             info = login_account_info.split(";")
             username = info[0]
             password = info[1]
+
             filter = {"username": username}
             update_data = {
                             "$set":

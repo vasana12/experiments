@@ -18,9 +18,12 @@ INSTA_ACCOUNT_OBJ.client_name = "admin_test"
 
 username = None
 max_messages_per_day = 5
-account_setting_info_list = INSTA_ACCOUNT_OBJ.select_all_cookie_user(username=username, max_messages_per_day= max_messages_per_day)
-for account in account_setting_info_list:
-    print(account["username"], account["password"], account["last_login"])
+account_setting_info = INSTA_ACCOUNT_OBJ.select_cookie_user_many_v1(username=username, max_messages_per_day= max_messages_per_day)
+print(len(account_setting_info))
+
+
+# for account in account_setting_info_list:
+#     print(account["username"], account["password"], account["last_login"])
 
 
 

@@ -18,9 +18,10 @@ db_conn = m_instagram.InstaDB().conn
 INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(channel_name="instagram")
 INSTA_ACCOUNT_OBJ.client_name = "admin_test"
 
-text = get_dm_source.get_source_message(filename="taewha_message.txt")
+
+
 def select_user(username,max_messages_per_day):
-    account_setting_info = INSTA_ACCOUNT_OBJ.select_cookie_user(username=username, max_messages_per_day= max_messages_per_day)
+    account_setting_info = INSTA_ACCOUNT_OBJ.select_cookie_user_v1(username=username, max_messages_per_day= max_messages_per_day)
     return account_setting_info
 #
 def run():
@@ -28,19 +29,26 @@ def run():
     proxy = f"http://user-{username}-sessionduration-1:{password}@us.smartproxy.com:10000"
     # proxy = "http://5rfpjo4evhm0c8dx:ihzoneqam4p3vt2b@texas1.thesocialproxy.com:10000"
 
-    ### 0. 세팅 : 프로젝트, 프록시
-    project = "taewha"
-    start_date = "2022-03-11"
-    project_info = {"project_name": project, "start_date": start_date}
-    host,port, mobile_proxy_username,mobile_proxy_password = "residential.ipb.cloud", "7777", "customer-lsgr20040901-asn-20057-sessid-pCMf-sesstime-30", "UG2xaDXxC"
+    ### 0. 세팅 : 프로젝트, 발송 텍스트, 프록시
+    project = "puzzle_shake"
+    start_date = "2022-03-15"
+    project_info = {"project_name":project, "start_date": start_date}
+
+    """ dm/source/message """
+    text = get_dm_source.get_source_message(filename="puzzle_shake_paper.txt")
+    # host,port, mobile_proxy_username,mobile_proxy_password = "residential.ipb.cloud", "7777", "customer-lsgr20040901-asn-20057-sessid-pCMf-sesstime-1", "UG2xaDXxC"
     # proxy = f"http://{mobile_proxy_username}:{mobile_proxy_password}@{host}:{port}"
     #
     # proxy = None
     ### 1. 전송할 인플루언서 리스트 가져오기
-    search_hashtag = get_dm_source.get_source_hashtag("taewha.txt")
-    search_filter = {"user_followed_by": {"$gte": 4000, "$lte": 10000}}
+    """ dm/source/hashtag """
+    search_hashtag = get_dm_source.get_source_hashtag("puzzle_shake_paper.txt")
+    search_filter = {"user_followed_by": {"$gte": 2000, "$lte":5000},"avg_like":
+                {
+                    "$gte": 50
+                },"$text":{"$search": search_hashtag}}
 
-    file_name, skip, limit, only_username,  =  search_hashtag, 10000, 3000, False
+    file_name, skip, limit, only_username,  =  search_hashtag, 0, 3000, False
     target_username_list = get_influencer.main(search_filter=search_filter, file_name=file_name, skip=skip, limit=limit, only_username=only_username)
     target_username_list = list(map(lambda x: x["username"], target_username_list))
 
@@ -63,6 +71,7 @@ def run():
         bot.login(username=username, password=password, account_setting_info=account_setting_info, proxy=proxy, project_info =project_info)
         broken_items = bot.send_messages(text, target_username_list)
         target_username_list = broken_items
+        logger.info(f"broken_target_username_list:{target_username_list[0:10]}")
         if not broken_items:
             logger.info(f"no target_username_list ")
             break
