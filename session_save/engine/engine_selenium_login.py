@@ -84,7 +84,7 @@ def check_cache_modal(self):
 
 def check_login_success(self):
     try:
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sqdOP  L3NKy   y3zKF     '] | //*[@id='react-root']/section/main/div/div/div/section/div/button")))
+        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sqdOP  L3NKy   y3zKF     ']")))
     except Exception as e:
         self.logger.debug(f"sqdOP  L3NKy   y3zKF     error_message:{e}")
         return False
@@ -135,6 +135,16 @@ def success_bot_account_logout(self):
         return False
     else:
         self.driver.find_element(By.XPATH, "//img[@class='_6q-tv'] | //*[@id='react-root']/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img | //*[@id='react-root']/div/div/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img").click()
+        return True
+
+def authorize_cookie(self):
+    try:
+        WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//button[@class='aOOlW  bIiDR  '] | /html/body/div[4]/div/div/button[2]")))
+    except Exception as e:
+        self.logger.debug(f"no authorize cookie button:{e}")
+        return False
+    else:
+        self.driver.find_element(By.XPATH, "//button[@class='aOOlW  bIiDR  '] | /html/body/div[4]/div/div/button[2]").click()
         return True
 
 def success_bot_account_logout_click(self):

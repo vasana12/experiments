@@ -39,10 +39,23 @@ REQUEST_HEADERS = {
     "Connection": "close",
 }
 
-PROXY_HOST = 'residential.ipb.cloud'  # rotating proxy or host
-PROXY_PORT = 7777 # port
-PROXY_USER = 'customer-lsgr20040901-asn-20057-sessid-pCMf-sesstime-1' # username
-PROXY_PASS = 'UG2xaDXxC' # password
+PROXY_HOST = "us.smartproxy.com"
+PROXY_PORT = "10001"
+PROXY_USER = "user-sp22064497-sessionduration-1"
+PROXY_PASS = "amdc2580!"
+
+
+# PROXY_HOST = 'residential.ipb.cloud'  # rotating proxy or host
+# PROXY_PORT = 7777 # port
+# PROXY_USER = 'customer-lsgr20040901-asn-22394-sessid-zmmT-sesstime-1' # username
+#
+# PROXY_PASS = 'UG2xaDXxC' # password
+
+# PROXY_HOST = 'residential.ipb.cloud'  # rotating proxy or host
+# PROXY_PORT = 7777 # port
+# PROXY_USER = 'customer-lsgr20040901-asn-22394-sessid-zmmT-sesstime-1' # username
+#
+# PROXY_PASS = 'UG2xaDXxC' # password
 #
 # PROXY_HOST = 'texas1.thesocialproxy.com'  # rotating proxy or host
 # PROXY_PORT = 10000 # port

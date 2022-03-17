@@ -42,16 +42,19 @@ def read_account_info_from_db():
     setting_account_doc = list(ACCOUNT_COLLECTION.find({"$or":[filter_new]}))
     return setting_account_doc
 
-def read_accoun_info_from_db_one():
-    filter_new = {"status": "new", "client_name": "admin_test"}
+def read_accoun_info_from_db_one(client_name=None):
+    filter_new = {"status": "new"}
+    if client_name:
+        filter_new.update(client_name=client_name)
     # filter_old = {"status":"available", "client_name":"admin_test","last_login":{"$lte":calcuate_check_point_deadline()}}
     # filter_checkpoint = {"status":"checkpoint_required"}
-    setting_account_doc = ACCOUNT_COLLECTION.find_one_and_update({"$or":[filter_new]},update={"$set":{"status":"selenium_login"}})
+    setting_account_doc = ACCOUNT_COLLECTION.find_one_and_update({"$or":[filter_new]},update={"$set":{"status":"new"}})
     # setting_account_doc = list(ACCOUNT_COLLECTION.find({"$or":[filter_new]}))
     return setting_account_doc
 
 def save_uuid_and_session_info(setting_info):
     account_info = account_collection.find_one(filter={"username":setting_info["username"]})
+
     ## when account_already exist
     if account_info:
         _id = account_info["_id"]
@@ -76,6 +79,7 @@ def save_uuid_and_session_info(setting_info):
             }
         )
         return
+
     ### new account setting info insert
     insert_info = {
         "username": setting_info["username"],
@@ -104,6 +108,7 @@ def save_uuid_and_session_info(setting_info):
         "mobile_session" :True,
         "last_login": datetime.now(),
     }
+
     account_collection.insert_one(insert_info)
 
 def read_account_setting_info_from_db(username, password):

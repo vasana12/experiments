@@ -9,7 +9,7 @@ from session_save.engine import engine_selenium_login
 
 
 class botAccountSetting():
-    def __init__(self):
+    def __init__(self, proxy = True):
         self.login_page_redirect = False
         # FORMAT = 'INSTAGRAM_TARGETING_BOTs %(asctime)s - %(levelname)s - %(name)s - %(module)s.%(funcName)s - %(message)s'
         FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
@@ -22,7 +22,8 @@ class botAccountSetting():
         self.logger = logger
         self.proxy = f"http://{config.PROXY_USER}:{config.PROXY_PASS}@{config.PROXY_HOST}:{config.PROXY_PORT}"
         self.is_ssfErrorAlert = False
-        self.driver = get_chromedriver(use_proxy=True)
+        self.driver = self.driver_setting(user_proxy=proxy)
+
     @staticmethod
     def driver_setting(user_proxy=True):
         driver = get_chromedriver(use_proxy=user_proxy)
@@ -66,7 +67,6 @@ class botAccountSetting():
         ###1. 로그인 정보 입력하기
         self.logger.info(f"input login info {self.username}/{self.password}")
         if not engine_selenium_login.input_login_info(self):
-
             return False
 
         ###2. 로그인 버튼 클릭
@@ -110,41 +110,45 @@ class botAccountSetting():
                 else:
                     self.login_page_redirect = False
                     return False
+            else:
+                self.logger.info(f"selenium login - {login_status} : undefined error")
+                self.driver.close()
+                self.login_page_redirect = False
+                self.driver = self.driver_setting()
+                self.instagram_selenium_login()
         ###로그인이 성공했을 경우 session 정보 저장해준다.
         else:
+            engine_selenium_login.authorize_cookie(self)
             self.logger.info(f"check selenium login status")
             self.login_page_redirect = False
             return self.send_driver_cookie()
 
-    def login(self):
+    def login(self,client_name= None):
         # self.driver = get_chromedriver(use_proxy=True)
-        login_account_info = botAccount_setting_db.read_accoun_info_from_db_one()
-        try:
-            self.username = login_account_info["username"]
-            self.password = login_account_info["password"]
-            # self.username = "cendrocdanilova8dobryakova"
-            # self.password = "s3BdrMcD"
+        login_account_info = botAccount_setting_db.read_accoun_info_from_db_one(client_name=client_name)
 
-            self.logger.info(f"/{self.username}/{self.password} 로그인 시도")
+        self.username = login_account_info["username"]
+        self.password = login_account_info["password"]
 
-            selenium_login_response = self.instagram_selenium_login()
+        self.logger.info(f"/{self.username}/{self.password} 로그인 시도")
 
-            if not selenium_login_response:
-                botAccount_setting_db.update_account_unavailable(username=self.username)
-                self.logger.info(f"{self.username}/{self.password} update unavailable... we start next iteration")
+        selenium_login_response = self.instagram_selenium_login()
+
+        if not selenium_login_response:
+            botAccount_setting_db.update_account_unavailable(username=self.username)
+            self.logger.info(f"{self.username}/{self.password} update unavailable... we start next iteration")
 
 
-            if selenium_login_response:
-                request_login_response = self.request_login()
-                self.logger.info(f"request_login_response:{request_login_response}")
-                if engine_selenium_login.success_bot_account_logout(self):
-                    self.logger.debug("success_bot_account_logout - test")
-                    if engine_selenium_login.success_bot_account_logout_click(self):
-                        self.logger.debug("success_bot_account_logout_click - test")
-                        self.login_page_redirect = True
-                    else:
-                        self.driver.close()
-                        self.drvier = self.driver_setting()
-                        self.login_page_redirect = False
-        except Exception as e:
-            self.logger.error(f"exception : {e}")
+        if selenium_login_response:
+            request_login_response = self.request_login()
+            self.logger.info(f"request_login_response:{request_login_response}")
+
+            if engine_selenium_login.success_bot_account_logout(self):
+                self.logger.debug("success_bot_account_logout - test")
+                if engine_selenium_login.success_bot_account_logout_click(self):
+                    self.logger.debug("success_bot_account_logout_click - test")
+                    self.login_page_redirect = True
+                else:
+                    self.driver.close()
+                    self.drvier = self.driver_setting()
+                    self.login_page_redirect = False
