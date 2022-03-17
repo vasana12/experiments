@@ -83,7 +83,7 @@ class loginSession():
         return self.session.cookies.get_dict()
     @property
     def token(self):
-        return self.cookie_dict["csrftoken"]
+        return self.cookie_dict.get("csrftoken")
 
 
 

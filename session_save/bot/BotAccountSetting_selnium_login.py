@@ -112,6 +112,9 @@ class botAccountSetting():
                     return False
             else:
                 self.logger.info(f"selenium login - {login_status} : undefined error")
+
+                if engine_selenium_login.weird_account(self):
+                    return False
                 self.driver.close()
                 self.login_page_redirect = False
                 self.driver = self.driver_setting()

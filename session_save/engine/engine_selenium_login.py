@@ -118,13 +118,15 @@ def detected_robot_logout(self):
 def detected_robot_logout_click(self):
     try:
 
-        WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH,
-                                                                         "/html/body/div[7]/div/div/div/div[2]/button[1] | //button[@class='aOOlW  bIiDR  ']")))
+        WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[7]/div/div/div/div[2]/button[1] | //button[@class='aOOlW  bIiDR  ']")))
     except Exception as e:
         self.logger.debug(f"error_message:{e}")
         return False
     else:
-        self.driver.find_element(By.XPATH, "/html/body/div[7]/div/div/div/div[2]/button[1] | //button[@class='aOOlW  bIiDR  ']").click()
+        try:
+            self.driver.find_element(By.XPATH, "/html/body/div[7]/div/div/div/div[2]/button[1] | //button[@class='aOOlW  bIiDR  ']").click()
+        except:
+            return False
         return True
 
 def success_bot_account_logout(self):
@@ -145,6 +147,16 @@ def authorize_cookie(self):
         return False
     else:
         self.driver.find_element(By.XPATH, "//button[@class='aOOlW  bIiDR  '] | /html/body/div[4]/div/div/button[2]").click()
+        return True
+
+def weird_account(self):
+    try:
+        WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//*[@id='react-root']/section/div/div/div[4]/a")))
+    except Exception as e:
+        self.logger.debug(f"no authorize cookie button:{e}")
+        return False
+    else:
+        self.driver.find_element(By.XPATH, "//*[@id='react-root']/section/div/div/div[4]/a").click()
         return True
 
 def success_bot_account_logout_click(self):
