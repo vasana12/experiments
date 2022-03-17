@@ -20,7 +20,7 @@ def follow(self, user_id, check_user):
                     "blocked_actions_protection ACTIVE. " "Skipping `follow` action."
                 )
                 return False
-        self.delay("follow")
+        # self.delay("follow")
         _r = self.api.follow(user_id)
         if _r == "feedback_required":
             self.logger.error("`Follow` action has been BLOCKED...!!!")
@@ -60,7 +60,7 @@ def follow(self, user_id, check_user):
                 msg = "===> FOLLOWED <==== `user_id`: {}.".format(user_id)
                 self.console_print(msg, "green")
             self.total["follows"] += 1
-            self.followed_file.append(user_id)
+            # self.followed_file.append(user_id)
             if user_id not in self.following:
                 self.following.append(user_id)
             if self.blocked_actions_sleep and self.sleeping_actions["follows"]:
@@ -79,18 +79,15 @@ def follow_users(self, user_ids, nfollows=None):
         return
     msg = "Going to follow {} users.".format(len(user_ids))
     self.logger.info(msg)
-    skipped = self.skipped_file
-    followed = self.followed_file
-    unfollowed = self.unfollowed_file
+    # skipped = self.skipped_file
+    # followed = self.followed_file
+    # unfollowed = self.unfollowed_file
     self.console_print(msg, "green")
 
     # Remove skipped and already followed and unfollowed list from user_ids
-    user_ids = list(set(user_ids) - skipped.set - followed.set - unfollowed.set)
+    user_ids = list(set(user_ids))
     user_ids = user_ids[:nfollows] if nfollows else user_ids
-    msg = (
-        "After filtering followed, unfollowed and " "`{}`, {} user_ids left to follow."
-    ).format(skipped.fname, len(user_ids))
-    self.console_print(msg, "green")
+
     for user_id in tqdm(user_ids, desc="Processed users"):
         if self.reached_limit("follows"):
             self.logger.info("Out of follows for today.")

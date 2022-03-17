@@ -17,13 +17,13 @@ logger.setLevel(logging.INFO)
 skip = 0
 limit = 3000
 only_username = False
-search_hashtag = get_dm_source.get_source_hashtag("puzzle_paper.txt")
-filename = f"puzzle_paper_{search_hashtag}"
+search_hashtag = get_dm_source.get_source_hashtag("puzzle_shake_paper.txt")
+filename = f"cook_{search_hashtag}"
 search_filter = \
         {
             "user_followed_by":
                 {
-                    "$gte": 5000
+                    "$gte": 2000, "$lte":5000
                 },
             "avg_like":
                 {
@@ -34,7 +34,7 @@ search_filter = \
                     "$search": search_hashtag
                 }
         }
-target_username_list = get_influencer.main(search_filter=search_filter, file_name=filename, skip=0, limit=3000, only_username=only_username)
+target_username_list = get_influencer.main(search_filter=search_filter, file_name=filename, skip=0, limit=limit, only_username=only_username)
 
 
 

@@ -81,6 +81,8 @@ class InstaBotClient(InstaDB):
         self.password = self.client_info_doc["password"]
         self.hashtag_usage = self.client_info_doc["usage"]["hashtag"]
         self.hashtag_limit = self.client_info_doc["limit"]["hashtag"]
+        self.search_usage = self.client_info_doc["usage"]["search"]
+        self.search_limit = self.client_info_doc["limit"]["search"]
         self.dm_usage = self.client_info_doc["usage"]["dm"]
         self.dm_limit = self.client_info_doc["limit"]["dm"]
         self.subscription_start = self.client_info_doc["subscription"]["start"]
@@ -88,6 +90,9 @@ class InstaBotClient(InstaDB):
         self.concurrency_usage = self.client_info_doc["usage"]["concurrency"]
         self.concurrency_limit = self.client_info_doc["limit"]["concurrency"]
 
+    @property
+    def document(self):
+        return self.collection.find_one({"_id": self._id})
     def login(self):
         self.concurrency_usage = self.concurrency_usage + 1
         self.collection.update_one({"_id": self._id}, {"$set": {"usage.concurrency": self.concurrency_usage}})
@@ -99,6 +104,12 @@ class InstaBotClient(InstaDB):
 
     def hashtag_extract(self):
         self.collection.update_one({"_id": self._id}, {"$inc": {"usage.hashtag": 1}})
+
+    def dm_extract(self):
+        self.collection.update_one({"_id": self._id}, {"$inc": {"usage.dm": 1}})
+
+    def search_extract(self):
+        self.collection.update_one({"_id": self._id}, {"$inc": {"usage.search": 1}})
 
 class InstaAccount(InstaDB):
     def __init__(self,client_name=None,channel_name= None,username= None,account_crawl_max_num =200):
@@ -457,6 +468,15 @@ class InstaAccount(InstaDB):
         }
 
         if self.client_name != "admin":
+            filter_checkpoint_date = {
+            "session" : {"$exists":1},
+            "mobile_session" : True,
+            "status": "available",
+            "client_name": self.client_name,
+            "channel": self.channel_name,
+            "checkpoint.start_time": {"$lte": datetime.now()- timedelta(days=8)}
+            }
+
             filter_raw = {
             "session" : {"$exists":1},
             "mobile_session" : True,
@@ -465,6 +485,7 @@ class InstaAccount(InstaDB):
             "channel": self.channel_name,
             "checkpoint.total.messages": {"$lt": max_messages_per_day}
             }
+
             filter_plus = {
             "session" : {"$exists":1},
             "mobile_session" : True,
@@ -475,6 +496,14 @@ class InstaAccount(InstaDB):
             }
 
         else:
+            filter_checkpoint_date = {
+            "session" : {"$exists":1},
+            "mobile_session" : True,
+            "status": "available",
+            "channel": self.channel_name,
+            "checkpoint.start_time": {"$lte": datetime.now()- timedelta(days=8)}
+            }
+
             filter_raw = {
                 "mobile_session": True,
                 "session": {"$exists": 1},
@@ -498,7 +527,7 @@ class InstaAccount(InstaDB):
             filter_plus.update(client_name=self.client_name)
 
         self.logger.debug(f"filter_raw:{filter_raw}")
-        available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_raw, filter_plus]}, update={"$set":{"status":"login"}}, projection=projection ,sort=[('last_login', 1)])
+        available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_raw, filter_plus, filter_checkpoint_date]}, update={"$set":{"status":"login","last_login":datetime.now()}}, projection=projection ,sort=[('last_login', 1)])
 
         if available_account is not None:
             self.username = available_account["username"]
