@@ -4,5 +4,7 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="jdk" jdkName="Python 3.9 (sns_pyqt5)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="sns_pyqt5" />
+    <orderEntry type="module" module-name="i_login_post" />
   </component>
 </module>

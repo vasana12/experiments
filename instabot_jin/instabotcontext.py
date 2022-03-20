@@ -146,39 +146,30 @@ class InstabotContext:
     def test_login(self) -> Optional[str]:
         data = self.graphql_query("d6f4427fbe92d846298cf93df0b937d3", {})
         return data["data"]["user"]["username"] if data["data"]["user"] is not None else None
-    
-    def login(self, user, passwd):
-        """Not meant to be used directly, use :meth:`Instaloader.load_session_from_file`."""
-        account_collection = m_instagram.InstaDB(db_name="account").db["account"]
-        user_doc = account_collection.find_one({"username": user})
-        logger.info(f"user_doc:{user_doc}")
 
-        logger.info("load from db session")
-        logger.fatal(f"user_doc:{user_doc}")
+    def load_session_from_db(self, username, session_info):
         session = requests.Session()
-        link = "https://www.instagram.com/accounts/login/"
-        # getCSRF = session.get(link)
-        # cookieString = str(getCSRF.cookies)
-        # LoginCSRFtoken = cookieString[37:69]
-        logger.fatal(f"session.cookies:{session.cookies.get_dict()}")
-        session.cookies.update({'sessionid': '', 'mid': '', 'ig_pr': '1',
-                                'ig_vw': '1920', 'ig_cb': '1', 'csrftoken': '',
-                                's_network': '', 'ds_user_id': ''})
-        # Override default timeout behavior.
-        # Need to silence mypy bug for this. See: https://github.com/python/mypy/issues/2427
-        session.request = partial(session.request, timeout=self.request_timeout)  # type: ignore
-        logger.fatal(f"load_from_session_cookie_jar:{session.cookies.get_dict()}")
-
-        login_csrf_token = user_doc["session"]["csrftoken"]
-        login_user_id = user_doc["session"]["ds_user_id"]
-        login_session_id = user_doc["session"]["sessionid"]
+        session.cookies = requests.utils.cookiejar_from_dict(session_info)
+        session.headers.update(self._default_http_header())
+        session.headers.update({'X-CSRFToken': session.cookies.get_dict()['csrftoken']})
+        session.request = partial(session.request, timeout=self.request_timeout)
+        login_csrf_token = session_info["csrftoken"]
+        login_user_id = session_info["ds_user_id"]
+        login_session_id = session_info["sessionid"]
 
         self.api_headers["x-csrftoken"] = self.api_headers["x-csrftoken"].format(**locals())
         self.api_headers["cookie"] = self.api_headers["cookie"].format(**locals())
 
         self._session = session
         self._session.headers = self.api_headers
-        self.username = user
+        self.username = username
+
+    def login(self, user, session_info:Optional[dict]=None):
+        if session_info:
+            self.load_session_from_db(username=user,session_info=session_info)
+            return True
+        else:
+            return False
 
     def do_sleep(self):
         if self.sleep:

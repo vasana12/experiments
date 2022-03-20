@@ -474,7 +474,7 @@ class InstaAccount(InstaDB):
             "status": "available",
             "client_name": self.client_name,
             "channel": self.channel_name,
-            "checkpoint.start_time": {"$lte": datetime.now()- timedelta(days=8)}
+            "checkpoint.start_time": {"$lte": datetime.now()- timedelta(days=6)}
             }
 
             filter_raw = {
@@ -501,7 +501,7 @@ class InstaAccount(InstaDB):
             "mobile_session" : True,
             "status": "available",
             "channel": self.channel_name,
-            "checkpoint.start_time": {"$lte": datetime.now()- timedelta(days=8)}
+            "checkpoint.start_time": {"$lte": datetime.now()- timedelta(days=6)}
             }
 
             filter_raw = {
@@ -624,15 +624,7 @@ class InstaAccount(InstaDB):
         )
 
     def update_unavailable(self):
-        ##계정을 사용할 수 없는 경우네는 계정의 상태를 unavailable 로 변경한다.
-        if self.client_name != "admin":
-            update_raw = {
-                "client_name": self.client_name, "username": self.username, "channel": self.channel_name,
-            }
-        else:
-            update_raw = {
-                 "username": self.username, "channel": self.channel_name,
-            }
+        update_raw = {"username": self.username}
         self.logger.debug(f"db:{self.db_name}/collection:{self.collection.name}/update_raw:{update_raw}")
-        self.collection.update_one(update_raw,{"$set":{"status":"unavailable","last_login": datetime.now()}})
+        self.collection.update_one(update_raw,{"$set":{"status":"unavailable"}})
 

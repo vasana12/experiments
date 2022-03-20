@@ -13,20 +13,46 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta
 from functools import partial
 from typing import Any, Callable, Dict, Iterator, List, Optional, Union
-from db import m_instagram
+
 import requests
 import requests.utils
-
+from . import config, devices
 from .exceptions import *
 import logging
 
-FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
-logging.basicConfig(format=FORMAT)
-logger = logging.getLogger(__name__)
-if logger.hasHandlers():
-    # Logger is already configured, remove all handlers
-    logger.handlers = []
-logger.setLevel(logging.INFO)
+
+
+REQUEST_HEADERS = {
+    "X-IG-App-Locale": "en_US",
+    "X-IG-Device-Locale": "en_US",
+    "X-Pigeon-Session-Id": "21aa671b-a5f3-4093-8ec2-0c98420675e1",
+    "X-Pigeon-Rawclienttime": str(round(time.time() * 1000)),
+    "X-IG-Connection-Speed": "-1kbps",
+    "X-IG-Bandwidth-Speed-KBPS": str(random.randint(7000, 10000)),
+    "X-IG-Bandwidth-TotalBytes-B": str(random.randint(500000, 900000)),
+    "X-IG-Bandwidth-TotalTime-MS": str(random.randint(50, 150)),
+    "X-IG-Prefetch-Request": "foreground",
+    "X-Bloks-Version-Id": "0a3ae4c88248863609c67e278f34af44673cff300bc76add965a9fb036bd3ca3",
+    "X-IG-WWW-Claim": "0",
+    "X-MID": "XkAyKQABAAHizpYQvHzNeBo4E9nm",
+    "X-Bloks-Is-Layout-RTL": "false",
+    "X-Bloks-Enable-RenderCore": "false",
+    # TODO get the uuid from api_login here
+    # "X-IG-Device-ID": "{uuid}",
+    # TODO get the device_id from api_login here
+    # "X-IG-Android-ID": "{device_id}",
+    "X-IG-Connection-Type": "WIFI",
+    "X-IG-Capabilities": "3brTvwE=",
+    "X-IG-App-ID": "567067343352427",
+    "X-IG-App-Startup-Country": "US",
+    "Accept-Language": "en-US",
+    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    "Accept-Encoding": "gzip, deflate",
+    "Host": "i.instagram.com",
+    "X-FB-HTTP-Engine": "Liger",
+    "Connection": "close",
+}
+
 
 def copy_session(session: requests.Session, request_timeout: Optional[float] = None) -> requests.Session:
     """Duplicates a requests.Session."""
@@ -41,30 +67,16 @@ def copy_session(session: requests.Session, request_timeout: Optional[float] = N
 
 def default_user_agent() -> str:
     return 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 ' \
-           '(KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36'
+           '(KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36'
 
 
-class InstaloaderContext:
-    """Class providing methods for (error) logging and low-level communication with Instagram.
-
-    It is not thought to be instantiated directly, rather :class:`Instaloader` instances maintain a context
-    object.
-
-    For logging, it provides :meth:`log`, :meth:`error`, :meth:`error_catcher`.
-
-    It provides low-level communication routines :meth:`get_json`, :meth:`graphql_query`, :meth:`graphql_node_list`,
-    :meth:`get_and_write_raw` and implements mechanisms for rate controlling and error handling.
-
-    Further, it provides methods for logging in and general session handles, which are used by that routines in
-    class :class:`Instaloader`.
-    """
-
+class InstabotContext:
     def __init__(self, sleep: bool = True, quiet: bool = False, user_agent: Optional[str] = None,
                  max_connection_attempts: int = 3, request_timeout: float = 300.0,
-                 rate_controller: Optional[Callable[["InstaloaderContext"], "RateController"]] = None,
+                 rate_controller = None,
                  fatal_status_codes: Optional[List[int]] = None,
                  iphone_support: bool = True):
-
+        self.device = devices.DEFAULT_DEVICE
         self.user_agent = user_agent if user_agent is not None else default_user_agent()
         self.request_timeout = request_timeout
         self._session = self.get_anonymous_session()
@@ -76,20 +88,6 @@ class InstaloaderContext:
         self._root_rhx_gis = None
         self.two_factor_auth_pending = None
         self.iphone_support = iphone_support
-
-        # error log, filled with error() and printed at the end of Instaloader.main()
-        self.error_log = []                      # type: List[str]
-
-        self._rate_controller = rate_controller(self) if rate_controller is not None else RateController(self)
-
-        # Can be set to True for testing, disables supression of InstaloaderContext._error_catcher
-        self.raise_all_errors = False
-
-        # HTTP status codes that should cause an AbortDownloadException
-        self.fatal_status_codes = fatal_status_codes or []
-
-        # Cache profile from id (mapping from id to Profile)
-        self.profile_id_cache = dict()           # type: Dict[int, Any]
         self.api_headers = {'authority': 'i.instagram.com', 'sec-ch-ua': '^\\^',
                             'x-ig-www-claim': 'hmac.AR1zEkyp_49MJj9gFdNddIdOHHRRXiLFKjcUAM8aCZpTodan',
                             'sec-ch-ua-mobile': '?0', 'x-instagram-ajax': '038c8e332b43',
@@ -101,6 +99,21 @@ class InstaloaderContext:
                             'referer': 'https://www.instagram.com/',
                             'accept-language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
                             'cookie': 'ig_did=0976F080-548B-4797-9541-59CD87106A52; mid=X2V5XwALAAFXnLmEccKvAiyIVpVL; ig_nrcb=1; shbid=7030; rur=FTW; shbts=1623064813.0255795; csrftoken="{login_csrf_token}"; ds_user_id="{login_user_id}"; sessionid="{login_session_id}"', }
+
+        # 로그 생성
+        FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
+        logging.basicConfig(format=FORMAT)
+        logger = logging.getLogger(__name__)
+        if logger.hasHandlers():
+            # Logger is already configured, remove all handlers
+            logger.handlers = []
+        logger.setLevel(logging.INFO)
+        self.logger = logger
+
+        self._rate_controller = rate_controller(self) if rate_controller is not None else RateController(self)
+
+        # HTTP status codes that should cause an AbortDownloadException
+        self.fatal_status_codes = fatal_status_codes or []
 
     @contextmanager
     def anonymous_copy(self):
@@ -120,43 +133,22 @@ class InstaloaderContext:
         """True, if this Instaloader instance is logged in."""
         return bool(self.username)
 
-    def log(self, *msg, sep='', end='\n', flush=False):
-        """Log a message to stdout that can be suppressed with --quiet."""
-        if not self.quiet:
-            print(*msg, sep=sep, end=end, flush=flush)
+    @property
+    def cookie_dict(self):
+        return self._session.cookies.get_dict()
 
-    def error(self, msg, repeat_at_end=True):
-        """Log a non-fatal error message to stderr, which is repeated at program termination.
+    @property
+    def token(self):
+        return self.cookie_dict["csrftoken"]
 
-        :param msg: Message to be printed.
-        :param repeat_at_end: Set to false if the message should be printed, but not repeated at program termination."""
-        print(msg, file=sys.stderr)
-        if repeat_at_end:
-            self.error_log.append(msg)
+    @property
+    def user_id(self):
+        return self.cookie_dict["ds_user_id"]
 
-    def close(self):
-        """Print error log and close session"""
-        if self.error_log and not self.quiet:
-            print("\nErrors or warnings occurred:", file=sys.stderr)
-            for err in self.error_log:
-                print(err, file=sys.stderr)
-        self._session.close()
+    def set_device(self):
+        self.device_settings = devices.DEVICES[self.device]
+        self.user_agent = config.USER_AGENT_BASE.format(**self.device_settings)
 
-    @contextmanager
-    def error_catcher(self, extra_info: Optional[str] = None):
-        """
-        Context manager to catch, print and record InstaloaderExceptions.
-
-        :param extra_info: String to prefix error message with."""
-        try:
-            yield
-        except InstaloaderException as err:
-            if extra_info:
-                self.error('{}: {}'.format(extra_info, err))
-            else:
-                self.error('{}'.format(err))
-            if self.raise_all_errors:
-                raise
 
     def _default_http_header(self, empty_session_only: bool = False) -> Dict[str, str]:
         """Returns default HTTP header we use for requests."""
@@ -184,25 +176,46 @@ class InstaloaderContext:
                                 'ig_vw': '1920', 'csrftoken': '',
                                 's_network': '', 'ds_user_id': ''})
         session.headers.update(self._default_http_header(empty_session_only=True))
-        # Override default timeout behavior.
-        # Need to silence mypy bug for this. See: https://github.com/python/mypy/issues/2427
-        session.request = partial(session.request, timeout=self.request_timeout) # type: ignore
+        session.request = partial(session.request, timeout=self.request_timeout)
         return session
 
-    def save_session_to_file(self, sessionfile):
-        """Not meant to be used directly, use :meth:`Instaloader.save_session_to_file`."""
-        pickle.dump(requests.utils.dict_from_cookiejar(self._session.cookies), sessionfile)
+    # def get_session_info(self,session_info):
+    #     if session_info
+    #     return self._session.cookies.get_dict()
 
     def load_session_from_file(self, username, sessionfile):
-        """Not meant to be used directly, use :meth:`Instaloader.load_session_from_file`."""
         session = requests.Session()
         session.cookies = requests.utils.cookiejar_from_dict(pickle.load(sessionfile))
         session.headers.update(self._default_http_header())
         session.headers.update({'X-CSRFToken': session.cookies.get_dict()['csrftoken']})
-        # Override default timeout behavior.
-        # Need to silence mypy bug for this. See: https://github.com/python/mypy/issues/2427
-        session.request = partial(session.request, timeout=self.request_timeout) # type: ignore
+        session.request = partial(session.request, timeout=self.request_timeout)
         self._session = session
+        self.username = username
+
+
+    def load_session_from_db(self, username, session_info):
+        session = requests.Session()
+        # username, password = 'sp22064497', 'amdc2580!'
+        # proxy = f"http://user-{username}-sessionduration-1:{password}@us.smartproxy.com:10000"
+        # parsed = urllib.parse.urlparse(proxy)
+        # scheme = "http://" if not parsed.scheme else ""
+        # session.proxies["http"] = scheme + proxy
+        # session.proxies["https"] = scheme + proxy
+
+        session.cookies = requests.utils.cookiejar_from_dict(session_info)
+        session.headers.update(self._default_http_header())
+        session.headers.update({'X-CSRFToken': session.cookies.get_dict()['csrftoken']})
+        session.request = partial(session.request, timeout=self.request_timeout)
+        login_csrf_token = session_info["csrftoken"]
+        login_user_id = session_info["ds_user_id"]
+        login_session_id = session_info["sessionid"]
+
+        self.api_headers["user-agent"] = "Instagram 117.0.0.28.123 Android (28/9.0; 420dpi; 1080x1920; OnePlus; ONEPLUS A3003; OnePlus3; qcom; en_US; 180322800)"
+        self.api_headers["x-csrftoken"] = self.api_headers["x-csrftoken"].format(**locals())
+        self.api_headers["cookie"] = self.api_headers["cookie"].format(**locals())
+
+        self._session = session
+        self._session.headers = self.api_headers
         self.username = username
 
     def test_login(self) -> Optional[str]:
@@ -210,64 +223,13 @@ class InstaloaderContext:
         data = self.graphql_query("d6f4427fbe92d846298cf93df0b937d3", {})
         return data["data"]["user"]["username"] if data["data"]["user"] is not None else None
 
-    def login(self, user, passwd):
-        """Not meant to be used directly, use :meth:`Instaloader.load_session_from_file`."""
-        account_collection = m_instagram.InstaDB(db_name="account").db["account"]
-        user_doc = account_collection.find_one({"username": user})
-        logger.info(f"user_doc:{user_doc}")
+    def login(self, user, session_info:Optional[dict]=None):
+        if session_info:
+            self.load_session_from_db(username=user,session_info=session_info)
+            return True
+        else:
+            return False
 
-        logger.info("load from db session")
-        logger.fatal(f"user_doc:{user_doc}")
-        session = requests.Session()
-        link = "https://www.instagram.com/accounts/login/"
-        # getCSRF = session.get(link)
-        # cookieString = str(getCSRF.cookies)
-        # LoginCSRFtoken = cookieString[37:69]
-        logger.fatal(f"session.cookies:{session.cookies.get_dict()}")
-        session.cookies.update({'sessionid': '', 'mid': '', 'ig_pr': '1',
-                                'ig_vw': '1920', 'ig_cb': '1', 'csrftoken': '',
-                                's_network': '', 'ds_user_id': ''})
-        # Override default timeout behavior.
-        # Need to silence mypy bug for this. See: https://github.com/python/mypy/issues/2427
-        session.request = partial(session.request, timeout=self.request_timeout)  # type: ignore
-        logger.fatal(f"load_from_session_cookie_jar:{session.cookies.get_dict()}")
-
-        login_csrf_token = user_doc["session"]["csrftoken"]
-        login_user_id = user_doc["session"]["ds_user_id"]
-        login_session_id = user_doc["session"]["sessionid"]
-
-        self.api_headers["x-csrftoken"] = self.api_headers["x-csrftoken"].format(**locals())
-        self.api_headers["cookie"] = self.api_headers["cookie"].format(**locals())
-
-        self._session = session
-        self._session.headers = self.api_headers
-        self.username = user
-
-    def two_factor_login(self, two_factor_code):
-        """Second step of login if 2FA is enabled.
-        Not meant to be used directly, use :meth:`Instaloader.two_factor_login`.
-
-        :raises InvalidArgumentException: No two-factor authentication pending.
-        :raises BadCredentialsException: 2FA verification code invalid.
-
-        .. versionadded:: 4.2"""
-        if not self.two_factor_auth_pending:
-            raise InvalidArgumentException("No two-factor authentication pending.")
-        (session, user, two_factor_id) = self.two_factor_auth_pending
-
-        login = session.post('https://www.instagram.com/accounts/login/ajax/two_factor/',
-                             data={'username': user, 'verificationCode': two_factor_code, 'identifier': two_factor_id},
-                             allow_redirects=True)
-        resp_json = login.json()
-        if resp_json['status'] != 'ok':
-            if 'message' in resp_json:
-                raise BadCredentialsException("2FA error: {}".format(resp_json['message']))
-            else:
-                raise BadCredentialsException("2FA error: \"{}\" status.".format(resp_json['status']))
-        session.headers.update({'X-CSRFToken': login.cookies['csrftoken']})
-        self._session = session
-        self.username = user
-        self.two_factor_auth_pending = None
 
     def do_sleep(self):
         """Sleep a short time if self.sleep is set. Called before each request to instagram.com."""
@@ -308,12 +270,10 @@ class InstaloaderContext:
                 search_type = params["search_type"]
                 type_url_mapping = {"hashtag": "tags", "location": "locations"}
                 url_type = type_url_mapping[search_type]
-                logger.info("is post")
-                logger.info(f"data:{data}")
-                logger.info(f'https://i.instagram.com/api/v1/{url_type}/{name}/sections/')
+                self.logger.info("is post")
+                self.logger.info(f'POST to endpoint - https://i.instagram.com/api/v1/{url_type}/{name}/sections/')
                 resp = sess.post(f'https://i.instagram.com/api/v1/{url_type}/{name}/sections/',headers=self.api_headers, data=data, allow_redirects=False)
-                logger.info(resp.status_code)
-                logger.info(resp.text)
+
             else:
                 resp = sess.get('https://{0}/{1}'.format(host, path), params=params, allow_redirects=False)
             if resp.status_code in self.fatal_status_codes:
@@ -323,7 +283,8 @@ class InstaloaderContext:
                 ))
             while resp.is_redirect:
                 redirect_url = resp.headers['location']
-                self.log('\nHTTP redirect from https://{0}/{1} to {2}'.format(host, path, redirect_url))
+
+                self.logger.info('\nHTTP redirect from https://{0}/{1} to {2}'.format(host, path, redirect_url))
                 if redirect_url.startswith('https://www.instagram.com/accounts/login'):
                     if not self.is_logged_in:
                         raise LoginRequiredException("Redirected to login page. Use --login.")
@@ -379,7 +340,7 @@ class InstaloaderContext:
                     raise QueryReturnedNotFoundException(error_string) from err
                 else:
                     raise ConnectionException(error_string) from err
-            self.error(error_string + " [retrying; skip with ^C]", repeat_at_end=False)
+            self.logger.error(error_string + " [retrying; skip with ^C]")
             try:
                 if isinstance(err, TooManyRequestsException):
                     if is_graphql_query:
@@ -388,13 +349,13 @@ class InstaloaderContext:
                         self._rate_controller.handle_429('iphone')
                     if is_other_query:
                         self._rate_controller.handle_429('other')
-                return self.get_json(path=path, params=params, host=host, session=sess, _attempt=_attempt + 1)
+                return self.get_json_v_api(path=path, params=params, host=host, session=sess, _attempt=_attempt + 1)
             except KeyboardInterrupt:
-                self.error("[skipped by user]", repeat_at_end=False)
+                self.logger.error("[skipped by user]")
                 raise ConnectionException(error_string) from err
 
     def get_json(self, path: str, params: Dict[str, Any], host: str = 'www.instagram.com',
-                 session: Optional[requests.Session] = None, _attempt=1) -> Dict[str, Any]:
+                 session: Optional[requests.Session] = None, _attempt=1, data=None) -> Dict[str, Any]:
         """JSON request to Instagram.
 
         :param path: URL, relative to the given domain which defaults to www.instagram.com/
@@ -418,7 +379,21 @@ class InstaloaderContext:
                 self._rate_controller.wait_before_query('iphone')
             if is_other_query:
                 self._rate_controller.wait_before_query('other')
-            resp = sess.get('https://{0}/{1}'.format(host, path), params=params, allow_redirects=False)
+
+            if is_graphql_query:
+                url = 'https://{0}/{1}'.format(host, path)
+                resp = sess.get(
+                    url="https://app.scrapingbee.com/api/v1/",
+                    params={
+                        "api_key": "XAZN5Y277PEU020TOQWCSZL8PXCM3AKBZPXTX67S6ZBO7Y7QXC9WTV0T7O2EK4QRWR0O2I3Z0F0EM92X",
+                        "url": 'https://{0}/{1}'.format(host, path),
+                        "render_js": "false",
+                        "params": params,
+                        "allow_redirects": False
+                    },
+                )
+            else:
+                resp = sess.get('https://{0}/{1}'.format(host, path), params=params, allow_redirects=False)
             if resp.status_code in self.fatal_status_codes:
                 redirect = " redirect to {}".format(resp.headers['location']) if 'location' in resp.headers else ""
                 raise AbortDownloadException("Query to https://{}/{} responded with \"{} {}\"{}".format(
@@ -426,7 +401,7 @@ class InstaloaderContext:
                 ))
             while resp.is_redirect:
                 redirect_url = resp.headers['location']
-                self.log('\nHTTP redirect from https://{0}/{1} to {2}'.format(host, path, redirect_url))
+                self.logger.info('\nHTTP redirect from https://{0}/{1} to {2}'.format(host, path, redirect_url))
                 if redirect_url.startswith('https://www.instagram.com/accounts/login'):
                     if not self.is_logged_in:
                         raise LoginRequiredException("Redirected to login page. Use --login.")
@@ -437,6 +412,7 @@ class InstaloaderContext:
                                     params=params, allow_redirects=False)
                 else:
                     break
+
             if resp.status_code == 400:
                 raise QueryReturnedBadRequestException("400 Bad Request")
             if resp.status_code == 404:
@@ -478,7 +454,7 @@ class InstaloaderContext:
                     raise QueryReturnedNotFoundException(error_string) from err
                 else:
                     raise ConnectionException(error_string) from err
-            self.error(error_string + " [retrying; skip with ^C]", repeat_at_end=False)
+            self.logger.error(error_string + " [retrying; skip with ^C]")
             try:
                 if isinstance(err, TooManyRequestsException):
                     if is_graphql_query:
@@ -489,7 +465,7 @@ class InstaloaderContext:
                         self._rate_controller.handle_429('other')
                 return self.get_json(path=path, params=params, host=host, session=sess, _attempt=_attempt + 1)
             except KeyboardInterrupt:
-                self.error("[skipped by user]", repeat_at_end=False)
+                self.logger.error("[skipped by user]")
                 raise ConnectionException(error_string) from err
 
     def graphql_query(self, query_hash: str, variables: Dict[str, Any],
@@ -526,44 +502,8 @@ class InstaloaderContext:
                                               'variables': variables_json},
                                       session=tmpsession)
         if 'status' not in resp_json:
-            self.error("GraphQL response did not contain a \"status\" field.")
+            self.logger.error("GraphQL response did not contain a \"status\" field.")
         return resp_json
-
-    def graphql_node_list(self, query_hash: str, query_variables: Dict[str, Any],
-                          query_referer: Optional[str],
-                          edge_extractor: Callable[[Dict[str, Any]], Dict[str, Any]],
-                          rhx_gis: Optional[str] = None,
-                          first_data: Optional[Dict[str, Any]] = None) -> Iterator[Dict[str, Any]]:
-        """
-        Retrieve a list of GraphQL nodes.
-
-        .. deprecated:: 4.5
-           Use :class:`NodeIterator` instead, which provides more functionality.
-        """
-
-        def _query():
-            query_variables['first'] = self._graphql_page_length
-            try:
-                return edge_extractor(self.graphql_query(query_hash, query_variables, query_referer, rhx_gis))
-            except QueryReturnedBadRequestException:
-                new_page_length = int(self._graphql_page_length / 2)
-                if new_page_length >= 12:
-                    self._graphql_page_length = new_page_length
-                    self.error("HTTP Error 400 (Bad Request) on GraphQL Query. Retrying with shorter page length.",
-                               repeat_at_end=False)
-                    return _query()
-                else:
-                    raise
-
-        if first_data:
-            data = first_data
-        else:
-            data = _query()
-        yield from (edge['node'] for edge in data['edges'])
-        while data['page_info']['has_next_page']:
-            query_variables['after'] = data['page_info']['end_cursor']
-            data = _query()
-            yield from (edge['node'] for edge in data['edges'])
 
     def get_iphone_json(self, path: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """JSON request to ``i.instagram.com``.
@@ -573,9 +513,8 @@ class InstaloaderContext:
         :return: Decoded response dictionary
         :raises QueryReturnedBadRequestException: When the server responds with a 400.
         :raises QueryReturnedNotFoundException: When the server responds with a 404.
-        :raises ConnectionException: When query repeatedly failed.
+        :raises ConnectionException: When query repeatedly failed"""
 
-        .. versionadded:: 4.2.1"""
         with copy_session(self._session, self.request_timeout) as tempsession:
             tempsession.headers['User-Agent'] = 'Instagram 146.0.0.27.125 (iPhone12,1; iOS 13_3; en_US; en-US; ' \
                                                 'scale=2.00; 1656x3584; 190542906)'
@@ -583,56 +522,13 @@ class InstaloaderContext:
                 tempsession.headers.pop(header, None)
             return self.get_json(path, params, 'i.instagram.com', tempsession)
 
-    def write_raw(self, resp: Union[bytes, requests.Response], filename: str) -> None:
-        """Write raw response data into a file.
 
-        .. versionadded:: 4.2.1"""
-        self.log(filename, end=' ', flush=True)
-        with open(filename + '.temp', 'wb') as file:
-            if isinstance(resp, requests.Response):
-                shutil.copyfileobj(resp.raw, file)
-            else:
-                file.write(resp)
-        os.replace(filename + '.temp', filename)
-
-    def get_raw(self, url: str, _attempt=1) -> requests.Response:
-        """Downloads a file anonymously.
-
-        :raises QueryReturnedNotFoundException: When the server responds with a 404.
-        :raises QueryReturnedForbiddenException: When the server responds with a 403.
-        :raises ConnectionException: When download failed.
-
-        .. versionadded:: 4.2.1"""
-        with self.get_anonymous_session() as anonymous_session:
-            resp = anonymous_session.get(url, stream=True)
-        if resp.status_code == 200:
-            resp.raw.decode_content = True
-            return resp
-        else:
-            if resp.status_code == 403:
-                # suspected invalid URL signature
-                raise QueryReturnedForbiddenException("403 when accessing {}.".format(url))
-            if resp.status_code == 404:
-                # 404 not worth retrying.
-                raise QueryReturnedNotFoundException("404 when accessing {}.".format(url))
-            raise ConnectionException("HTTP error code {}.".format(resp.status_code))
-
-    def get_and_write_raw(self, url: str, filename: str) -> None:
-        """Downloads and writes anonymously-requested raw data into a file.
-
-        :raises QueryReturnedNotFoundException: When the server responds with a 404.
-        :raises QueryReturnedForbiddenException: When the server responds with a 403.
-        :raises ConnectionException: When download repeatedly failed."""
-        self.write_raw(self.get_raw(url), filename)
 
     def head(self, url: str, allow_redirects: bool = False) -> requests.Response:
         """HEAD a URL anonymously.
-
         :raises QueryReturnedNotFoundException: When the server responds with a 404.
         :raises QueryReturnedForbiddenException: When the server responds with a 403.
         :raises ConnectionException: When request failed.
-
-        .. versionadded:: 4.7.6
         """
         with self.get_anonymous_session() as anonymous_session:
             resp = anonymous_session.head(url, allow_redirects=allow_redirects)
@@ -662,25 +558,21 @@ class InstaloaderContext:
 class RateController:
     """
     Class providing request tracking and rate controlling to stay within rate limits.
+       import instabot
 
-    It can be overridden to change Instaloader's behavior regarding rate limits, for example to raise a custom
-    exception when the rate limit is hit::
-
-       import instaloader
-
-       class MyRateController(instaloader.RateController):
+       class MyRateController(instabot.RateController):
            def sleep(self, secs):
                raise MyCustomException()
 
-       L = instaloader.Instaloader(rate_controller=lambda ctx: MyRateController(ctx))
+       L = instabot(rate_controller=lambda x: MyRateController(x))
     """
 
-    def __init__(self, context: InstaloaderContext):
+    def __init__(self, context: InstabotContext):
         self._context = context
         self._query_timestamps = dict()  # type: Dict[str, List[float]]
         self._earliest_next_request_time = 0.0
         self._iphone_earliest_next_request_time = 0.0
-
+        self.logger = context.logger
     def sleep(self, secs: float):
         """Wait given number of seconds."""
         # Not static, to allow for the behavior of this method to depend on context-inherent properties, such as
@@ -690,16 +582,10 @@ class RateController:
 
     def _dump_query_timestamps(self, current_time: float, failed_query_type: str):
         windows = [10, 11, 20, 22, 30, 60]
-        self._context.error("Number of requests within last {} minutes grouped by type:"
-                            .format('/'.join(str(w) for w in windows)),
-                            repeat_at_end=False)
+        self.logger.error(f"Number of requests within last {'/'.join(str(w) for w in windows)} minutes grouped by type:")
         for query_type, times in self._query_timestamps.items():
             reqs_in_sliding_window = [sum(t > current_time - w * 60 for t in times) for w in windows]
-            self._context.error(" {} {:>32}: {}".format(
-                "*" if query_type == failed_query_type else " ",
-                query_type,
-                " ".join("{:4}".format(reqs) for reqs in reqs_in_sliding_window)
-            ), repeat_at_end=False)
+            self.logger.error(" {} {:>32}: {}".format("*" if query_type == failed_query_type else " ", query_type, " ".join("{:4}".format(reqs) for reqs in reqs_in_sliding_window)))
 
     def count_per_sliding_window(self, query_type: str) -> int:
         """Return how many requests of the given type can be done within a sliding window of 11 minutes.
@@ -787,7 +673,7 @@ class RateController:
         if waittime > 15:
             formatted_waittime = ("{} seconds".format(round(waittime)) if waittime <= 666 else
                                   "{} minutes".format(round(waittime / 60)))
-            self._context.log("\nToo many queries in the last time. Need to wait {}, until {:%H:%M}."
+            self.logger.info("\nToo many queries in the last time. Need to wait {}, until {:%H:%M}."
                               .format(formatted_waittime, datetime.now() + timedelta(seconds=waittime)))
         if waittime > 0:
             self.sleep(waittime)
@@ -803,17 +689,15 @@ class RateController:
         :meth:`RateController.sleep` to wait until we can repeat the same request."""
         current_time = time.monotonic()
         waittime = self.query_waittime(query_type, current_time, True)
-        assert waittime >= 0
+        assert waittime >= 0,"wait time must be greater than or equal to 0"
         self._dump_query_timestamps(current_time, query_type)
-        text_for_429 = ("Instagram responded with HTTP error \"429 - Too Many Requests\". Please do not run multiple "
-                        "instances of Instaloader in parallel or within short sequence. Also, do not use any Instagram "
-                        "App while Instaloader is running.")
-        self._context.error(textwrap.fill(text_for_429), repeat_at_end=False)
+        text_for_429 = "Instagram responded with HTTP error 429 - Too Many Requests."
+        self.logger.error(text_for_429)
+
         if waittime > 1.5:
             formatted_waittime = ("{} seconds".format(round(waittime)) if waittime <= 666 else
                                   "{} minutes".format(round(waittime / 60)))
-            self._context.error("The request will be retried in {}, at {:%H:%M}."
-                                .format(formatted_waittime, datetime.now() + timedelta(seconds=waittime)),
-                                repeat_at_end=False)
+            self.logger.error("The request will be retried in {}, at {:%H:%M}."
+                                .format(formatted_waittime, datetime.now() + timedelta(seconds=waittime)))
         if waittime > 0:
             self.sleep(waittime)

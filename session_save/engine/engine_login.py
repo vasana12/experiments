@@ -29,7 +29,7 @@ class loginSession():
         if logger.hasHandlers():
             # Logger is already configured, remove all handlers
             logger.handlers = []
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
         self.logger = logger
         host = "texas1.thesocialproxy.com"
         port = "10000"
@@ -40,6 +40,7 @@ class loginSession():
         self.last_response = None
         self.last_json = None
         self.proxy = f"http://{config.PROXY_USER}:{config.PROXY_USER}@{config.PROXY_HOST}:{config.PROXY_PORT}" if proxy == None else proxy
+        self.proxy = None
         self.set_proxy()
         self.session.headers.update(config.REQUEST_HEADERS)
         self.session.headers.update({"User-Agent": self.setting_info["user_agent"]})
@@ -75,6 +76,7 @@ class loginSession():
             "usages": '["account_recovery_omnibox"]',
             "device_id": self.setting_info["uuids"]["device_id"],
         }
+        self.logger.debug(f"data:{data}")
         data = json.dumps(data)
         return self.send_request(f"{config.API_URL}accounts/get_prefill_candidates/", post=data,with_signature=True)
 

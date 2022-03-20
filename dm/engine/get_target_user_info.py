@@ -2,6 +2,14 @@ import requests
 import json
 import boto3
 import botocore.config
+import logging
+FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger(__name__)
+if logger.hasHandlers():
+    # Logger is already configured, remove all handlers
+    logger.handlers = []
+logger.setLevel(logging.INFO)
 
 cfg = botocore.config.Config(retries={'max_attempts': 0}, read_timeout=900000, connect_timeout=900000)
 LAMBDA_CLIENT = boto3.client('lambda',
@@ -11,15 +19,19 @@ LAMBDA_CLIENT = boto3.client('lambda',
                              config= cfg)
 
 def lambda_get_target_user_info(username):
-    payload = {"function_name": "instagram_username_to_userid"}
-    payload["username"] = username
-    res = LAMBDA_CLIENT.invoke(
-        FunctionName=payload["function_name"],
-        InvocationType="RequestResponse",  # default : RequestResponse, Event
-        Payload=json.dumps(payload))
+    try:
+        payload = {"function_name": "instagram_username_to_userid"}
+        payload["username"] = username
+        res = LAMBDA_CLIENT.invoke(
+            FunctionName=payload["function_name"],
+            InvocationType="RequestResponse",  # default : RequestResponse, Event
+            Payload=json.dumps(payload))
 
-    json_response = json.loads(res["Payload"].read())
-    body = json_response["body"]
+        json_response = json.loads(res["Payload"].read())
+        body = json_response["body"]
+    except Exception as e:
+        logger.error(f"lambda invoke error : {e} ")
+        return None
     return body
 
 def get_target_user_info(keyword,search_type, proxy = None, scrapingbee=None):
