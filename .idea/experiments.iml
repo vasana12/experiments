@@ -6,5 +6,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="sns_pyqt5" />
     <orderEntry type="module" module-name="i_login_post" />
+    <orderEntry type="module" module-name="instagram-api" />
   </component>
 </module>

@@ -213,7 +213,7 @@ class InstabotContext:
         self.api_headers["user-agent"] = "Instagram 117.0.0.28.123 Android (28/9.0; 420dpi; 1080x1920; OnePlus; ONEPLUS A3003; OnePlus3; qcom; en_US; 180322800)"
         self.api_headers["x-csrftoken"] = self.api_headers["x-csrftoken"].format(**locals())
         self.api_headers["cookie"] = self.api_headers["cookie"].format(**locals())
-
+        self.logger.info(self.api_headers["cookie"])
         self._session = session
         self._session.headers = self.api_headers
         self.username = username
@@ -470,37 +470,19 @@ class InstabotContext:
 
     def graphql_query(self, query_hash: str, variables: Dict[str, Any],
                       referer: Optional[str] = None, rhx_gis: Optional[str] = None) -> Dict[str, Any]:
-        """
-        Do a GraphQL Query.
 
-        :param query_hash: Query identifying hash.
-        :param variables: Variables for the Query.
-        :param referer: HTTP Referer, or None.
-        :param rhx_gis: 'rhx_gis' variable as somewhere returned by Instagram, needed to 'sign' request
-        :return: The server's response dictionary.
-        """
-        with copy_session(self._session, self.request_timeout) as tmpsession:
-            tmpsession.headers.update(self._default_http_header(empty_session_only=True))
-            del tmpsession.headers['Connection']
-            del tmpsession.headers['Content-Length']
-            tmpsession.headers['authority'] = 'www.instagram.com'
-            tmpsession.headers['scheme'] = 'https'
-            tmpsession.headers['accept'] = '*/*'
-            if referer is not None:
-                tmpsession.headers['referer'] = urllib.parse.quote(referer)
 
-            variables_json = json.dumps(variables, separators=(',', ':'))
+        variables_json = json.dumps(variables, separators=(',', ':'))
 
-            if rhx_gis:
-                #self.log("rhx_gis {} query_hash {}".format(rhx_gis, query_hash))
-                values = "{}:{}".format(rhx_gis, variables_json)
-                x_instagram_gis = hashlib.md5(values.encode()).hexdigest()
-                tmpsession.headers['x-instagram-gis'] = x_instagram_gis
+        if rhx_gis:
+            #self.log("rhx_gis {} query_hash {}".format(rhx_gis, query_hash))
+            values = "{}:{}".format(rhx_gis, variables_json)
+            x_instagram_gis = hashlib.md5(values.encode()).hexdigest()
+            self._session.headers['x-instagram-gis'] = x_instagram_gis
 
-            resp_json = self.get_json('graphql/query',
-                                      params={'query_hash': query_hash,
-                                              'variables': variables_json},
-                                      session=tmpsession)
+        resp_json = self.get_json_v_api('graphql/query',
+                                  params={'query_hash': query_hash,
+                                          'variables': variables_json})
         if 'status' not in resp_json:
             self.logger.error("GraphQL response did not contain a \"status\" field.")
         return resp_json

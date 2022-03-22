@@ -55,7 +55,10 @@ def click_login_button(self):
         self.logger.debug(f"error_message:{e}")
         return False
     else:
-        self.driver.find_element(By.XPATH, "//*[@id='loginForm']/div/div[3]/button").click()
+        try:
+            self.driver.find_element(By.XPATH, "//*[@id='loginForm']/div/div[3]/button").click()
+        except:
+            return False
         return True
 
 def check_ssfErrorAlert(self):

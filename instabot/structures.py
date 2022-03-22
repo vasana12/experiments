@@ -1146,7 +1146,9 @@ class Hashtag:
         return json_response["graphql"]["hashtag"] if "graphql" in json_response else json_response["data"]
 
     def _query_api_v3(self, params):
+
         json_response = self._context.get_json_v_api("explore/tags/{0}/".format(self.name), params)
+        print(f"json_response_test:{json_response}")
         return json_response["graphql"]["hashtag"] if "graphql" in json_response else json_response["data"]
 
 
@@ -1226,12 +1228,14 @@ class Hashtag:
             """Yields the posts associated with this hashtag."""
             self._metadata("top", "sections")
             conn = self._metadata("top")
+            print(conn)
             self._context.logger.info(f"next_max_id:{conn['next_max_id']}")
             for idx, section in enumerate(conn["sections"]):
                 yield from (
                 Post(self._context, edge["media"], next_max_id=conn['next_max_id'], next_page=conn['next_page'],
                      search_type="hashtag") for edge in
                 section["layout_content"]["medias"])
+
         else:
             self._context.logger.info(
                 f"logged in here is the get_posts def, reinitialize : next_max_id = {next_max_id}, next_page= {next_page}")
@@ -1358,7 +1362,7 @@ class Hashtag:
     def get_all_posts(self) -> Iterator[Post]:
         """Yields all posts"""
         sorted_top_posts = iter(sorted(self.get_top_posts(), key=lambda p: p.date_utc, reverse=True))
-        other_posts = self.get_posts()
+        other_posts = self.get_recent_posts()
         next_top = next(sorted_top_posts, None)
         next_other = next(other_posts, None)
         while next_top is not None or next_other is not None:

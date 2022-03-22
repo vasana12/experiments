@@ -37,7 +37,7 @@ def select_user(username=None):
     return account_setting_info
 
 def get_hashtag_bot(hashtag_name):
-    account_setting_info = select_user()
+    account_setting_info = select_user(username="kremer7bkdianshin")
     account_username = account_setting_info.get("username")
     account_password = account_setting_info.get("password")
 
@@ -55,13 +55,13 @@ def get_hashtag_bot(hashtag_name):
             return hashtag_bot
 
 
-hashtag_name_list = ["게딱지비빔밥","투뿔","암소", "와규", "제철", "과일", "바다의우유"]
+hashtag_name_list = ["감자"]
 username_list = []
 for hashtag_name in hashtag_name_list:
     hashtag_bot = get_hashtag_bot(hashtag_name)
     try:
         for idx, item in enumerate(hashtag_bot.get_top_posts_api_v3(next_page=None, next_max_id=None)):
-            if idx > 5000:
+            if idx > 3000:
                 break
             print(hashtag_name, idx, item.shortcode, item.user, item.likes, item.next_page, item.next_max_id)
             username = item.user.get("username")

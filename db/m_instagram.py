@@ -474,7 +474,7 @@ class InstaAccount(InstaDB):
             "status": "available",
             "client_name": self.client_name,
             "channel": self.channel_name,
-            "checkpoint.start_time": {"$lte": datetime.now()- timedelta(days=6)}
+            "checkpoint.start_time": {"$lte": datetime.now()- timedelta(days=14)}
             }
 
             filter_raw = {
@@ -501,7 +501,7 @@ class InstaAccount(InstaDB):
             "mobile_session" : True,
             "status": "available",
             "channel": self.channel_name,
-            "checkpoint.start_time": {"$lte": datetime.now()- timedelta(days=6)}
+            "checkpoint.start_time": {"$lte": datetime.now()- timedelta(days=14)}
             }
 
             filter_raw = {
@@ -521,11 +521,12 @@ class InstaAccount(InstaDB):
         if username:
             filter_raw.update(username=username)
             filter_plus.update(username=username)
+            filter_checkpoint_date.update(username=username)
 
         if self.client_name:
             filter_raw.update(client_name=self.client_name)
             filter_plus.update(client_name=self.client_name)
-
+            filter_checkpoint_date.update(client_name=self.client_name)
         self.logger.debug(f"filter_raw:{filter_raw}")
         available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_raw, filter_plus, filter_checkpoint_date]}, update={"$set":{"status":"login","last_login":datetime.now()}}, projection=projection ,sort=[('last_login', 1)])
 

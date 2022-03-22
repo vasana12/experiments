@@ -16,6 +16,7 @@ class NodeIterator(Iterator):
                  query_variables= None,
                  query_referer = None,
                  first_data = None):
+        self.logger = context.logger
         self._context = context
         self._query_hash = query_hash
         self._edge_extractor = edge_extractor
@@ -42,12 +43,12 @@ class NodeIterator(Iterator):
             )
             self._best_before = datetime.now() + NodeIterator._shelf_life
             return data
+
         except QueryReturnedBadRequestException:
             new_page_length = int(NodeIterator._graphql_page_length / 2)
             if new_page_length >= 12:
                 NodeIterator._graphql_page_length = new_page_length
-                self._context.error("HTTP Error 400 (Bad Request) on GraphQL Query. Retrying with shorter page length.",
-                                    repeat_at_end=False)
+                self._context.logger.error("HTTP Error 400 (Bad Request) on GraphQL Query. Retrying with shorter page length.")
                 return self._query(after)
             else:
                 raise
