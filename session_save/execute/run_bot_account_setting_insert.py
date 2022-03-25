@@ -50,7 +50,7 @@ def insert_account():
         try:
             info = login_account_info.split(":")
             username = info[0]
-            password = info[1].split("|")[0]
+            password = info[1]
 
             filter = {"username": username}
             update_data = {

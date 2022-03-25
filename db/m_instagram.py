@@ -442,7 +442,6 @@ class InstaAccount(InstaDB):
         if available_account is None:
             return None
         return available_account
-
     def select_cookie_user_v1(self, username=None, max_messages_per_day=None):
         if not max_messages_per_day:
             max_messages_per_day = 5
@@ -529,6 +528,68 @@ class InstaAccount(InstaDB):
             filter_checkpoint_date.update(client_name=self.client_name)
         self.logger.debug(f"filter_raw:{filter_raw}")
         available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_raw, filter_plus, filter_checkpoint_date]}, update={"$set":{"status":"login","last_login":datetime.now()}}, projection=projection ,sort=[('last_login', 1)])
+
+        if available_account is not None:
+            self.username = available_account["username"]
+        else:
+            self.logger.debug(f"available_account is None")
+            return None
+        return available_account
+    def select_cookie_user_v2(self, username=None, max_messages_per_day=None):
+        if not max_messages_per_day:
+            max_messages_per_day = 5
+        projection = {
+            "_id": 1,
+            "username": 1,
+            "channel": 1,
+            "client_name": 1,
+            "last_login": 1,
+            "limit": 1,
+            "password": 1,
+            "status": 1,
+            "usage": 1,
+            "device_settings": 1,
+            "session.csrftoken": 1,
+            "session.ds_user_id": 1,
+            "session.mid": 1,
+            "session.rur": 1,
+            "session.sessionid": 1,
+            "timing_value": 1,
+            "user_agent": 1,
+            "uuids": 1
+        }
+
+        if self.client_name != "admin":
+
+            filter_plus = {
+            "session" : {"$exists":1},
+            "mobile_session" : True,
+            "status": "available",
+            "client_name": self.client_name,
+            "channel": self.channel_name,
+            "checkpoint": {"$exists": False}
+            }
+
+        else:
+
+            filter_plus = {
+                "mobile_session": True,
+                "session": {"$exists": 1},
+                "status": "available",
+                "channel": self.channel_name,
+                "checkpoint": {"$exists": False}
+            }
+        if username:
+
+            filter_plus.update(username=username)
+
+
+        if self.client_name:
+
+            filter_plus.update(client_name=self.client_name)
+
+        self.logger.debug(f"filter_raw:{filter_plus}")
+        available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_plus]}, update={"$set":{"status":"login","last_login":datetime.now()}}, projection=projection ,sort=[('last_login', 1)])
 
         if available_account is not None:
             self.username = available_account["username"]

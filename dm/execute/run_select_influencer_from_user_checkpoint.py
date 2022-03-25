@@ -15,26 +15,32 @@ logger.setLevel(logging.INFO)
 
 
 skip = 0
-limit = 3000
+limit = 500
 only_username = False
-search_hashtag = "바다의우유"
-filename = f"cook_{search_hashtag}"
+
+search_hashtag = "공구 공동구매 협찬 공구오픈 공구예정 공구알림 효소"
+filename = f"brandot_{search_hashtag}"
 search_filter = \
         {
             "user_followed_by":
                 {
-                    "$gte": 2000, "$lte":5000
+                    "$gte": 6000
                 },
             "avg_like":
                 {
-                    "$gte": 50
+                    "$gte": 300
+                },
+            "avg_comment":
+                {
+                    "$gte": 20
                 },
             "$text":
                 {
                     "$search": search_hashtag
                 }
         }
-target_username_list = get_influencer.main(search_filter=search_filter, file_name=filename, skip=0, limit=limit, only_username=only_username)
+target_username_list = get_influencer.main(search_filter=search_filter, file_name=filename, skip=0, limit=limit, only_username=only_username, collection_name="user_checkpoint")
 print(target_username_list)
+print(len(target_username_list))
 
 

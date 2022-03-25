@@ -51,7 +51,7 @@ def insert_account():
             info = login_account_info.split(";")
             username = info[0]
             password = info[1]
-            cookie_bytes = base64.b64decode(info[4])
+            cookie_bytes = base64.b64decode(info[2])
             cookie_string = cookie_bytes.decode("ascii")
             cookie_list = json.loads(cookie_string)
 

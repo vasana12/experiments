@@ -81,8 +81,17 @@ def check_cache_modal(self):
         self.logger.debug(f"button[@class='aOOlW   HoLwm '] cache modal not exist:{e}")
         return False
     else:
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
-            (By.XPATH, "//button[@class='aOOlW   HoLwm '] | /html/body/div[4]/div/div/div/div[3]/button[2]"))).cilck()
+        self.driver.find_element(By.XPATH, "//button[@class='aOOlW   HoLwm '] | /html/body/div[4]/div/div/div/div[3]/button[2]").click()
+        return True
+
+def check_spam_image(self):
+    try:
+        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sqdOP  L3NKy   y3zKF   cB_4K  ']")))
+    except Exception as e:
+        self.logger.debug(f"button[@class='sqdOP  L3NKy   y3zKF   cB_4K  '] check_spam_image not exist:{e}")
+        return False
+    else:
+        self.driver.find_element(By.XPATH, "//button[@class='sqdOP  L3NKy   y3zKF   cB_4K  ']").click()
         return True
 
 def check_login_success(self):
@@ -90,8 +99,12 @@ def check_login_success(self):
         WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sqdOP  L3NKy   y3zKF     ']")))
     except Exception as e:
         self.logger.debug(f"sqdOP  L3NKy   y3zKF     error_message:{e}")
-        return False
+        if check_spam_image(self):
+            return True
+        else:
+            return False
     else:
+
         csrftoken_info = self.driver.get_cookie("csrftoken")
         if csrftoken_info:
             self.logger.info("selenium login process success, we send selenium session info to request ")
