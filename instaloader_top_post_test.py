@@ -37,7 +37,7 @@ def select_user(username=None):
     return account_setting_info
 
 def get_hashtag_bot(hashtag_name):
-    account_setting_info = select_user(username="kremer7bkdianshin")
+    account_setting_info = select_user(username="seuwgaiwsjspdowinp")
     account_username = account_setting_info.get("username")
     account_password = account_setting_info.get("password")
 
@@ -55,7 +55,7 @@ def get_hashtag_bot(hashtag_name):
             return hashtag_bot
 
 
-hashtag_name_list = ["감자"]
+hashtag_name_list = ["P2E","NFT","비트코인", "playtoeran", "업비트", "엑시인피니티", "샌드박스", "메타버스", "게임", "돈버는게임", "부업", "빗썸", "모바일게임", "핸드폰게임"]
 username_list = []
 for hashtag_name in hashtag_name_list:
     hashtag_bot = get_hashtag_bot(hashtag_name)

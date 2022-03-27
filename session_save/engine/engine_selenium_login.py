@@ -1,3 +1,5 @@
+import time
+
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
@@ -7,7 +9,15 @@ def loading_page(self:BotAccountSetting):
     ### when we need to make driver go to https://www.instagram.com
     self.logger.info(f"when we need to make driver go to https://www.instagram.com - redirect {self.login_page_redirect}")
     if not self.login_page_redirect:
-        self.driver.get("https://www.instagram.com")
+        try:
+            self.driver.get("https://www.instagram.com")
+        except Exception as e:
+            self.logger.debug(f"{self.login_page_redirect}/error_message:{e}")
+            self.driver.close()
+            self.login_page_redirect = False
+            self.driver = self.driver = self.driver_setting()
+            self.loading_page(self)
+
         ####로딩할 때까지 기다려준다 (10초 지나면 에러처리)
         try:
             WebDriverWait(self.driver, 20).until(
