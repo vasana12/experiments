@@ -25,26 +25,24 @@ def select_user(username,max_messages_per_day):
     return account_setting_info
 #
 def run():
-    username, password = 'sp22064497', 'amdc2580!'
-    proxy = f"http://user-{username}-sessionduration-1:{password}@us.smartproxy.com:10000"
-    # proxy = "http://5rfpjo4evhm0c8dx:ihzoneqam4p3vt2b@texas1.thesocialproxy.com:10000"
+
 
     ### 0. 세팅 : 프로젝트, 발송 텍스트, 프록시
-    project = "arana"
-    start_date = "2022-03-24"
+    project = "pila"
+    start_date = "2022-04-20"
     project_info = {"project_name":project, "start_date": start_date}
     collection_name = "user_checkpoint"
 
     """ dm/source/message """
-    text = get_dm_source.get_source_message(filename="arana.txt")
-    # host,port, mobile_proxy_username,mobile_proxy_password = "residential.ipb.cloud", "7777", "customer-lsgr20040901-asn-20057-sessid-pCMf-sesstime-1", "UG2xaDXxC"
-    # proxy = f"http://{mobile_proxy_username}:{mobile_proxy_password}@{host}:{port}"
-    #
+    text = get_dm_source.get_source_message(filename="pila.txt")
+    host, port, mobile_proxy_username, mobile_proxy_password = "residential.ipb.cloud", "7777", "customer-lsgr20040901-asn-12576-sessid-xnoa-sesstime-1", "UG2xaDXxC"
+    proxy = f"http://{mobile_proxy_username}:{mobile_proxy_password}@{host}:{port}"
+
     # proxy = None
     ### 1. 전송할 인플루언서 리스트 가져오기
     """ dm/source/hashtag """
-    search_hashtag = get_dm_source.get_source_hashtag("arana.txt")
-    search_filter = {"user_followed_by": {"$gte":5000, "$lte":100000}, "avg_like":{"$gte":50},"$text":{"$search": search_hashtag}}
+    search_hashtag = get_dm_source.get_source_hashtag("pila.txt")
+    search_filter = {"user_followed_by": {"$gte":1000, "$lte":10000}, "avg_like":{"$gte":50},"$text":{"$search": search_hashtag}}
 
     file_name, skip, limit, only_username,  =  search_hashtag, 0, 2000, False
     target_username_list = get_influencer.main(search_filter=search_filter, file_name=file_name, skip=skip, limit=limit, only_username=only_username, collection_name=collection_name)
@@ -52,7 +50,7 @@ def run():
 
     ## 2. 이전 프로젝트 에서 진행한 인플루언서 제외하기
     black_list = completed_target_influencer.find_completed_influencer(project_name=project)
-    target_username_list = list(set(target_username_list) - set(black_list))
+    target_username_list = list(set(target_username_list) - set(black_list))[0:500]
     logger.info(f"총 {len(target_username_list)} 명에게 dm 발송 시작 target_username_list:{target_username_list}")
     while True:
         max_messages_per_day = 5

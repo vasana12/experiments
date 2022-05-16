@@ -91,6 +91,7 @@ class loginSession():
 
     def login_success(self):
         setting_info = read_account_setting_info_from_db(self.username, self.password)
+
         cookie = requests.utils.dict_from_cookiejar(self.session.cookies)
         setting_info["username"], setting_info["password"], setting_info["cookie"] = self.username, self.password, cookie
         self.logger.info(f"{self.username}/{self.password} success - > account collection")
@@ -107,6 +108,7 @@ class loginSession():
 
     def login(self):
         self.logger.info(f"login_trial")
+
         data = json.dumps({
             "jazoest": "22264",
             "country_codes": '[{"country_code":"1","source":["default"]}]',
@@ -121,6 +123,7 @@ class loginSession():
             # "enc_password:" "#PWD_INSTAGRAM:4:TIME:ENCRYPTED_PASSWORD"
             "login_attempt_count": "0",
         })
+        self.logger.debug(f"data_test:{data}")
         response = self.send_request(f"{config.API_URL}accounts/login/", post=data, with_signature=True)
 
         if response:
@@ -157,6 +160,4 @@ class loginSession():
         else:
             self.logger.debug(f"Responsecode indicated error; returned response : {response.status_code} response content: {response.content[0:100]}")
             return False
-
-
 

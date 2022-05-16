@@ -394,6 +394,7 @@ class InstabotContext:
                 )
             else:
                 resp = sess.get('https://{0}/{1}'.format(host, path), params=params, allow_redirects=False)
+            print(resp.text)
             if resp.status_code in self.fatal_status_codes:
                 redirect = " redirect to {}".format(resp.headers['location']) if 'location' in resp.headers else ""
                 raise AbortDownloadException("Query to https://{}/{} responded with \"{} {}\"{}".format(

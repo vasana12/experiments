@@ -18,7 +18,7 @@ class botAccountSetting():
         if logger.hasHandlers():
             # Logger is already configured, remove all handlers
             logger.handlers = []
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
         self.logger = logger
         self.proxy = f"http://{config.PROXY_USER}:{config.PROXY_PASS}@{config.PROXY_HOST}:{config.PROXY_PORT}"
         self.is_ssfErrorAlert = False
@@ -51,7 +51,7 @@ class botAccountSetting():
         while True:
             self.logger.debug(f"first_page_iterate_count:{self.first_page_iterate_count}")
             if (self.is_ssfErrorAlert == True) or (self.first_page_iterate_count >=1):
-                self.logger.debug(f"fself.is_ssfErrorAlert:{self.is_ssfErrorAlert}/self.first_page_iterate_count:{self.first_page_iterate_count}")
+                self.logger.debug(f"self.is_ssfErrorAlert:{self.is_ssfErrorAlert}/self.first_page_iterate_count:{self.first_page_iterate_count}")
                 self.driver.close()
                 self.driver = self.driver_setting()
                 self.login_page_redirect = False
@@ -64,6 +64,10 @@ class botAccountSetting():
             else:
                 self.first_page_iterate_count += 1
 
+        is_cache_modal = engine_selenium_login.check_cache_modal(self)
+        if is_cache_modal:
+            self.logger.info(f"selenium login - success : cache modal click")
+
         ###1. 로그인 정보 입력하기
         self.logger.info(f"input login info {self.username}/{self.password}")
         if not engine_selenium_login.input_login_info(self):
@@ -75,7 +79,7 @@ class botAccountSetting():
             return False
 
         ###3. 셀레늄 로그인 성공/실패 확인
-        self.logger.info(f"check selenium login status")
+        self.logger.info(f"check selenium login status 1")
         login_status = engine_selenium_login.check_login_success(self)
 
         ###로그인이 실패했을 경우
@@ -89,6 +93,19 @@ class botAccountSetting():
 
             ### check is_ssfErrorAlert
             is_ssfErrorAlert = engine_selenium_login.check_ssfErrorAlert(self)
+
+            if is_ssfErrorAlert == "password_error":
+                self.login_page_redirect = False
+                return False
+
+            if is_ssfErrorAlert == "violation":
+                self.login_page_redirect = False
+                return False
+
+            if is_ssfErrorAlert == "invaild account":
+                self.login_page_redirect = False
+                return False
+
             if is_ssfErrorAlert:
                 self.logger.info(f"selenium login - {login_status} : is_ssfErrorAlert, we recur instagram_selenium_login ")
                 self.is_ssfErrorAlert = True
@@ -107,14 +124,18 @@ class botAccountSetting():
                     else:
                         self.login_page_redirect = False
                         return False
+
+            if engine_selenium_login.is_detected_robot_red(self):
+                self.logger.info(f"selenium login - {login_status} : bot_detected_red")
+                logout_response = engine_selenium_login.is_detected_robot_red_logout_click(self)
+                if logout_response:
+                    self.login_page_redirect = True
+                    return False
                 else:
                     self.login_page_redirect = False
                     return False
             else:
                 self.logger.info(f"selenium login - {login_status} : undefined error")
-
-                if engine_selenium_login.weird_account(self):
-                    return False
                 self.driver.close()
                 self.login_page_redirect = False
                 self.driver = self.driver_setting()
@@ -122,7 +143,7 @@ class botAccountSetting():
         ###로그인이 성공했을 경우 session 정보 저장해준다.
         else:
             engine_selenium_login.authorize_cookie(self)
-            self.logger.info(f"check selenium login status")
+            self.logger.info(f"check selenium login status 2")
             self.login_page_redirect = False
             return self.send_driver_cookie()
 
@@ -132,6 +153,8 @@ class botAccountSetting():
 
         self.username = login_account_info["username"]
         self.password = login_account_info["password"]
+
+
 
         self.logger.info(f"/{self.username}/{self.password} 로그인 시도")
 

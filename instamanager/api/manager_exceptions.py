@@ -13,7 +13,8 @@ class OopsException(ManagerException):
 
 class FeedbackRequired(ManagerException):
     pass
-
+class PasswordIncorrect(ManagerException):
+    pass
 class InstaJSONDecodeError(ManagerException):
     pass
 class RequestTimeOut(ManagerException):

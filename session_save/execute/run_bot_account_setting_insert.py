@@ -48,7 +48,7 @@ def insert_account():
             continue
 
         try:
-            info = login_account_info.split(";")
+            info = login_account_info.split(":")
             username = info[0]
             password = info[1]
 

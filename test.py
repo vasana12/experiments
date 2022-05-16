@@ -1,21 +1,41 @@
-import instabot
-from db import m_instagram
-import json
-import boto3
-import botocore.config
-import logging
+import re
+from bs4 import BeautifulSoup
+import requests
+from datetime import datetime
 
-INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(channel_name="instagram")
-INSTA_ACCOUNT_OBJ.client_name = "admin_test"
-account_setting_info = INSTA_ACCOUNT_OBJ.select_cookie_user_v1(username="send_direct_items")
-account_username = account_setting_info.get("username")
-account_password = account_setting_info.get("password")
+def cleanse(text) :
+    text = re.sub(u"[^\x20-\x7E가-힣]"," ",text)
+    text = re.sub(u"\\s+", " ", text)
+    return text.strip()
 
-bot = instabot.Instabot()
-bot.login(user=account_username)
-hashtag_name = "과일"
-hashtag_bot = instabot.Hashtag.from_name(context=bot.context, name=hashtag_name)
-for idx, item in enumerate(hashtag_bot.get_top_posts_api_v3(next_page=None, next_max_id=None)):
-    if idx > 5000:
-        break
-    print(hashtag_name, idx, item.shortcode, item.user, item.likes, item.next_page, item.next_max_id)
+def get_voices():
+    page = 1
+    while True:
+        try:
+            domain = "https://www.consumernews.co.kr"
+            path = f"/bbs/list.html?page={page}&table=report&sc_category=&sc_area=&sc_word=&sc_word2=&sc_andor=&term_start=&term_end=&goso_pid=&goso_pid2=&ref="
+            target_page_url = f"{domain}{path}"
+
+            response = requests.get(target_page_url)
+            soup = BeautifulSoup(response.text, "lxml")
+            table = soup.find("table", {"class": "hover unstriped report-table"})
+            body = table.find("tbody")
+            voice_list = body.find_all("tr")
+
+            for idx, voice in enumerate(voice_list):
+                voice:BeautifulSoup
+                summary = voice.find("span", {"class": "summary"}).text
+                summary = cleanse(summary)
+                post_date = voice.find_all("td", {"class": "text-center show-for-large"})[1].text
+                post_date = datetime.strptime(post_date, "%Y-%m-%d %H:%M ")
+                post_date = post_date.date()
+                yield {"content": summary, "post_date": post_date}
+        except Exception as e:
+            print(f"error:{e}")
+        else:
+            print(f"target_page_url:{target_page_url} ,response:200")
+            page += 1
+
+if __name__ == "__main__":
+    for item in get_voices():
+        print(item)

@@ -25,8 +25,8 @@ BAND_ACCOUNT, HASHTAG_AND_USER, PROJECT_COLLECTION, ITEM_HASHTAG_COLLECTION, ITE
     SERVICE_INSTAGRAM["user"], SERVICE_INSTAGRAM["location"], SERVICE_INSTAGRAM["info"], SERVICE_INSTAGRAM["task"], \
     SERVICE_INSTAGRAM["post"], SERVICE_INSTAGRAM["search"], SERVICE_INSTAGRAM["setting"]
 
-def calcuate_check_point_deadline():
-    check_point_deadline = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=4)
+def calcuate_check_point_deadline(days=3):
+    check_point_deadline = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=days)
     return check_point_deadline
 
 def update_account_unavailable(username):
@@ -36,21 +36,85 @@ def update_account_unavailable(username):
 
 def read_account_info_from_db():
     filter_new = {"status": "new", "client_name": "admin_test"}
+    filter_new_login = {"status": "available", "checkpoint": {"$exists": False}, "client_name": "admin_test", "last_login": {"$gte": calcuate_check_point_deadline(days=3)}}
     # filter_old = {"status":"available", "client_name":"admin_test","last_login":{"$lte":calcuate_check_point_deadline()}}
     # filter_checkpoint = {"status":"checkpoint_required"}
 
-    setting_account_doc = list(ACCOUNT_COLLECTION.find({"$or":[filter_new]}))
+    setting_account_doc = list(ACCOUNT_COLLECTION.find({"$or":[filter_new,filter_new_login]}).sort([('last_login', 1)]))
+    print(len(setting_account_doc))
     return setting_account_doc
 
 def read_accoun_info_from_db_one(client_name=None):
     filter_new = {"status": "new"}
     if client_name:
         filter_new.update(client_name=client_name)
+
+    # filter_new_login = {"status": "available", "checkpoint": {"$exists": False}, "client_name": "admin_test",
+    #                         "last_login": {"$gte": calcuate_check_point_deadline(days=3)}}
     # filter_old = {"status":"available", "client_name":"admin_test","last_login":{"$lte":calcuate_check_point_deadline()}}
     # filter_checkpoint = {"status":"checkpoint_required"}
-    setting_account_doc = ACCOUNT_COLLECTION.find_one_and_update({"$or":[filter_new]},update={"$set":{"status":"new"}})
+    setting_account_doc = ACCOUNT_COLLECTION.find_one_and_update({"$or":[filter_new]}, update={"$set":{"status":"login"}}, sort=[('last_login', 1)])
     # setting_account_doc = list(ACCOUNT_COLLECTION.find({"$or":[filter_new]}))
     return setting_account_doc
+
+def save_uuid_and_session_info_new(setting_info):
+    account_info = account_collection.find_one(filter={"username":setting_info["username"]})
+
+    ## when account_already exist
+    if account_info:
+        _id = account_info["_id"]
+        account_collection.update_one(
+            filter={
+                "_id": _id
+            },
+            update={
+                "$set": {
+                    "usage.hashtag": 0,
+                    "usage.dm": 0,
+                    "last_login": datetime.now(),
+                    "status": "new",
+                    "uuids": setting_info["uuids"],
+                    "timing_value.last_login": time.time(),
+                    "timing_value.last_experiments": time.time(),
+                    "device_settings": setting_info["device_settings"],
+                    "user_agent": setting_info["user_agent"],
+                    "session": setting_info["cookie"],
+                    "mobile_session": True
+                }
+            }
+        )
+        return
+
+    ### new account setting info insert
+    insert_info = {
+        "username": setting_info["username"],
+        "password": setting_info["password"],
+        "client_name": setting_info["client_name"],
+        "channel": "instagram",
+        "status":"new",
+        "limit": {
+            "dm": setting_info["limit"]["dm"],
+            "hashtag": setting_info["limit"]["hashtag"]
+        },
+        "usage": {
+            "dm": 0,
+            "hashtag": 0
+        },
+        "uuids":setting_info["uuids"]
+            ,
+        "timing_value":
+            {
+                "last_login": time.time(),
+                "last_experiments": time.time()
+            },
+        "device_settings": setting_info["device_settings"],
+        "user_agent": setting_info["user_agent"],
+        "session": setting_info["cookie"],
+        "mobile_session": True,
+        "last_login": datetime.now(),
+    }
+
+    account_collection.insert_one(insert_info)
 
 def save_uuid_and_session_info(setting_info):
     account_info = account_collection.find_one(filter={"username":setting_info["username"]})
@@ -86,7 +150,7 @@ def save_uuid_and_session_info(setting_info):
         "password": setting_info["password"],
         "client_name": setting_info["client_name"],
         "channel": "instagram",
-        "status":"available",
+        "status": "available",
         "limit": {
             "dm": setting_info["limit"]["dm"],
             "hashtag": setting_info["limit"]["hashtag"]
@@ -105,7 +169,7 @@ def save_uuid_and_session_info(setting_info):
         "device_settings": setting_info["device_settings"],
         "user_agent": setting_info["user_agent"],
         "session": setting_info["cookie"],
-        "mobile_session" :True,
+        "mobile_session": True,
         "last_login": datetime.now(),
     }
 

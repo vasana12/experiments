@@ -53,7 +53,6 @@ def insert_account():
             password = info[0].split(":")[1]
             user_agent = info[1]
             cookie_info = info[2]
-            print(username,password)
             ig_did = cookie_info.split(";")[0].replace("ig_did=","")
             csrftoken = cookie_info.split(";")[1].replace("csrftoken=", "")
             ds_user_id = cookie_info.split(";")[2].replace("ds_user_id=", "")
@@ -73,9 +72,43 @@ def insert_account():
 
 
         except Exception as e:
-            logger.error(f"insert error - {e}/ {idx} - username:{username}/password:{password} registered error")
+            logger.info(f"e {idx} - username:{username}/password:{password} error registered error!")
+            info = login_account_info.split("||")
+            username = info[0].split(":")[0]
+            password = info[0].split(":")[1]
+
+            cookie_info = info[1]
+            csrftoken = cookie_info.split("csrftoken=")[1]
+            csrftoken = csrftoken.split(";")[0]
+
+            ds_user_id = cookie_info.split("ds_user_id=")[1]
+            ds_user_id = ds_user_id.split(";")[0]
+
+            sessionid = cookie_info.split("sessionid=")[1]
+            sessionid = sessionid.split(";")[0]
+
+            mid = login_account_info.split("mid=")[1]
+            mid = mid.split(";")[0]
+
+            rur = cookie_info.split("rur=")[1]
+            rur = rur.split(";")[0]
+
+            setting_info = read_account_setting_info_from_db(username=username, password=password)
+            setting_info["username"] = username
+            setting_info["password"] = password
+            setting_info["cookie"] = {}
+            setting_info["cookie"]["mid"] = mid
+            setting_info["cookie"]["csrftoken"] = csrftoken
+            setting_info["cookie"]["sessionid"] = sessionid
+            setting_info["cookie"]["ds_user_id"] = ds_user_id
+            setting_info["cookie"]["rur"] = rur
+
+            save_uuid_and_session_info(setting_info=setting_info)
+            logger.info(f"{idx} - username:{username}/password:{password} error registered new!")
+
         else:
             logger.info(f"{idx} - username:{username}/password:{password} registered new!")
             save_uuid_and_session_info(setting_info=setting_info)
+
 if __name__ == "__main__":
     insert_account()

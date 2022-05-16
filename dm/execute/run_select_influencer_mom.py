@@ -15,18 +15,18 @@ logger.setLevel(logging.INFO)
 
 
 skip = 0
-limit = 2000
+limit = 20000
 only_username = False
 collection_name = "user_checkpoint"
-search_hashtag = get_dm_source.get_source_hashtag("our_pregnant.txt")
+search_hashtag = get_dm_source.get_source_hashtag("jusik.txt")
 print(search_hashtag)
-filename = f"our_pregnant_{search_hashtag}"
+filename = f"jusik_{search_hashtag}"
 
 search_filter = \
         {
             "user_followed_by":
                 {
-                    "$lte": 1500,
+                    "$lte": 5000,
                 },
             "$text":
                 {

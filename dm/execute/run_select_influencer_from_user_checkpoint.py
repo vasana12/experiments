@@ -1,8 +1,5 @@
-from db import m_instagram
-from dm.engine import completed_target_influencer
-from instamanager import Bot
 import logging
-from dm.prepare import get_dm_source, get_influencer
+from dm.prepare import get_influencer
 
 FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
 logging.basicConfig(format=FORMAT)
@@ -15,24 +12,16 @@ logger.setLevel(logging.INFO)
 
 
 skip = 0
-limit = 500
+limit = 3000
 only_username = False
 
-search_hashtag = "공구 공동구매 협찬 공구오픈 공구예정 공구알림 효소"
-filename = f"brandot_{search_hashtag}"
+search_hashtag = "메이크업 립스틱 붓기차 여름코디 안다르 립스틱 틴트 붓기차 디톡스 오운완 젝시믹스 룰루레몬 여자데일리룩 운동하는여자 요가 필라테스 레깅스 여름코디 단발 식이요법 "
+filename = f"puzzle_{search_hashtag}"
 search_filter = \
         {
             "user_followed_by":
                 {
-                    "$gte": 6000
-                },
-            "avg_like":
-                {
-                    "$gte": 300
-                },
-            "avg_comment":
-                {
-                    "$gte": 20
+                    "$gte": 10000
                 },
             "$text":
                 {
@@ -40,7 +29,7 @@ search_filter = \
                 }
         }
 target_username_list = get_influencer.main(search_filter=search_filter, file_name=filename, skip=0, limit=limit, only_username=only_username, collection_name="user_checkpoint")
-print(target_username_list)
+
 print(len(target_username_list))
 
 

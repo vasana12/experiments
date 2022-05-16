@@ -71,38 +71,13 @@ class botAccountSetting():
         login_account_info_list = botAccount_setting_db.read_account_info_from_db()
 
         for idx, login_account_info in enumerate(login_account_info_list):
-            if idx%20 == 0:
-                try:
-                    self.driver.close()
-                except:
-                    pass
-                self.driver = get_chromedriver(use_proxy=True)
-                self.instagram_selenium_loading()
             try:
                 self.username = login_account_info["username"]
                 self.password = login_account_info["password"]
                 self.logger.info(f"{idx}/{self.username}/{self.password} 로그인 시도")
 
-                selenium_login_response = self.send_driver_cookie()
-
-                if not selenium_login_response:
-                    botAccount_setting_db.update_account_unavailable(username=self.username)
-                    self.logger.info(f"{self.username}/{self.password} update unavailable... we start next iteration")
-                    continue
-
-                if selenium_login_response:
-                    request_login_response = self.request_login()
-                    self.logger.info(f"request_login_response:{request_login_response}")
-                    if request_login_response:
-                        continue
-                    else:
-                        self.logger.info(f"+1 request_login_response:{request_login_response}")
-                        self.request_login()
-
-                    # else:
-                    #     self.driver.close()
-                    #     self.drvier = self.driver_setting()
-                    #     self.login_page_redirect = False
-
+                session = engine_login.loginSession(username=self.username, password=self.password, proxy=None, session=None)
+                session.get_prefill_candidates()
+                session.login()
             except Exception as e:
                 self.logger.error(f"exception : {e}")

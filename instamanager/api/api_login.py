@@ -63,6 +63,7 @@ def get_prefill_candidates(self, login=False):
         "usages": '["account_recovery_omnibox"]',
         "device_id": self.device_id,
     }
+
     if login is False:
         data["_csrftoken"] = self.token
     data = json.dumps(data)

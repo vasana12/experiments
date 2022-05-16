@@ -1,3 +1,5 @@
+import time
+
 import instabot
 from db import m_instagram
 import json
@@ -36,8 +38,14 @@ def select_user(username=None):
     account_setting_info = INSTA_ACCOUNT_OBJ.select_cookie_user_v1(username=username)
     return account_setting_info
 
+def update_available():
+    INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(channel_name="instagram")
+    INSTA_ACCOUNT_OBJ.client_name = "admin_test"
+    account_setting_info = INSTA_ACCOUNT_OBJ.update_available()
+    return account_setting_info
+
 def get_hashtag_bot(hashtag_name):
-    account_setting_info = select_user()
+    account_setting_info = select_user(username="send_direct_items")
     account_username = account_setting_info.get("username")
     account_password = account_setting_info.get("password")
 
@@ -55,17 +63,18 @@ def get_hashtag_bot(hashtag_name):
             return hashtag_bot
 
 
-account_setting_info = select_user(username=None)
-hashtag_name_list = ["임신초기증상", "임신초기", "예비맘일상"]
+hashtag_name_list = ["여자데일리룩코디", "친환경인테리어","친환경가구","옷장정리","인테리어소품", "드레스룸가구"]
 username_list = []
 
 for hashtag_name in hashtag_name_list:
     hashtag_bot = get_hashtag_bot(hashtag_name)
     try:
         for idx, item in enumerate(hashtag_bot.get_posts_api_v3(next_page=None, next_max_id=None)):
-            if idx > 20000:
+            if idx > 5000:
                 break
-            print(hashtag_name, idx, item.shortcode, item.user, item.likes, item.next_page, item.next_max_id)
+            if idx%500 == 0 and idx/500>0:
+                time.sleep(60)
+            print(hashtag_name, idx, item.shortcode, item.likes)
             username = item.user.get("username")
             if username in username_list:
                 print(f"{username} 중복")
@@ -73,6 +82,7 @@ for hashtag_name in hashtag_name_list:
             username_list.append(username)
             payload.update(username=username,hashtag=hashtag_name)
             res = LAMBDA_CLIENT.invoke(FunctionName="user_brief_by_username", InvocationType="Event", Payload=json.dumps(payload))
+        update_available()
     except Exception as e:
         print(e)
         continue

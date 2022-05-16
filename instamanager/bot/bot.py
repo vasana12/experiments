@@ -190,6 +190,7 @@ class Bot(object):
         loglevel_stream=logging.INFO,
         log_follow_unfollow=True,
         db_conn: pymongo.MongoClient = None,
+        account_obj = None,
         account_setting_info = None,
         project_info = None
     ):
@@ -201,9 +202,11 @@ class Bot(object):
             loglevel_file=loglevel_file,
             loglevel_stream=loglevel_stream,
             db_conn = db_conn,
+            account_obj = account_obj,
             account_setting_info= account_setting_info,
             project_info = None
         )
+        self.account_obj = account_obj
         self.db_conn = db_conn
         self.log_follow_unfollow = log_follow_unfollow
         self.base_path = base_path

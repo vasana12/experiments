@@ -1146,9 +1146,7 @@ class Hashtag:
         return json_response["graphql"]["hashtag"] if "graphql" in json_response else json_response["data"]
 
     def _query_api_v3(self, params):
-
         json_response = self._context.get_json_v_api("explore/tags/{0}/".format(self.name), params)
-        print(f"json_response_test:{json_response}")
         return json_response["graphql"]["hashtag"] if "graphql" in json_response else json_response["data"]
 
 
@@ -1228,7 +1226,6 @@ class Hashtag:
             """Yields the posts associated with this hashtag."""
             self._metadata("top", "sections")
             conn = self._metadata("top")
-            print(conn)
             self._context.logger.info(f"next_max_id:{conn['next_max_id']}")
             for idx, section in enumerate(conn["sections"]):
                 yield from (

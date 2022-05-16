@@ -1,3 +1,4 @@
+import time
 import instabot
 from db import m_instagram
 import json
@@ -30,14 +31,21 @@ payload = {"checkpoint_update_term": 0}
 INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(channel_name="instagram")
 INSTA_ACCOUNT_OBJ.client_name = "admin_test"
 
+def update_available(username):
+    INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(channel_name="instagram")
+    INSTA_ACCOUNT_OBJ.client_name = "admin_test"
+    account_setting_info = INSTA_ACCOUNT_OBJ.update_available(username=username)
+    return account_setting_info
+
 def select_user(username=None):
     INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(channel_name="instagram")
     INSTA_ACCOUNT_OBJ.client_name = "admin_test"
-    account_setting_info = INSTA_ACCOUNT_OBJ.select_cookie_user_v1(username=username)
+    account_setting_info = INSTA_ACCOUNT_OBJ.select_cookie_user_v2(username=username)
+    print(account_setting_info)
     return account_setting_info
 
 def get_hashtag_bot(hashtag_name):
-    account_setting_info = select_user(username="seuwgaiwsjspdowinp")
+    account_setting_info = select_user(username="send_direct_items")
     account_username = account_setting_info.get("username")
     account_password = account_setting_info.get("password")
 
@@ -52,17 +60,19 @@ def get_hashtag_bot(hashtag_name):
             print(e)
             continue
         else:
-            return hashtag_bot
+            return hashtag_bot,account_username
 
 
-hashtag_name_list = ["P2E","NFT","비트코인", "playtoeran", "업비트", "엑시인피니티", "샌드박스", "메타버스", "게임", "돈버는게임", "부업", "빗썸", "모바일게임", "핸드폰게임"]
+hashtag_name_list = ["여자데일리룩코디", "친환경인테리어", "친환경가구", "옷장정리", "인테리어소품", "드레스룸가구"]
 username_list = []
 for hashtag_name in hashtag_name_list:
-    hashtag_bot = get_hashtag_bot(hashtag_name)
+    hashtag_bot, account_username = get_hashtag_bot(hashtag_name)
     try:
         for idx, item in enumerate(hashtag_bot.get_top_posts_api_v3(next_page=None, next_max_id=None)):
-            if idx > 3000:
+            if idx > 1000:
                 break
+            if idx%100 == 0 and idx/100>0:
+                time.sleep(60)
             print(hashtag_name, idx, item.shortcode, item.user, item.likes, item.next_page, item.next_max_id)
             username = item.user.get("username")
             if username in username_list:
@@ -71,6 +81,7 @@ for hashtag_name in hashtag_name_list:
             username_list.append(username)
             payload.update(username=username,hashtag=hashtag_name)
             res = LAMBDA_CLIENT.invoke(FunctionName="user_brief_by_username", InvocationType="Event", Payload=json.dumps(payload))
+        update_available(username=account_username)
     except Exception as e:
         print(e)
         continue

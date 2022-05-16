@@ -25,25 +25,22 @@ def select_user(username,max_messages_per_day):
     return account_setting_info
 #
 def run():
-    username, password = 'sp22064497', 'amdc2580!'
-    proxy = f"http://user-{username}-sessionduration-1:{password}@us.smartproxy.com:10000"
-    # proxy = "http://5rfpjo4evhm0c8dx:ihzoneqam4p3vt2b@texas1.thesocialproxy.com:10000"
 
     ### 0. 세팅 : 프로젝트, 발송 텍스트, 프록시
-    project = "puzzle_shake"
-    start_date = "2022-03-15"
+    project = "puzzle_paper"
+    start_date = "2022-04-21"
     project_info = {"project_name":project, "start_date": start_date}
 
     """ dm/source/message """
     text = get_dm_source.get_source_message(filename="puzzle_shake_paper.txt")
-    # host,port, mobile_proxy_username,mobile_proxy_password = "residential.ipb.cloud", "7777", "customer-lsgr20040901-asn-20057-sessid-pCMf-sesstime-1", "UG2xaDXxC"
-    # proxy = f"http://{mobile_proxy_username}:{mobile_proxy_password}@{host}:{port}"
+    host, port, mobile_proxy_username, mobile_proxy_password = "residential.ipb.cloud", "7777", "customer-lsgr20040901-asn-12576-sessid-xnoa-sesstime-1", "UG2xaDXxC"
+    proxy = f"http://{mobile_proxy_username}:{mobile_proxy_password}@{host}:{port}"
     #
     # proxy = None
     ### 1. 전송할 인플루언서 리스트 가져오기
     """ dm/source/hashtag """
-    search_hashtag = get_dm_source.get_source_hashtag("puzzle_shake_paper.txt")
-    search_filter = {"user_followed_by": {"$gte": 2000, "$lte":5000},"avg_like":
+    search_hashtag = get_dm_source.get_source_hashtag("puzzle_paper.txt")
+    search_filter = {"user_followed_by": {"$gte": 4000, "$lte":10000}, "avg_like":
                 {
                     "$gte": 50
                 },"$text":{"$search": search_hashtag}}

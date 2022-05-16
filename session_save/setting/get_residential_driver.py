@@ -103,5 +103,5 @@ def get_chromedriver(use_proxy=False, user_agent=None):
             driver = None
 
     if driver is None:
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        driver = webdriver.Chrome(os.path.join(path, 'chromedriver'), options=chrome_options)
     return driver

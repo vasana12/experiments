@@ -51,6 +51,10 @@ def send_message(self, text, user_ids, thread_id=None):
         self.logger.info("Unloadable participant")
         return UnloadableParticipant()
 
+    if send_direct_item_response == "password_incorrect":
+        self.logger.info("password_incorrect")
+        return PasswordIncorrect()
+
     if send_direct_item_response == "feedback_required":
         self.logger.info("feedback_required")
         return FeedbackRequired()
@@ -76,9 +80,6 @@ def send_messages(self:instamanager.Bot, text, user_ids):
 
     for user in tqdm(user_ids):
         self.small_delay()
-
-
-
         self.logger.info(f"Going to send messages. to ->  {user}")
         send_message_response = self.send_message(text, user)
 
@@ -107,8 +108,16 @@ def send_messages(self:instamanager.Bot, text, user_ids):
             return broken_items
 
         if isinstance(send_message_response, FeedbackRequired):
-            self.db_conn["account"]["account"].update_one({"username": self.username}, {"$set": {"status": "available"}})
+            self.db_conn["account"]["account"].update_one({"username": self.username}, {"$set": {"status": "unavailable"}})
             self.logger.error(f"feedback required, break iteration and restart new account  ")
+            self.error_delay()
+            broken_items = user_ids[user_ids.index(user):]
+            save_checkpoint(self)
+            return broken_items
+
+        if isinstance(send_message_response, PasswordIncorrect):
+            self.db_conn["account"]["account"].update_one({"username": self.username}, {"$set": {"status": "unavailable"}})
+            self.logger.error(f"password incorrect, break iteration and restart new account  ")
             self.error_delay()
             broken_items = user_ids[user_ids.index(user):]
             save_checkpoint(self)

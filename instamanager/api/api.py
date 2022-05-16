@@ -20,6 +20,7 @@ from requests_toolbelt import MultipartEncoder
 from tqdm import tqdm
 from urllib3.exceptions import MaxRetryError
 
+from session_save.engine import engine_login
 from . import config, devices
 from .api_login import (
     change_device_simulation,
@@ -72,6 +73,7 @@ class API(object):
         loglevel_stream=logging.INFO,
         db_conn = None,
         account_setting_info = None,
+        account_obj = None,
         project_info = None
     ):
         # Setup device and user_agent
@@ -458,6 +460,19 @@ class API(object):
                     payload = response_data.get("payload")
                     if payload.get("message") is not None and "Unloadable participant" in str(payload.get("message").encode("utf-8")):
                         return "Unloadable participant"
+
+                if response_data.get(
+                        "message"
+                ) is not None and "password you entered is incorrect" in str(
+                    response_data.get("message").encode("utf-8")
+                ):
+                    try:
+                        self.last_response = response
+                        self.last_json = json.loads(response.text)
+                    except Exception:
+                        pass
+                    return "password_incorrect"
+
                 if response_data.get(
                     "message"
                 ) is not None and "feedback_required" in str(
@@ -483,6 +498,19 @@ class API(object):
                     self.logger.info("Response Text: {}".format(str(response.text)))
                 except Exception:
                     pass
+
+            if response.status_code == 403:
+                self.logger.error("Since session is expired, we need to login again")
+                session = engine_login.loginSession(username=self.username, password=self.password, proxy=None, session=None)
+                session.get_prefill_candidates()
+                if not session.login():
+                    return False
+                account_setting_info = self.account_collection.find_one({"username":self.username})
+                self.account_setting_info = account_setting_info
+                self.login(username=self.username, password=self.password, account_setting_info=self.account_setting_info, proxy=self.proxy, project_info=self.project_info)
+                return self.send_request(endpoint,post,login, with_signature, headers, extra_sig, timeout_minutes)
+                ###logot Error
+
             if response.status_code == 429:
                 # if we come to this error, add 5 minutes of sleep everytime we hit the 429 error (aka soft bann) keep increasing untill we are unbanned
                 if timeout_minutes is None:
@@ -516,6 +544,7 @@ class API(object):
                 except JSONDecodeError:
                     self.logger.error("JSONDecodeError")
                     return "InstaJSONDecodeError"
+
                 if response_data.get("challenge_required"):
                     # Try and fix the challenge required error by totally restarting
                     self.logger.error(

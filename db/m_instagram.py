@@ -17,7 +17,7 @@ class NoFoundException(Exception):
 class InstaDB:
     def __init__(self,db_name=None):
         self.db_name = db_name
-        self.conn = pymongo.MongoClient("mongodb+srv://datacast:amdc7025!@cluster0.egbmu.mongodb.net/admin?retryWrites=true&w=majority", tlsCAFile=ca,unicode_decode_error_handler='ignore')
+        self.conn = pymongo.MongoClient("218.153.187.100:27017", username="datacast", password="amdc2580!", authSource="admin", authMechanism="SCRAM-SHA-1", unicode_decode_error_handler='ignore')
         self.db = self.conn[self.db_name] if db_name else None
         self.account_collection = self.conn['account']['account']
         FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
@@ -535,6 +535,38 @@ class InstaAccount(InstaDB):
             self.logger.debug(f"available_account is None")
             return None
         return available_account
+
+    def select_user(self,username):
+        projection = {
+            "_id": 1,
+            "username": 1,
+            "channel": 1,
+            "client_name": 1,
+            "last_login": 1,
+            "limit": 1,
+            "password": 1,
+            "status": 1,
+            "usage": 1,
+            "device_settings": 1,
+            "session.csrftoken": 1,
+            "session.ds_user_id": 1,
+            "session.mid": 1,
+            "session.rur": 1,
+            "session.sessionid": 1,
+            "timing_value": 1,
+            "user_agent": 1,
+            "uuids": 1
+        }
+
+        filter_plus = {"username":username}
+        available_account = self.account_collection.find_one(filter=filter_plus, projection=projection)
+
+        if available_account is not None:
+            self.username = available_account["username"]
+        else:
+            self.logger.debug(f"available_account is None")
+            return None
+        return available_account
     def select_cookie_user_v2(self, username=None, max_messages_per_day=None):
         if not max_messages_per_day:
             max_messages_per_day = 5
@@ -589,7 +621,7 @@ class InstaAccount(InstaDB):
             filter_plus.update(client_name=self.client_name)
 
         self.logger.debug(f"filter_raw:{filter_plus}")
-        available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_plus]}, update={"$set":{"status":"login","last_login":datetime.now()}}, projection=projection ,sort=[('last_login', 1)])
+        available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_plus]}, update={"$set":{"status":"login","last_login":datetime.now()}}, projection=projection ,sort=[('last_login', -1)])
 
         if available_account is not None:
             self.username = available_account["username"]
@@ -597,7 +629,6 @@ class InstaAccount(InstaDB):
             self.logger.debug(f"available_account is None")
             return None
         return available_account
-
     def select_cookie_user(self,username=None, max_messages_per_day=None):
         if not max_messages_per_day:
             max_messages_per_day = 5
@@ -664,16 +695,11 @@ class InstaAccount(InstaDB):
 
         self.update_available()
 
-    def update_available(self):
+    def update_available(self,username=None):
         ##logout 하는 경우에는 계정의 상태를 available 로 변경하고 last_login 을 현재시간으로 업데이트 시켜준다.
-        if self.client_name != "admin":
-            update_raw = {
-                "client_name": self.client_name, "username": self.username, "channel": self.channel_name,
-            }
-        else:
-            update_raw = {
-                 "username": self.username, "channel": self.channel_name,
-            }
+        if username:
+            self.username = username
+        update_raw = {"username": self.username, "channel": self.channel_name}
         self.logger.info(f"db:{self.db_name}/collection:{self.collection.name}/update_raw:{update_raw}")
         self.collection.update_one(
             update_raw,
