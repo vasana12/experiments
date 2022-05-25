@@ -41,9 +41,7 @@ def insert_account():
     logger.debug("insert_account_start")
     login_account_info_list = read_account_info_from_text()
     for idx, login_account_info in enumerate(login_account_info_list):
-
         username , password = None, None
-
         if login_account_info == "":
             continue
 
@@ -72,40 +70,73 @@ def insert_account():
 
 
         except Exception as e:
-            logger.info(f"e {idx} - username:{username}/password:{password} error registered error!")
-            info = login_account_info.split("||")
-            username = info[0].split(":")[0]
-            password = info[0].split(":")[1]
+            try:
+                logger.info(f"{idx} - username:{username}/password:{password} error registered error!")
+                info = login_account_info.split("||")
+                username = info[0].split(":")[0]
+                password = info[0].split(":")[1]
 
-            cookie_info = info[1]
-            csrftoken = cookie_info.split("csrftoken=")[1]
-            csrftoken = csrftoken.split(";")[0]
+                cookie_info = info[1]
+                csrftoken = cookie_info.split("csrftoken=")[1]
+                csrftoken = csrftoken.split(";")[0]
 
-            ds_user_id = cookie_info.split("ds_user_id=")[1]
-            ds_user_id = ds_user_id.split(";")[0]
+                ds_user_id = cookie_info.split("ds_user_id=")[1]
+                ds_user_id = ds_user_id.split(";")[0]
 
-            sessionid = cookie_info.split("sessionid=")[1]
-            sessionid = sessionid.split(";")[0]
+                sessionid = cookie_info.split("sessionid=")[1]
+                sessionid = sessionid.split(";")[0]
 
-            mid = login_account_info.split("mid=")[1]
-            mid = mid.split(";")[0]
+                mid = login_account_info.split("mid=")[1]
+                mid = mid.split(";")[0]
 
-            rur = cookie_info.split("rur=")[1]
-            rur = rur.split(";")[0]
+                rur = cookie_info.split("rur=")[1]
+                rur = rur.split(";")[0]
 
-            setting_info = read_account_setting_info_from_db(username=username, password=password)
-            setting_info["username"] = username
-            setting_info["password"] = password
-            setting_info["cookie"] = {}
-            setting_info["cookie"]["mid"] = mid
-            setting_info["cookie"]["csrftoken"] = csrftoken
-            setting_info["cookie"]["sessionid"] = sessionid
-            setting_info["cookie"]["ds_user_id"] = ds_user_id
-            setting_info["cookie"]["rur"] = rur
+                setting_info = read_account_setting_info_from_db(username=username, password=password)
+                setting_info["username"] = username
+                setting_info["password"] = password
+                setting_info["cookie"] = {}
+                setting_info["cookie"]["mid"] = mid
+                setting_info["cookie"]["csrftoken"] = csrftoken
+                setting_info["cookie"]["sessionid"] = sessionid
+                setting_info["cookie"]["ds_user_id"] = ds_user_id
+                setting_info["cookie"]["rur"] = rur
 
-            save_uuid_and_session_info(setting_info=setting_info)
-            logger.info(f"{idx} - username:{username}/password:{password} error registered new!")
+                save_uuid_and_session_info(setting_info=setting_info)
+                logger.info(f"{idx} - username:{username}/password:{password} error registered new!")
+            except:
+                logger.error(f"insert error 2 - {e}/ {idx} - username:{username}/password:{password} registered error")
+                info = login_account_info.split("|")
+                account_info = info[0].split(":")
 
+                username = account_info[0]
+                password = account_info[1]
+
+                user_agent = info[1]
+
+                csrftoken = login_account_info.split("csrftoken=")[1]
+                csrftoken = csrftoken.split(";")[0]
+
+                ds_user_id = login_account_info.split("ds_user_id=")[1]
+                ds_user_id = ds_user_id.split(";")[0]
+
+                sessionid = login_account_info.split("sessionid=")[1]
+                sessionid = sessionid.split(";")[0]
+
+                rur = login_account_info.split("rur=")[1]
+                rur = rur.split(";")[0]
+                setting_info = read_account_setting_info_from_db(username=username, password=password)
+
+                setting_info["username"] = username
+                setting_info["password"] = password
+                setting_info["user_agent"] = user_agent
+                setting_info["cookie"] = {}
+                setting_info["cookie"]["csrftoken"] = csrftoken
+                setting_info["cookie"]["sessionid"] = sessionid
+                setting_info["cookie"]["ds_user_id"] = ds_user_id
+                setting_info["cookie"]["rur"] = rur
+                logger.info(f"{idx} - username:{username}/password:{password} error registered new!")
+                save_uuid_and_session_info(setting_info=setting_info)
         else:
             logger.info(f"{idx} - username:{username}/password:{password} registered new!")
             save_uuid_and_session_info(setting_info=setting_info)

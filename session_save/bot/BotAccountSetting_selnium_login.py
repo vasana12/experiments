@@ -63,7 +63,7 @@ class botAccountSetting():
                 break
             else:
                 self.first_page_iterate_count += 1
-
+        input()
         is_cache_modal = engine_selenium_login.check_cache_modal(self)
         if is_cache_modal:
             self.logger.info(f"selenium login - success : cache modal click")
@@ -151,9 +151,8 @@ class botAccountSetting():
         # self.driver = get_chromedriver(use_proxy=True)
         login_account_info = botAccount_setting_db.read_accoun_info_from_db_one(client_name=client_name)
 
-        self.username = login_account_info["username"]
-        self.password = login_account_info["password"]
-
+        self.username = "isi2_9655"
+        self.password = "w7d7m5bS"
 
 
         self.logger.info(f"/{self.username}/{self.password} 로그인 시도")
@@ -169,6 +168,7 @@ class botAccountSetting():
             request_login_response = self.request_login()
             self.logger.info(f"request_login_response:{request_login_response}")
 
+            engine_selenium_login.success_bot_account_cookie_check(self)
             if engine_selenium_login.success_bot_account_logout(self):
                 self.logger.debug("success_bot_account_logout - test")
                 if engine_selenium_login.success_bot_account_logout_click(self):

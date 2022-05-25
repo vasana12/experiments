@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="supertag" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="datacast@218.153.187.100:22 password" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
     <option name="confirmBeforeUploading" value="false" />
     <serverData>
-      <paths name="supertag">
+      <paths name="datacast@218.153.187.100:22 password">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/ec2-user/project/splabs" local="$PROJECT_DIR$/../splabs" />
+            <mapping deploy="/var/project/memory_check" local="$PROJECT_DIR$/../memory_check" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="hpe">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$/../memory_check" web="/" />
           </mappings>
         </serverdata>
       </paths>

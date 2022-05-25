@@ -9,6 +9,7 @@
       <module fileurl="file://$PROJECT_DIR$/../insta_bot/.idea/insta_bot.iml" filepath="$PROJECT_DIR$/../insta_bot/.idea/insta_bot.iml" />
       <module fileurl="file://$PROJECT_DIR$/../instagram-api/.idea/instagram-api.iml" filepath="$PROJECT_DIR$/../instagram-api/.idea/instagram-api.iml" />
       <module fileurl="file://$PROJECT_DIR$/../instagram-api-docs/.idea/instagram-api-docs.iml" filepath="$PROJECT_DIR$/../instagram-api-docs/.idea/instagram-api-docs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../memory_check/.idea/memory_check.iml" filepath="$PROJECT_DIR$/../memory_check/.idea/memory_check.iml" />
       <module fileurl="file://$PROJECT_DIR$/../sns_pyqt5/.idea/sns_pyqt5.iml" filepath="$PROJECT_DIR$/../sns_pyqt5/.idea/sns_pyqt5.iml" />
       <module fileurl="file://$PROJECT_DIR$/../splabs/.idea/splabs.iml" filepath="$PROJECT_DIR$/../splabs/.idea/splabs.iml" />
     </modules>

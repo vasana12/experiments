@@ -17,7 +17,7 @@ class NoFoundException(Exception):
 class InstaDB:
     def __init__(self,db_name=None):
         self.db_name = db_name
-        self.conn = pymongo.MongoClient("218.153.187.100:27017", username="datacast", password="amdc2580!", authSource="admin", authMechanism="SCRAM-SHA-1", unicode_decode_error_handler='ignore')
+        self.conn = pymongo.MongoClient("218.153.187.100:27017", directConnection=True, username="datacast", password="amdc2580!", authSource="admin", authMechanism="SCRAM-SHA-1", unicode_decode_error_handler='ignore')
         self.db = self.conn[self.db_name] if db_name else None
         self.account_collection = self.conn['account']['account']
         FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
@@ -621,7 +621,7 @@ class InstaAccount(InstaDB):
             filter_plus.update(client_name=self.client_name)
 
         self.logger.debug(f"filter_raw:{filter_plus}")
-        available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_plus]}, update={"$set":{"status":"login","last_login":datetime.now()}}, projection=projection ,sort=[('last_login', -1)])
+        available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_plus]}, update={"$set":{"status":"login","last_login":datetime.now()}}, projection=projection, sort=[('last_login', -1)])
 
         if available_account is not None:
             self.username = available_account["username"]

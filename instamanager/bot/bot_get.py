@@ -216,7 +216,7 @@ def get_user_id_from_username(self, username):
             self._usernames[username] = str(user_doc["userid"])
             return self._usernames[username]
 
-        ##when userpk not in our db, we invoke lambda session to get target user info
+        #when userpk not in our db, we invoke lambda session to get target user info
         get_user_info_response = get_target_user_info.lambda_get_target_user_info(username=username)
         if get_user_info_response:
             userpk = get_user_info_response["user_id"]
@@ -224,11 +224,10 @@ def get_user_id_from_username(self, username):
             return self._usernames[username]
 
         ##when lambda session can't return , we user proxy to get userpk
-        # self.api.search_username(username)
-        # self.very_small_delay()
-        # if "user" in self.api.last_json:
-        #     self._usernames[username] = str(self.api.last_json["user"]["pk"])
-        #     return self._usernames[username]
+        self.api.search_username(username)
+        if "user" in self.api.last_json:
+            self._usernames[username] = str(self.api.last_json["user"]["pk"])
+            return self._usernames[username]
         ##when all those method return nothing, we return None
         return None
 

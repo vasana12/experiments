@@ -183,6 +183,16 @@ def detected_robot_logout_click(self):
             return False
         return True
 
+def success_bot_account_cookie_check(self):
+    try:
+        WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.XPATH, "//span[text()='모든 쿠키 허용']")))
+    except Exception as e:
+        self.logger.debug(f"success_bot_account_cookie_check error_message:{e}")
+        pass
+    else:
+        self.driver.find_element(By.XPATH, "//span[text()='모든 쿠키 허용']").click()
+        return True
+
 def success_bot_account_logout(self):
     try:
         WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//img[@class='_6q-tv'] | //*[@id='react-root']/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img | //*[@id='react-root']/div/div/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img")))

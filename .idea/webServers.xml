@@ -16,6 +16,13 @@
           </advancedOptions>
         </fileTransfer>
       </webServer>
+      <webServer id="78831810-bd8d-4086-9381-9220ef1f12f8" name="hpe">
+        <fileTransfer rootFolder="/var/project/memory_check" accessType="SFTP" host="218.153.187.100" port="22" sshConfigId="3136afe3-2fb1-45d1-bc0e-04553c0610a0" sshConfig="datacast@218.153.187.100:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
     </option>
   </component>
 </project>

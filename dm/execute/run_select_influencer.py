@@ -25,24 +25,25 @@ def search_influencer_info(exclude_user_list=None):
     if not exclude_user_list:
         exclude_user_list = []
     skip = 0
-    limit = 2000
+    limit = 500
     only_username = False
 
     collection_name = "user_checkpoint"
-    search_hashtag = get_dm_source.get_source_hashtag("puzzle_pet.txt")
+    search_hashtag = get_dm_source.get_source_hashtag("gonggu.txt")
     # search_hashtag = "강아지키우고싶다"
-    filename = f"puzzle_pet_{search_hashtag[0:10]}"
+    filename = f"공구_500_{search_hashtag[0:10]}"
 
 
     search_filter = \
             {
-                "user_followed_by": {
-                    "$gte": 5500
+                "user_followed_by":
+                    {
+                        "$gte": 5000
+                    },
+                "avg_like":
+                {
+                    "$gte": 100
                 },
-                # "avg_like":
-                # {
-                #     "$gte": 500
-                # },
                 "$text":
                     {
                         "$search": search_hashtag
@@ -59,7 +60,7 @@ def search_influencer_info(exclude_user_list=None):
 
     return target_username_list
 
-username = get_influnecer_info_by_project(project_name="puzzle", only_username=True, file_name=None)
+username = get_influnecer_info_by_project(project_name="gonggu", only_username=True, file_name=None)
 target_username_list = search_influencer_info(exclude_user_list=username)
 print(len(target_username_list))
 # username = get_influnecer_info_by_project(project_name="puzzle", file_name=None)

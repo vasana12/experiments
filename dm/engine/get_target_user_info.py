@@ -14,8 +14,8 @@ logger.setLevel(logging.INFO)
 cfg = botocore.config.Config(retries={'max_attempts': 0}, read_timeout=900000, connect_timeout=900000)
 LAMBDA_CLIENT = boto3.client('lambda',
                              region_name='ap-northeast-2',
-                             aws_access_key_id='AKIAYHHL7L4IP25TWTQQ',
-                             aws_secret_access_key='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',
+                             aws_access_key_id='AKIAYHHL7L4IGWDMEJ4J',
+                             aws_secret_access_key='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',
                              config= cfg)
 
 def lambda_get_target_user_info(username):
