@@ -48,17 +48,16 @@ def get_userinfo_by_project(project_name, only_username = None, file_name = None
         save_file(influencer_data_list, f"{file_name}_인플루언서")
     return influencer_data_list
 def get_influencers(search_filter,influencer_skip=0 ,influencer_limit=0, only_username= False,collection_name=None):
-    collection_lookup = {"hashtag_and_user_search" : HASHTAG_AND_USER_SEARCH, "user_checkpoint":USER_CHECKPOINT}
-    selected_collection = collection_lookup.get(collection_name)
-    if selected_collection is None:
-        logger.error(f"you choose wrong collection collection : you can choose {','.join(collection_lookup.keys())} ")
-        return
-    field_exclude = {"contact_phone":False, "contact_email":False, "_id": False, "recent_posts": False, "search": False, "thumbnail_url": False, "hashtag": False, "likes": False, "comments": False, "crawled_date_time":False,"analyzed_date_time":False,"dateField":False,"avg_point":False,"activity_category":False,"brand":False,"expected_pay_photo":False,"expected_pay_product":False,"sex":False,"sns_facebook":False,"sns_naver":False,"sns_tiktok":False,"sns_youtube":False,"userid":False,"top_posts":False,"top_users":False}
+
+    field_exclude = {"status":False,"contact_phone":False, "contact_email":False, "_id": False, "recent_posts": False, "search": False, "thumbnail_url": False, "hashtag": False, "likes": False, "comments": False, "crawled_date_time":False,"analyzed_date_time":False,"dateField":False,"avg_point":False,"activity_category":False,"brand":False,"expected_pay_photo":False,"expected_pay_product":False,"sex":False,"sns_facebook":False,"sns_naver":False,"sns_tiktok":False,"sns_youtube":False,"userid":False,"top_posts":False,"top_users":False}
     only_username_field_exclude = {"_id": 0,"username":1}
     field_exclude = only_username_field_exclude if only_username else field_exclude
-    cursor = selected_collection.find(search_filter, field_exclude).skip(influencer_skip).limit(influencer_limit)
-    influencer_list = list(cursor)
 
+    if collection_name == "user_checkpoint":
+        search_filter.update(collection_from={"$exists":False})
+    cursor = USER_CHECKPOINT.find(search_filter, field_exclude).skip(influencer_skip).limit(influencer_limit)
+
+    influencer_list = list(cursor)
     if only_username :
         influencer_list = list(map(lambda x: x["username"], influencer_list))
         return influencer_list
@@ -78,7 +77,7 @@ def get_userinfo_by_username(username, collection_name):
                      "sns_tiktok": False, "sns_youtube": False, "userid": False, "top_posts": False, "top_users": False, "status":False}
     return selected_collection.find_one({"username":username}, field_exclude)
 
-def main(search_filter=None, file_name=None, skip=None, limit=None, only_username=None, collection_name="hashtag_and_user_search"):
+def main(search_filter=None, file_name=None, skip=None, limit=None, only_username=None, collection_name=None):
     influencer_data_list = get_influencers(search_filter=search_filter, influencer_skip=skip, influencer_limit=limit, only_username=only_username, collection_name = collection_name)
     if file_name:
         save_file(influencer_data_list, f"{file_name}_인플루언서_{limit}")

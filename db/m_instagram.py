@@ -20,6 +20,7 @@ class InstaDB:
         self.conn = pymongo.MongoClient("218.153.187.100:27017", directConnection=True, username="datacast", password="amdc2580!", authSource="admin", authMechanism="SCRAM-SHA-1", unicode_decode_error_handler='ignore')
         self.db = self.conn[self.db_name] if db_name else None
         self.account_collection = self.conn['account']['account']
+        self.bandncast_account_collection = self.conn["bandncast"]["account"]
         FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
         logging.basicConfig(format=FORMAT)
         logger = logging.getLogger(__name__)

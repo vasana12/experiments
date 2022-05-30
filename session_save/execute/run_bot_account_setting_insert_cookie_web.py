@@ -4,7 +4,7 @@ from pathlib import Path
 import logging
 from db import m_instagram
 import base64
-from session_save.setting.botAccount_setting_db import read_account_setting_info_from_db, save_uuid_and_session_info, update_account_unavailable
+from session_save.setting.botAccount_setting_db import read_account_setting_info_from_db, save_uuid_and_session_info, save_uuid_and_session_info_bandncast,update_account_unavailable
 import ast
 insta_db = m_instagram.InstaDB(db_name="account")
 account_collection = insta_db.account_collection
@@ -40,6 +40,8 @@ def read_account_info_from_text():
 def insert_account():
     logger.debug("insert_account_start")
     login_account_info_list = read_account_info_from_text()
+
+    seller = "insta_shop"
     for idx, login_account_info in enumerate(login_account_info_list):
         username , password = None, None
         if login_account_info == "":
@@ -47,28 +49,36 @@ def insert_account():
 
         try:
             info = login_account_info.split("|")
-            username = info[0].split(":")[0]
-            password = info[0].split(":")[1]
-            user_agent = info[1]
-            cookie_info = info[2]
-            ig_did = cookie_info.split(";")[0].replace("ig_did=","")
-            csrftoken = cookie_info.split(";")[1].replace("csrftoken=", "")
-            ds_user_id = cookie_info.split(";")[2].replace("ds_user_id=", "")
-            mid = cookie_info.split(";")[3].replace("mid=", "")
-            sessionid = cookie_info.split(";")[4].replace("sessionid=", "")
+            account_info = info[0].split(":")
 
-            setting_info = read_account_setting_info_from_db(username=username,password=password)
+            username = account_info[0]
+            password = account_info[1]
+
+            user_agent = info[1]
+
+            csrftoken = login_account_info.split("csrftoken=")[1]
+            csrftoken = csrftoken.split(";")[0]
+
+            ds_user_id = login_account_info.split("ds_user_id=")[1]
+            ds_user_id = ds_user_id.split(";")[0]
+
+            sessionid = login_account_info.split("sessionid=")[1]
+            sessionid = sessionid.split(";")[0]
+
+            rur = login_account_info.split("rur=")[1]
+            rur = rur.split(";")[0]
+            setting_info = read_account_setting_info_from_db(username=username, password=password)
 
             setting_info["username"] = username
             setting_info["password"] = password
+            setting_info["user_agent"] = user_agent
             setting_info["cookie"] = {}
-            setting_info["cookie"]["ig_did"] = ig_did
-            setting_info["cookie"]["mid"] = mid
             setting_info["cookie"]["csrftoken"] = csrftoken
             setting_info["cookie"]["sessionid"] = sessionid
             setting_info["cookie"]["ds_user_id"] = ds_user_id
-
-
+            setting_info["cookie"]["rur"] = rur
+            logger.info(f"{idx} - username:{username}/password:{password} registered new!")
+            save_uuid_and_session_info_bandncast(setting_info=setting_info, seller=seller)
         except Exception as e:
             try:
                 logger.info(f"{idx} - username:{username}/password:{password} error registered error!")
@@ -102,7 +112,7 @@ def insert_account():
                 setting_info["cookie"]["ds_user_id"] = ds_user_id
                 setting_info["cookie"]["rur"] = rur
 
-                save_uuid_and_session_info(setting_info=setting_info)
+                save_uuid_and_session_info(setting_info=setting_info, seller=seller)
                 logger.info(f"{idx} - username:{username}/password:{password} error registered new!")
             except:
                 logger.error(f"insert error 2 - {e}/ {idx} - username:{username}/password:{password} registered error")
@@ -136,10 +146,10 @@ def insert_account():
                 setting_info["cookie"]["ds_user_id"] = ds_user_id
                 setting_info["cookie"]["rur"] = rur
                 logger.info(f"{idx} - username:{username}/password:{password} error registered new!")
-                save_uuid_and_session_info(setting_info=setting_info)
+                save_uuid_and_session_info_bandncast(setting_info=setting_info, seller=seller)
         else:
             logger.info(f"{idx} - username:{username}/password:{password} registered new!")
-            save_uuid_and_session_info(setting_info=setting_info)
+            save_uuid_and_session_info_bandncast(setting_info=setting_info, seller=seller)
 
 if __name__ == "__main__":
     insert_account()

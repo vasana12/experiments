@@ -29,9 +29,9 @@ def search_influencer_info(exclude_user_list=None):
     only_username = False
 
     collection_name = "user_checkpoint"
-    search_hashtag = get_dm_source.get_source_hashtag("gonggu.txt")
-    # search_hashtag = "강아지키우고싶다"
-    filename = f"공구_500_{search_hashtag[0:10]}"
+    # search_hashtag = get_dm_source.get_source_hashtag("trip.txt")
+    search_hashtag = "홍삼 고려홍삼 5년근홍삼"
+    filename = f"ginseng_500_{search_hashtag[0:10]}"
 
 
     search_filter = \
@@ -42,7 +42,7 @@ def search_influencer_info(exclude_user_list=None):
                     },
                 "avg_like":
                 {
-                    "$gte": 100
+                    "$gte": 50
                 },
                 "$text":
                     {
@@ -60,7 +60,7 @@ def search_influencer_info(exclude_user_list=None):
 
     return target_username_list
 
-username = get_influnecer_info_by_project(project_name="gonggu", only_username=True, file_name=None)
+username = get_influnecer_info_by_project(project_name="ginseng", only_username=True, file_name=None)
 target_username_list = search_influencer_info(exclude_user_list=username)
 print(len(target_username_list))
 # username = get_influnecer_info_by_project(project_name="puzzle", file_name=None)

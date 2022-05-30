@@ -7,7 +7,7 @@ from session_save.util import generate_uuid
 
 insta_db = m_instagram.InstaDB(db_name="account")
 account_collection = insta_db.account_collection
-
+bandncast_account_collection = insta_db.bandncast_account_collection
 FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -36,19 +36,19 @@ def update_account_unavailable(username):
 
 def read_account_info_from_db():
     filter_new = {"status": "new", "client_name": "admin_test"}
-    filter_new_login = {"status": "available", "checkpoint": {"$exists": False}, "client_name": "admin_test", "last_login": {"$gte": calcuate_check_point_deadline(days=3)}}
+    # filter_new_login = {"status": "available", "checkpoint": {"$exists": False}, "client_name": "admin_test", "last_login": {"$gte": calcuate_check_point_deadline(days=3)}}
     # filter_old = {"status":"available", "client_name":"admin_test","last_login":{"$lte":calcuate_check_point_deadline()}}
     # filter_checkpoint = {"status":"checkpoint_required"}
 
-    setting_account_doc = list(ACCOUNT_COLLECTION.find({"$or":[filter_new,filter_new_login]}).sort([('last_login', 1)]))
+    setting_account_doc = list(ACCOUNT_COLLECTION.find({"$or":[filter_new]}).sort([('last_login', 1)]))
     print(len(setting_account_doc))
     return setting_account_doc
 
 def read_accoun_info_from_db_one(client_name=None):
     filter_new = {"status": "new"}
-    if client_name:
-        filter_new.update(client_name=client_name)
-
+    # if client_name:
+    #     filter_new.update(client_name=client_name)
+    #
     # filter_new_login = {"status": "available", "checkpoint": {"$exists": False}, "client_name": "admin_test",
     #                         "last_login": {"$gte": calcuate_check_point_deadline(days=3)}}
     # filter_old = {"status":"available", "client_name":"admin_test","last_login":{"$lte":calcuate_check_point_deadline()}}
@@ -116,7 +116,7 @@ def save_uuid_and_session_info_new(setting_info):
 
     account_collection.insert_one(insert_info)
 
-def save_uuid_and_session_info(setting_info):
+def save_uuid_and_session_info(setting_info, seller=None):
     account_info = account_collection.find_one(filter={"username":setting_info["username"]})
 
     ## when account_already exist
@@ -128,6 +128,68 @@ def save_uuid_and_session_info(setting_info):
             },
             update={
                 "$set": {
+                    "seller":seller,
+                    "usage.hashtag": 0,
+                    "usage.dm": 0,
+                    "last_login": datetime.now(),
+                    "status": "unavailable",
+                    "uuids": setting_info["uuids"],
+                    "timing_value.last_login": time.time(),
+                    "timing_value.last_experiments": time.time(),
+                    "device_settings": setting_info["device_settings"],
+                    "user_agent": setting_info["user_agent"],
+                    "session": setting_info["cookie"],
+                    "mobile_session": True
+                }
+            }
+        )
+        return
+
+    ### new account setting info insert
+    insert_info = {
+        "username": setting_info["username"],
+        "password": setting_info["password"],
+        "client_name": setting_info["client_name"],
+        "channel": "instagram",
+        "status": "unavailable",
+        "limit": {
+            "dm": setting_info["limit"]["dm"],
+            "hashtag": setting_info["limit"]["hashtag"]
+        },
+        "usage": {
+            "dm": 0,
+            "hashtag": 0
+        },
+        "uuids":setting_info["uuids"]
+            ,
+        "timing_value":
+            {
+                "last_login": time.time(),
+                "last_experiments": time.time()
+            },
+        "device_settings": setting_info["device_settings"],
+        "user_agent": setting_info["user_agent"],
+        "session": setting_info["cookie"],
+        "mobile_session": True,
+        "last_login": datetime.now(),
+        "seller":seller
+    }
+
+    account_collection.insert_one(insert_info)
+
+def save_uuid_and_session_info_bandncast(setting_info,seller=None):
+    account_info = bandncast_account_collection.find_one(filter={"username":setting_info["username"]})
+
+    ## when account_already exist
+    if account_info:
+        _id = account_info["_id"]
+        bandncast_account_collection.update_one(
+            filter={
+                "_id": _id
+            },
+            update={
+                "$set": {
+                    "seller":seller,
                     "usage.hashtag": 0,
                     "usage.dm": 0,
                     "last_login": datetime.now(),
@@ -171,10 +233,10 @@ def save_uuid_and_session_info(setting_info):
         "session": setting_info["cookie"],
         "mobile_session": True,
         "last_login": datetime.now(),
+        "seller":seller
     }
 
-    account_collection.insert_one(insert_info)
-
+    bandncast_account_collection.insert_one(insert_info)
 def read_account_setting_info_from_db(username, password):
     uuids = generate_uuid.generate_all_uuids(username, password)
     device_doc = SETTING_COLLECTION.find_one({"name":"base"})
