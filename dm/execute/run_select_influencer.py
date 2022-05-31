@@ -25,12 +25,12 @@ def search_influencer_info(exclude_user_list=None):
     if not exclude_user_list:
         exclude_user_list = []
     skip = 0
-    limit = 500
+    limit = 140
     only_username = False
 
     collection_name = "user_checkpoint"
     # search_hashtag = get_dm_source.get_source_hashtag("trip.txt")
-    search_hashtag = "홍삼 고려홍삼 5년근홍삼"
+    search_hashtag = "붓기차"
     filename = f"ginseng_500_{search_hashtag[0:10]}"
 
 
