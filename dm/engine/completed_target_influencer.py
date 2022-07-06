@@ -21,7 +21,7 @@ PROJECT_DM, CLIENT_COLLECTION, HASHTAG_AND_USER_SEARCH, HASHTAG_AND_USER, PROJEC
     SERVICE_INSTAGRAM["info"], SERVICE_INSTAGRAM["task"], SERVICE_INSTAGRAM["post"], SERVICE_INSTAGRAM["search"]
 
 def find_completed_influencer(project_name):
-    today = datetime.now() - timedelta(days=1)
+    today = datetime.now()
     field_entered = {"_id": 0, "influencer": 1}
     cursor = PROJECT_DM.find({"project":project_name, "start_date":{"$lte":today}}, field_entered)
     project_list = list(cursor)

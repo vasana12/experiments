@@ -568,6 +568,7 @@ class InstaAccount(InstaDB):
             self.logger.debug(f"available_account is None")
             return None
         return available_account
+
     def select_cookie_user_v2(self, username=None, max_messages_per_day=None):
         if not max_messages_per_day:
             max_messages_per_day = 5
@@ -621,7 +622,7 @@ class InstaAccount(InstaDB):
 
             filter_plus.update(client_name=self.client_name)
 
-        self.logger.debug(f"filter_raw:{filter_plus}")
+        self.logger.info(f"filter_raw:{filter_plus}")
         available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_plus]}, update={"$set":{"status":"login","last_login":datetime.now()}}, projection=projection, sort=[('last_login', -1)])
 
         if available_account is not None:

@@ -17,8 +17,8 @@ logger.setLevel(logging.DEBUG)
 cfg = botocore.config.Config(retries={'max_attempts': 0}, read_timeout=900000, connect_timeout=900000)
 LAMBDA_CLIENT = boto3.client('lambda',
                              region_name='ap-northeast-2',
-                             aws_access_key_id='AKIAYHHL7L4IP25TWTQQ',
-                             aws_secret_access_key='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',
+                             aws_access_key_id='AKIAYHHL7L4IGWDMEJ4J',
+                             aws_secret_access_key='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',
                              config = cfg)
 
 payload = {"checkpoint_update_term": 0}
@@ -45,7 +45,7 @@ def select_user(username=None):
     return account_setting_info
 
 def get_hashtag_bot(hashtag_name):
-    account_setting_info = select_user(username="send_direct_items")
+    account_setting_info = select_user(username="honiahaka0_3006")
     account_username = account_setting_info.get("username")
     account_password = account_setting_info.get("password")
 

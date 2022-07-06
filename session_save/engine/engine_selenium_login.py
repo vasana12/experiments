@@ -16,7 +16,7 @@ def loading_page(self:BotAccountSetting):
             self.driver.close()
             self.login_page_redirect = False
             self.driver = self.driver = self.driver_setting()
-            self.loading_page(self)
+            loading_page(self)
 
         ####로딩할 때까지 기다려준다 (10초 지나면 에러처리)
         try:
@@ -59,15 +59,17 @@ def input_login_info(self:BotAccountSetting):
 
 def click_login_button(self):
     try:
-        WebDriverWait(self.driver, 20).until(
+        button = WebDriverWait(self.driver, 20).until(
             EC.element_to_be_clickable((By.XPATH, "//*[@id='loginForm']/div/div[3]/button")))
     except Exception as e:
         self.logger.debug(f"error_message:{e}")
         return False
     else:
         try:
-            self.driver.find_element(By.XPATH, "//*[@id='loginForm']/div/div[3]/button").click()
-        except:
+            self.driver.execute_script('arguments[0].click()', button)
+            #self.driver.find_element(By.XPATH, "//*[@id='loginForm']/div/div[3]/button").click()
+        except Exception as e:
+            self.logger.debug(f"error_message click_login_button:{e}")
             return False
         return True
 
@@ -95,7 +97,7 @@ def check_ssfErrorAlert(self):
 
 def check_cache_modal(self):
     try:
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+        WebDriverWait(self.driver, 15).until(EC.presence_of_element_located(
             (By.XPATH, "//button[@class='aOOlW  bIiDR  ']")))
     except Exception as e:
         self.logger.debug(f"button[@class='aOOlW  bIiDR  '] cache modal not exist:{e}")

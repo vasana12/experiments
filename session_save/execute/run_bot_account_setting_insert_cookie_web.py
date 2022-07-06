@@ -54,8 +54,6 @@ def insert_account():
             username = account_info[0]
             password = account_info[1]
 
-            user_agent = info[1]
-
             csrftoken = login_account_info.split("csrftoken=")[1]
             csrftoken = csrftoken.split(";")[0]
 
@@ -71,14 +69,11 @@ def insert_account():
 
             setting_info["username"] = username
             setting_info["password"] = password
-            setting_info["user_agent"] = user_agent
             setting_info["cookie"] = {}
             setting_info["cookie"]["csrftoken"] = csrftoken
             setting_info["cookie"]["sessionid"] = sessionid
             setting_info["cookie"]["ds_user_id"] = ds_user_id
             setting_info["cookie"]["rur"] = rur
-            logger.info(f"{idx} - username:{username}/password:{password} registered new!")
-            save_uuid_and_session_info_bandncast(setting_info=setting_info, seller=seller)
         except Exception as e:
             try:
                 logger.info(f"{idx} - username:{username}/password:{password} error registered error!")
@@ -112,8 +107,7 @@ def insert_account():
                 setting_info["cookie"]["ds_user_id"] = ds_user_id
                 setting_info["cookie"]["rur"] = rur
 
-                save_uuid_and_session_info(setting_info=setting_info, seller=seller)
-                logger.info(f"{idx} - username:{username}/password:{password} error registered new!")
+                logger.info(f"ex1 {idx} - username:{username}/password:{password} error registered new!")
             except:
                 logger.error(f"insert error 2 - {e}/ {idx} - username:{username}/password:{password} registered error")
                 info = login_account_info.split("|")
@@ -145,11 +139,10 @@ def insert_account():
                 setting_info["cookie"]["sessionid"] = sessionid
                 setting_info["cookie"]["ds_user_id"] = ds_user_id
                 setting_info["cookie"]["rur"] = rur
+                save_uuid_and_session_info(setting_info=setting_info, seller=seller)
                 logger.info(f"{idx} - username:{username}/password:{password} error registered new!")
-                save_uuid_and_session_info_bandncast(setting_info=setting_info, seller=seller)
         else:
-            logger.info(f"{idx} - username:{username}/password:{password} registered new!")
-            save_uuid_and_session_info_bandncast(setting_info=setting_info, seller=seller)
-
+            logger.info(f"here 3 {idx} - username:{username}/password:{password} registered new!")
+            save_uuid_and_session_info(setting_info=setting_info, seller=seller)
 if __name__ == "__main__":
     insert_account()

@@ -37,6 +37,7 @@ def read_account_info_from_text():
 def insert_account():
     logger.debug("insert_account_start")
     login_account_info_list = read_account_info_from_text()
+    seller = "insta_shop"
     for idx, login_account_info in enumerate(login_account_info_list):
         if login_account_info == "":
             continue
@@ -49,22 +50,23 @@ def insert_account():
 
         try:
             info = login_account_info.split(":")
-            username = info[0]
-            password = info[1]
+            username = info[0].replace(" ","")
+            password = info[1].replace(" ","")
 
             filter = {"username": username}
             update_data = {
                             "$set":
                                 {
-                                    "last_login": datetime.now()
+                                    "last_login": datetime.now(),
+                                    "seller": seller,
+                                    "status": "new",
+                                    "client_name": "admin_test"
                                 },
                                     "$setOnInsert":
                                 {
                                     "username": username,
                                     "password": password,
-                                    "status": "new",
-                                    "client_name":
-                                    "admin_test",
+
                                     "channel": "instagram",
                                     "limit":
                                         {

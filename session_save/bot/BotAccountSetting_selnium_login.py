@@ -72,7 +72,6 @@ class botAccountSetting():
         self.logger.info(f"input login info {self.username}/{self.password}")
         if not engine_selenium_login.input_login_info(self):
             return False
-
         ###2. 로그인 버튼 클릭
         self.logger.info(f"click login button")
         if not engine_selenium_login.click_login_button(self):

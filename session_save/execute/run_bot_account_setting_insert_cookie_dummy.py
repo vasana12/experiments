@@ -46,29 +46,35 @@ def insert_account():
             continue
 
         try:
-            info = login_account_info.split("|")
-            username = "dummy"
-            password = "dummy"
-            user_agent = info[1]
-            cookie_info = info[2]
-            ig_did = cookie_info.split(";")[0].replace("ig_did=","")
-            csrftoken = cookie_info.split(";")[1].replace("csrftoken=", "")
-            ds_user_id = cookie_info.split(";")[2].replace("ds_user_id=", "")
-            mid = cookie_info.split(";")[3].replace("mid=", "")
-            sessionid = cookie_info.split(";")[4].replace("sessionid=", "")
 
-            setting_info = read_account_setting_info_from_db(username=username,password=password)
+            ds_user = login_account_info.split("ds_user=")[1]
+            username = ds_user.split(";")[0]
+            password = "dummy"
+
+
+
+            csrftoken = login_account_info.split("csrftoken=")[1]
+            csrftoken = csrftoken.split(";")[0]
+
+            ds_user_id = login_account_info.split("ds_user_id=")[1]
+            ds_user_id = ds_user_id.split(";")[0]
+
+            sessionid = login_account_info.split("sessionid=")[1]
+            sessionid = sessionid.split(";")[0]
+
+            rur = login_account_info.split("rur=")[1]
+            rur = rur.split(";")[0]
+            setting_info = read_account_setting_info_from_db(username=username, password=password)
 
             setting_info["username"] = username
             setting_info["password"] = password
             setting_info["cookie"] = {}
-            setting_info["cookie"]["ig_did"] = ig_did
-            setting_info["cookie"]["mid"] = mid
             setting_info["cookie"]["csrftoken"] = csrftoken
             setting_info["cookie"]["sessionid"] = sessionid
             setting_info["cookie"]["ds_user_id"] = ds_user_id
-
-
+            setting_info["cookie"]["rur"] = rur
+            logger.info(f"{idx} - username:{username}/password:{password} registered new!")
+            save_uuid_and_session_info(setting_info=setting_info)
         except Exception as e:
             try:
                 logger.info(f"{idx} - username:{username}/password:{password} error registered error!")

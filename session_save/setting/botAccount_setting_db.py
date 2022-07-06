@@ -132,7 +132,7 @@ def save_uuid_and_session_info(setting_info, seller=None):
                     "usage.hashtag": 0,
                     "usage.dm": 0,
                     "last_login": datetime.now(),
-                    "status": "unavailable",
+                    "status": "available",
                     "uuids": setting_info["uuids"],
                     "timing_value.last_login": time.time(),
                     "timing_value.last_experiments": time.time(),
@@ -151,7 +151,7 @@ def save_uuid_and_session_info(setting_info, seller=None):
         "password": setting_info["password"],
         "client_name": setting_info["client_name"],
         "channel": "instagram",
-        "status": "unavailable",
+        "status": "new",
         "limit": {
             "dm": setting_info["limit"]["dm"],
             "hashtag": setting_info["limit"]["hashtag"]

@@ -85,7 +85,7 @@ def send_messages(self:instamanager.Bot, text, user_ids):
 
         if not send_message_response:
             self.db_conn["account"]["account"].update_one({"username": self.username}, {"$set": {"status": "unavailable"}})
-            self.logger.error(f"send_message_response:{send_message_response}, break iteration and restart new account  ")
+            self.logger.error(f"send_message_response:{send_message_response}, break iteration and restart new account")
             self.error_delay()
             broken_items = user_ids[user_ids.index(user) :]
             save_checkpoint(self)

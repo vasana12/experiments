@@ -1930,7 +1930,6 @@ class API(object):
             m = MultipartEncoder(data, boundary=self.uuid)
             data = m.to_string()
             headers.update({"Content-type": m.content_type})
-
         return self.send_request(url, data, with_signature=False, headers=headers)
 
     def get_pending_inbox(self):

@@ -39,10 +39,10 @@ REQUEST_HEADERS = {
     "Connection": "close",
 }
 
-PROXY_HOST = "gate.smartproxy.com" #"gate.smartproxy.com"
-PROXY_PORT = "10002" #"10001"
-PROXY_USER = "user-datacast1-sessionduration-1" #"user-datacast1-sessionduration-1"
-PROXY_PASS = "amdc2580!" #"amdc2580!"
+PROXY_HOST = 'residential.ipb.cloud'  # rotating proxy or host
+PROXY_PORT = 7777  # port
+PROXY_USER = 'customer-lsgr20040901-cc-US-sessid-oBGP-sesstime-1'  # username
+PROXY_PASS = 'UG2xaDXxC'  # password
 
 
 # PROXY_HOST = 'residential.ipb.cloud'  # rotating proxy or host
