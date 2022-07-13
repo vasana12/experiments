@@ -151,7 +151,7 @@ def save_uuid_and_session_info(setting_info, seller=None):
         "password": setting_info["password"],
         "client_name": setting_info["client_name"],
         "channel": "instagram",
-        "status": "new",
+        "status": "available",
         "limit": {
             "dm": setting_info["limit"]["dm"],
             "hashtag": setting_info["limit"]["hashtag"]

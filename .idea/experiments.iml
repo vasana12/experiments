@@ -14,5 +14,6 @@
     <orderEntry type="module" module-name="crawler" />
     <orderEntry type="module" module-name="insta_bot" />
     <orderEntry type="module" module-name="memory_check" />
+    <orderEntry type="module" module-name="apify" />
   </component>
 </module>
