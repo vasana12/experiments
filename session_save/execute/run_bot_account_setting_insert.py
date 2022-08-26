@@ -50,9 +50,9 @@ def insert_account():
 
         try:
             info = login_account_info.split(":")
-            username = info[0].replace(" ","")
-            password = info[1].replace(" ","")
-
+            username = info[0].replace(" ", "")
+            password = info[1].replace(" ", "")
+            password = password.split("||")[0]
             filter = {"username": username}
             update_data = {
                             "$set":
@@ -60,12 +60,13 @@ def insert_account():
                                     "last_login": datetime.now(),
                                     "seller": seller,
                                     "status": "new",
-                                    "client_name": "admin_test"
+                                    "client_name": "admin_test",
+                                   "password": password,
                                 },
                                     "$setOnInsert":
                                 {
                                     "username": username,
-                                    "password": password,
+
 
                                     "channel": "instagram",
                                     "limit":

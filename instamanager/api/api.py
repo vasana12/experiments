@@ -409,7 +409,7 @@ class API(object):
                 response = self.session.post(config.API_URL + endpoint, data=post,timeout=50)
             else:  # GET
                 # time.sleep(random.randint(1, 2))
-                response = self.session.get(config.API_URL + endpoint,timeout=50)
+                response = self.session.get(config.API_URL + endpoint, timeout=50)
         except Exception as e:
             if isinstance(e,ProxyError):
                 self.logger.warning(f"ProxyError {str(e)}")
@@ -500,15 +500,20 @@ class API(object):
                     pass
 
             if response.status_code == 403:
-                self.logger.error("Since session is expired, we need to login again")
-                session = engine_login.loginSession(username=self.username, password=self.password, proxy=None, session=None)
-                session.get_prefill_candidates()
-                if not session.login():
-                    return False
-                account_setting_info = self.account_collection.find_one({"username":self.username})
-                self.account_setting_info = account_setting_info
-                self.login(username=self.username, password=self.password, account_setting_info=self.account_setting_info, proxy=self.proxy, project_info=self.project_info)
-                return self.send_request(endpoint,post,login, with_signature, headers, extra_sig, timeout_minutes)
+                try:
+                    response_data = json.loads(response.text)
+                except JSONDecodeError:
+                    self.logger.error("JSONDecodeError")
+                    return "InstaJSONDecodeError"
+                # self.logger.error("Since session is expired, we need to login again")
+                # session = engine_login.loginSession(username=self.username, password=self.password, proxy=None, session=None)
+                # session.get_prefill_candidates()
+                # if not session.login():
+                #     return False
+                # account_setting_info = self.account_collection.find_one({"username":self.username})
+                # self.account_setting_info = account_setting_info
+                # self.login(username=self.username, password=self.password, account_setting_info=self.account_setting_info, proxy=self.proxy, project_info=self.project_info)
+                # return self.send_request(endpoint,post,login, with_signature, headers, extra_sig, timeout_minutes)
                 ###logot Error
 
             if response.status_code == 429:
@@ -1060,7 +1065,8 @@ class API(object):
 
     def get_username_info(self, user_id):
         url = "users/{user_id}/info/".format(user_id=user_id)
-        return self.send_request(url)
+        self.send_request(url)
+        return self.last_json
 
     def get_self_username_info(self):
         return self.get_username_info(self.user_id)
@@ -1552,6 +1558,12 @@ class API(object):
                 sig_key=config.SIG_KEY_VERSION, query=query, rank_token=self.rank_token
             )
         )
+    def get_userinfo_by_username(self, username):
+        url = (
+            "users/web_profile_info/?username={username}"
+        )
+        self.send_request(url.format(username=username))
+        return self.last_response
 
     def search_username(self, username):
         url = "users/{username}/usernameinfo/".format(username=username)

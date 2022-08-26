@@ -14,6 +14,27 @@ class NoFoundException(Exception):
     def __str__(self):
         return self.msg
 
+class NasDB:
+    def __init__(self,db_name=None):
+        self.db_name = db_name
+        self.conn = pymongo.MongoClient("61.98.230.194:27020",
+                    username="datacast",
+                    password="amdc7025!",
+                    authSource="admin",
+                    #authMechanism="SCRAM-SHA-1",
+                    directConnection = True,
+                    unicode_decode_error_handler='ignore')
+        self.db = self.conn[self.db_name] if db_name else None
+        self.account_collection = self.conn['account']['account']
+        FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
+        logging.basicConfig(format=FORMAT)
+        logger = logging.getLogger(__name__)
+        if logger.hasHandlers():
+            # Logger is already configured, remove all handlers
+            logger.handlers = []
+        logger.setLevel(logging.INFO)
+        self.logger = logger
+
 class InstaDB:
     def __init__(self,db_name=None):
         self.db_name = db_name
@@ -537,38 +558,26 @@ class InstaAccount(InstaDB):
             return None
         return available_account
 
-    def select_user(self,username):
-        projection = {
-            "_id": 1,
-            "username": 1,
-            "channel": 1,
-            "client_name": 1,
-            "last_login": 1,
-            "limit": 1,
-            "password": 1,
-            "status": 1,
-            "usage": 1,
-            "device_settings": 1,
-            "session.csrftoken": 1,
-            "session.ds_user_id": 1,
-            "session.mid": 1,
-            "session.rur": 1,
-            "session.sessionid": 1,
-            "timing_value": 1,
-            "user_agent": 1,
-            "uuids": 1
-        }
 
-        filter_plus = {"username":username}
-        available_account = self.account_collection.find_one(filter=filter_plus, projection=projection)
-
-        if available_account is not None:
-            self.username = available_account["username"]
-        else:
-            self.logger.debug(f"available_account is None")
-            return None
+    def find_account(self, total_required_account:int):
+        projection = {"username": 1, "_id":0}
+        available_account = self.account_collection.find(filter={"status": "available"},  projection=projection, sort=[('last_login', 1)]).limit(total_required_account)
         return available_account
 
+    def select_and_update_user(self, username=None):
+        filter = {"status":"available"}
+        if username:
+            filter.update(username=username)
+        projection = {"username": 1,
+                      "password":1,
+                      "_id": 0}
+        available_account = self.account_collection.find_one_and_update(filter=filter,
+                                                                        update={"$set": {"status": "login", "last_login": datetime.now()}},
+                                                                        projection=projection,
+                                                                        sort=[('last_login', 1)]
+                                                                        )
+
+        return available_account
     def select_cookie_user_v2(self, username=None, max_messages_per_day=None):
         if not max_messages_per_day:
             max_messages_per_day = 5
@@ -594,7 +603,6 @@ class InstaAccount(InstaDB):
         }
 
         if self.client_name != "admin":
-
             filter_plus = {
             "session" : {"$exists":1},
             "mobile_session" : True,
@@ -605,7 +613,6 @@ class InstaAccount(InstaDB):
             }
 
         else:
-
             filter_plus = {
                 "mobile_session": True,
                 "session": {"$exists": 1},
@@ -619,10 +626,9 @@ class InstaAccount(InstaDB):
 
 
         if self.client_name:
-
             filter_plus.update(client_name=self.client_name)
 
-        self.logger.info(f"filter_raw:{filter_plus}")
+        # self.logger.info(f"filter_raw:{filter_plus}")
         available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_plus]}, update={"$set":{"status":"login","last_login":datetime.now()}}, projection=projection, sort=[('last_login', -1)])
 
         if available_account is not None:

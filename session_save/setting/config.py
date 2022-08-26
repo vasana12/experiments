@@ -39,11 +39,10 @@ REQUEST_HEADERS = {
     "Connection": "close",
 }
 
-PROXY_HOST = 'residential.ipb.cloud'  # rotating proxy or host
-PROXY_PORT = 7777  # port
-PROXY_USER = 'customer-lsgr20040901-cc-US-sessid-oBGP-sesstime-1'  # username
-PROXY_PASS = 'UG2xaDXxC'  # password
-
+PROXY_HOST = 'resi3.ipb.cloud'  # rotating proxy or host
+PROXY_PORT = 9000  # port
+PROXY_USER = 'MrIlCvzYImHc0I3t'  # username
+PROXY_PASS = 'wifi;us;;;;'  # password
 
 # PROXY_HOST = 'residential.ipb.cloud'  # rotating proxy or host
 # PROXY_PORT = 7777 # port

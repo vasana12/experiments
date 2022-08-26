@@ -60,7 +60,7 @@ def send_message(self, text, user_ids, thread_id=None):
         return FeedbackRequired()
 
     if send_direct_item_response:
-        self.total["messages"] += 1
+        self.total["messages"] += len(user_ids)
         return 200
 
     self.logger.info("Message to {user_ids} wasn't sent".format(user_ids=user_ids))

@@ -131,6 +131,7 @@ def insert_account():
         else:
             pass
             logger.info(f"{idx} - username:{username}/password:{password} registered new!")
+            input()
             save_uuid_and_session_info_new(setting_info=setting_info)
 if __name__ == "__main__":
     insert_account()

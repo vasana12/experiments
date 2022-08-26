@@ -1,3 +1,4 @@
+import time
 import requests
 import requests.utils
 from session_save.setting.get_residential_driver import get_chromedriver
@@ -145,7 +146,10 @@ class botAccountSetting():
             self.logger.info(f"check selenium login status 2")
             self.login_page_redirect = False
             return self.send_driver_cookie()
-
+    def proxy_test(self):
+        self.driver = self.driver_setting()
+        self.driver.get("https://www.instagram.com")
+        time.sleep(1000)
     def login(self, client_name=None):
         # self.driver = get_chromedriver(use_proxy=True)
         login_account_info = botAccount_setting_db.read_accoun_info_from_db_one(client_name=client_name)

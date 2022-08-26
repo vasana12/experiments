@@ -6,8 +6,10 @@ from db import m_instagram
 from session_save.util import generate_uuid
 
 insta_db = m_instagram.InstaDB(db_name="account")
+nas_db = m_instagram.NasDB(db_name="account")
 account_collection = insta_db.account_collection
 bandncast_account_collection = insta_db.bandncast_account_collection
+nas_account_collection = nas_db.account_collection
 FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -116,7 +118,13 @@ def save_uuid_and_session_info_new(setting_info):
 
     account_collection.insert_one(insert_info)
 
-def save_uuid_and_session_info(setting_info, seller=None):
+def save_uuid_and_session_info(setting_info, seller=None, client_name=None, account_collection=None):
+    if account_collection == None:
+        account_collection = insta_db.account_collection
+    elif account_collection == "bandncast":
+        account_collection = bandncast_account_collection
+    elif account_collection == "nas":
+        account_collection = nas_account_collection
     account_info = account_collection.find_one(filter={"username":setting_info["username"]})
 
     ## when account_already exist
@@ -124,7 +132,7 @@ def save_uuid_and_session_info(setting_info, seller=None):
         _id = account_info["_id"]
         account_collection.update_one(
             filter={
-                "_id": _id
+                "_id": _id,
             },
             update={
                 "$set": {
@@ -132,26 +140,30 @@ def save_uuid_and_session_info(setting_info, seller=None):
                     "usage.hashtag": 0,
                     "usage.dm": 0,
                     "last_login": datetime.now(),
-                    "status": "available",
+                    "status": "new",
+                    "client_name":client_name,
                     "uuids": setting_info["uuids"],
                     "timing_value.last_login": time.time(),
                     "timing_value.last_experiments": time.time(),
                     "device_settings": setting_info["device_settings"],
                     "user_agent": setting_info["user_agent"],
                     "session": setting_info["cookie"],
-                    "mobile_session": True
-                }
+                    "mobile_session": True,
+
+                },
+                "$unset": {"checkpoint": 1}
             }
         )
         return
 
     ### new account setting info insert
     insert_info = {
+
         "username": setting_info["username"],
         "password": setting_info["password"],
-        "client_name": setting_info["client_name"],
+        "client_name": client_name,
         "channel": "instagram",
-        "status": "available",
+        "status": "new",
         "limit": {
             "dm": setting_info["limit"]["dm"],
             "hashtag": setting_info["limit"]["hashtag"]
@@ -172,7 +184,8 @@ def save_uuid_and_session_info(setting_info, seller=None):
         "session": setting_info["cookie"],
         "mobile_session": True,
         "last_login": datetime.now(),
-        "seller":seller
+        "seller":seller,
+
     }
 
     account_collection.insert_one(insert_info)

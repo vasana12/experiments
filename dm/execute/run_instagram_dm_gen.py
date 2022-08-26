@@ -23,33 +23,33 @@ INSTA_ACCOUNT_OBJ.client_name = "admin_test"
 def select_user(username,max_messages_per_day):
     account_setting_info = INSTA_ACCOUNT_OBJ.select_cookie_user_v2(username=username, max_messages_per_day= max_messages_per_day)
     return account_setting_info
+
 #
 def run():
     ### 0. 세팅 : 프로젝트, 발송 텍스트, 프록시
-    project = "kasino"
-    start_date = "2022-07-04"
+    project = "puzzle"
+    start_date = "2022-08-26"
     project_info = {"project_name": project, "start_date": start_date}
     collection_name = "user_checkpoint"
 
     """ dm/source/message """
-    text = get_dm_source.get_source_message(filename=f"{project}_1.txt")
-    host, port, mobile_proxy_username, mobile_proxy_password = "residential.ipb.cloud", "7777", "customer-lsgr20040901-cc-US-sessid-oBGP-sesstime-1", "UG2xaDXxC"
+    text = get_dm_source.get_source_message(filename=f"puzzle_paper.txt")
+    host, port, mobile_proxy_username, mobile_proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
     proxy = f"http://{mobile_proxy_username}:{mobile_proxy_password}@{host}:{port}"
 
     # proxy = None
     ### 1. 전송할 인플루언서 리스트 가져오기
     """ dm/source/hashtag """
-    search_hashtag = get_dm_source.get_source_hashtag(f"{project}.txt")
-    black_list = completed_target_influencer.find_completed_influencer(project_name=project)
+    search_hashtag = get_dm_source.get_source_hashtag(f"{project}_paper.txt")
+    # search_hashtag = "식단 다이어트 헬스 웰빙 먹방 운동 푸드 건강 뷰티 간식 디저트 공구 맛집 그릭 요거트"
+    # black_list = completed_target_influencer.find_completed_influencer(project_name=project)
+    black_list = []
     search_filter = {
                         "user_followed_by":
                     {
-                        "$gte": 100
+                        "$gte": 20000, "$lte":100000
                     },
-                        "avg_like":
-                    {
-                        "$gte": 20
-                    },
+
                         "$text":
                             {
                                 "$search": search_hashtag
@@ -60,11 +60,10 @@ def run():
                     }
     }
 
-    file_name, skip, limit, only_username,  =  search_hashtag, 0, 500, False
+    file_name, skip, limit, only_username,  =  search_hashtag, 0, 2000, False
     target_username_list = get_influencer.main(search_filter=search_filter, file_name=file_name, skip=skip, limit=limit, only_username=only_username, collection_name=collection_name)
+
     target_username_list = list(map(lambda x: x["username"], target_username_list))
-
-
     logger.info(f"총 {len(target_username_list)} 명에게 dm 발송 시작 target_username_list:{target_username_list}")
     while True:
         max_messages_per_day = 10
@@ -87,4 +86,3 @@ def run():
 
 if __name__ == "__main__":
     run()
-

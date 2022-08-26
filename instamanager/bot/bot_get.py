@@ -2,8 +2,12 @@
     All methods must return media_ids that can be
     passed into e.g. like() or comment() functions.
 """
+import json
 
+import requests
 from tqdm import tqdm
+
+from instamanager.api import config
 from dm.engine import get_target_user_info
 # STORY
 
@@ -210,16 +214,53 @@ def get_user_id_from_username(self, username):
     ###username is not in cache
     if username not in self._usernames:
 
-        #when userpk not in our db, we invoke lambda session to get target user info
-        get_user_info_response = get_target_user_info.lambda_get_target_user_info(username=username)
-        if get_user_info_response:
-            userpk = get_user_info_response["user_id"]
+        # #when userpk not in our db, we invoke lambda session to get target user info
+        # get_user_info_response = get_target_user_info.lambda_get_target_user_info(username=username)
+        # if get_user_info_response:
+        #     userpk = get_user_info_response["user_id"]
+        #     self._usernames[username] = str(userpk)
+        #     return self._usernames[username]
+        # else:
+        try:
+            self.api.session.headers.update(config.REQUEST_HEADERS)
+            self.api.session.headers.update({"User-Agent": self.api.user_agent})
+            response = self.api.session.get(url=f"https://i.instagram.com/api/v1/users/web_profile_info/?username={username}")
+            json_data = json.loads(response.text)
+            data = json_data["data"]["user"]
+            userid = data["id"]
+            userpk = userid
             self._usernames[username] = str(userpk)
+        except Exception as e:
+            try:
+                params = {"user": f"{username}"}
+                headers = {
+                    "X-RapidAPI-Key": "14c64cc381msheeb66906c0fd3a1p11cda7jsnd840bd01c5a8",
+                    "X-RapidAPI-Host": "instagram-scraper-2022.p.rapidapi.com"
+                }
+                response = requests.request("GET", "https://instagram-scraper-2022.p.rapidapi.com/ig/user_id/",
+                                            headers=headers,
+                                            params=params)
+                try:
+                    json_data = json.loads(response.text)
+                except:
+                    response = requests.request("GET", "https://instagram-scraper-2022.p.rapidapi.com/ig/user_id/",
+                                                headers=headers,
+                                                params=params)
+                    json_data = json.loads(response.text)
+
+                userid = json_data["id"]
+                userpk = userid
+                self._usernames[username] = str(userpk)
+            except:
+                return None
+        if self._usernames[username] is not None:
             return self._usernames[username]
 
+        if self._usernames[username] is not None:
+            return self._usernames[username]
         ##when lambda session can't return , we user proxy to get userpk
-        self.api.search_username(username)
         try:
+            self.api.search_username(username)
             if "user" in self.api.last_json:
                 self._usernames[username] = str(self.api.last_json["user"]["pk"])
                 return self._usernames[username]

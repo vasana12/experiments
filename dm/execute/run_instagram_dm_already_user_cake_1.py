@@ -58,6 +58,7 @@ def run():
     black_list = completed_target_influencer.find_completed_influencer(project_name=project)
     # target_username_list = list(set(target_username_list) - set(black_list))
     logger.info(f"총 {len(target_username_list)} 명에게 dm 발송 시작 target_username_list:{target_username_list}")
+
     while True:
         max_messages_per_day = 10
         account_setting_info = select_user(username=None, max_messages_per_day= max_messages_per_day)
