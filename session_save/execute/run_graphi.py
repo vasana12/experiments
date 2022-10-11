@@ -1,4 +1,4 @@
-from dm.engine import gpi
+from dm.engine import gpi_message
 import requests
 
 def test():

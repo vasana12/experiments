@@ -20,15 +20,21 @@ PROJECT_DM, CLIENT_COLLECTION, HASHTAG_AND_USER_SEARCH, HASHTAG_AND_USER, PROJEC
     SERVICE_INSTAGRAM["project"], SERVICE_INSTAGRAM["hashtag"], SERVICE_INSTAGRAM["user"], SERVICE_INSTAGRAM["location"], \
     SERVICE_INSTAGRAM["info"], SERVICE_INSTAGRAM["task"], SERVICE_INSTAGRAM["post"], SERVICE_INSTAGRAM["search"]
 
-def find_completed_influencer(project_name):
-    today = datetime.now()
+def find_completed_influencer(project_name, start_date=None, end_date=None):
+    start_date = datetime.now() if start_date is None else datetime.strptime(start_date, "%Y-%m-%d")
+    end_date = datetime.now() if end_date is None else datetime.strptime(end_date, "%Y-%m-%d")
+    filter_date = {"$lte": end_date, "$gte": start_date}
+
     field_entered = {"_id": 0, "influencer": 1}
-    cursor = PROJECT_DM.find({"project":project_name, "start_date":{"$lte":today}}, field_entered)
+    cursor = PROJECT_DM.find({"project": project_name, "start_date": filter_date}, field_entered)
+
     project_list = list(cursor)
     influencer_list = []
     for project in project_list:
         influencer_list.extend(project["influencer"])
-    return list(set(influencer_list))
+
+    influencer_list = list(map(lambda x: str(x), influencer_list))
+    return list(sorted(set(influencer_list),key=influencer_list.index))
 
 # def find_project_user(project_name):
 #     today = datetime.now() - timedelta(days=1)
@@ -36,20 +42,27 @@ def find_completed_influencer(project_name):
 #     project_doc = DM_COLLECTION.find_one({"project": project_name, "start_date": {"$lte": today}}, filed_entered)
 #     return project_doc
 
-def push_influencer_completed(project_name, start_date, influencer_completed):
-    start_date = datetime.strptime(start_date,"%Y-%m-%d")
-    filter = {"project": project_name, "start_date": start_date}
+def push_influencer_completed(project_name, start_date=None, influencer_completed=None):
+    today = datetime.now().date()
+    filter = {"project": project_name}
+    if start_date is None:
+        start_date = today
+    else:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+
+    filter.update(start_date=start_date)
 
     ### when project already exist
-    if PROJECT_DM.find_one_and_update(filter=filter, update={"$push": {"influencer":influencer_completed}}):
-        logger.info(f"push :{influencer_completed}")
-        return
+    for influencer in influencer_completed:
+        if PROJECT_DM.find_one_and_update(filter=filter, update={"$push": {"influencer": str(influencer)}}):
+            logger.info(f"push :{influencer}")
+            return
 
-    ### when project not exist
-    filter.update(influencer=[influencer_completed])
-    PROJECT_DM.insert_one(filter)
-    logger.info(f" make new project {filter.get('project')}/{filter.get('start_date')} and insert :{influencer_completed}")
-    return
+        ### when project not exist
+        filter.update(influencer=[influencer], start_date=start_date)
+        PROJECT_DM.insert_one(filter)
+        logger.info(f" make new project {filter.get('project')}/ and insert :{influencer}")
+        return
 
 
 #

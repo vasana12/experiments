@@ -1,5 +1,5 @@
 from db import m_instagram
-from dm.engine import completed_target_influencer, gpi
+from dm.engine import completed_target_influencer, gpi_message
 from instamanager import Bot
 import logging
 from dm.prepare import get_dm_source, get_influencer

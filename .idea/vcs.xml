@@ -4,6 +4,5 @@
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../DAlmaden" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../insta_bot" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../instagram-api" vcs="Git" />
   </component>
 </project>

@@ -4,6 +4,8 @@ import logging
 from pathlib import Path
 import bson
 import pandas as pd
+import pymongo
+
 from db import m_instagram
 from dm.prepare import get_dm_source
 
@@ -48,17 +50,39 @@ def get_userinfo_by_project(project_name, only_username = None, file_name = None
         save_file(influencer_data_list, f"{file_name}_인플루언서")
     return influencer_data_list
 
+def get_userid_by_project(project_name, ex_project_start_date=None, only_userid = None, file_name = None):
+    if ex_project_start_date is None:
+        projects = list(PROJECT_DM_COLLECTION.find({"project": {"$regex": project_name}}))
+    else:
+        projects = list(PROJECT_DM_COLLECTION.find({"project": {"$regex": project_name, "$lte":ex_project_start_date}}))
+
+    influencer_list = []
+    for project_info in projects:
+        influencer_list.extend(project_info["influencer"])
+    print(f"influencer_list:{influencer_list}")
+    influencer_list = list(set(influencer_list))
+    if only_userid:
+        influencer_data_list = list(USER_CHECKPOINT.find({"userid": {"$in": influencer_list}}))
+        influencer_data_list = list(map(lambda x: x["userid"],influencer_data_list))
+    else:
+        influencer_data_list = list(USER_CHECKPOINT.find({"userid":{"$in":influencer_list}}))
+    if file_name:
+        save_file(influencer_data_list, f"{file_name}_인플루언서")
+    return influencer_data_list
+
 def get_influencers(search_filter,influencer_skip=0 ,influencer_limit=0, only_username= False,collection_name=None):
 
-    field_exclude = {"profile_url":False, "collection_from":False, "status":False, "contact_phone":False, "contact_email":False, "_id": False, "recent_posts": False, "search": False, "thumbnail_url": False, "hashtag": False, "likes": False, "comments": False, "crawled_date_time":False,"analyzed_date_time":False,"dateField":False,"avg_point":False,"activity_category":False,"brand":False,"expected_pay_photo":False,"expected_pay_product":False,"sex":False,"sns_facebook":False,"sns_naver":False,"sns_tiktok":False,"sns_youtube":False, "top_posts":False,"top_users":False}
+    field_exclude = {"profile_url": False, "collection_from":False, "status":False, "contact_phone":False, "contact_email":False, "_id": False, "recent_posts": False, "search": False, "thumbnail_url": False, "hashtag": False, "likes": False, "comments": False, "crawled_date_time":False,"analyzed_date_time":False,"dateField":False,"avg_point":False,"activity_category":False,"brand":False,"expected_pay_photo":False,"expected_pay_product":False,"sex":False,"sns_facebook":False,"sns_naver":False,"sns_tiktok":False,"sns_youtube":False, "top_posts":False,"top_users":False}
+
     only_username_field_exclude = {"_id": 0, "username": 1}
     field_exclude = only_username_field_exclude if only_username else field_exclude
 
     if collection_name == "user_checkpoint":
         search_filter.update(collection_from={"$exists":False})
-    cursor = USER_CHECKPOINT.find(search_filter, field_exclude).skip(influencer_skip).limit(influencer_limit)
+    cursor = USER_CHECKPOINT.find(search_filter, field_exclude).skip(influencer_skip).limit(influencer_limit).sort([('analyzed_date_time', pymongo.DESCENDING)])
 
     influencer_list = list(cursor)
+
     if only_username :
         influencer_list = list(map(lambda x: x["username"], influencer_list))
         return influencer_list
@@ -80,6 +104,34 @@ def get_userinfo_by_username(username, collection_name):
 
 def main(search_filter=None, file_name=None, skip=None, limit=None, only_username=None, collection_name=None):
     influencer_data_list = get_influencers(search_filter=search_filter, influencer_skip=skip, influencer_limit=limit, only_username=only_username, collection_name = collection_name)
+
+    influencer_data_list = list(map(lambda x:
+                                    {
+                                        "username": x["username"],
+                                        "mediacount": x["mediacount"],
+                                        "userid": x["userid"],
+                                        "user_biography": x["user_biography"],
+                                        "user_external_url": x["user_external_url"],
+                                        "user_follow": x["user_follow"],
+                                        "user_followed_by": x["user_followed_by"],
+                                        "search_content": x["search_content"]
+                                              },
+                                    influencer_data_list))
+    filtered_influencer_data_list = []
+    for influencer in influencer_data_list:
+        user_followed_by = influencer["user_followed_by"]
+        user_follow = influencer["user_follow"]
+
+        # #필터2
+        # if user_follow*10 > user_followed_by > user_follow*2:
+        #     print(user_follow, user_followed_by)
+        #     filtered_influencer_data_list.append(influencer)
+        #
+        # 필터1
+        if user_followed_by>user_follow:
+            print(user_follow, user_followed_by)
+            filtered_influencer_data_list.append(influencer)
+    filtered_influencer_data_list = influencer_data_list
     if file_name:
-        save_file(influencer_data_list, f"{file_name}_인플루언서_{limit}")
+        save_file(filtered_influencer_data_list, f"{file_name}_인플루언서_{limit}")
     return influencer_data_list

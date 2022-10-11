@@ -35,27 +35,29 @@ def read_account_info_from_text():
     return login_account_info_list
 
 def insert_account():
+
     logger.debug("insert_account_start")
     login_account_info_list = read_account_info_from_text()
     seller = "insta_acc"
-    client_name = "729e01"
+    client_name = "hclass_2"
+
     for idx, login_account_info in enumerate(login_account_info_list):
         if login_account_info == "":
             continue
 
         username = None
         password = None
-        if idx== 200:
-            break
-        if idx < 100:
-            continue
+
         if login_account_info == "":
             continue
 
         try:
-            info = login_account_info.split("|")
-            username = info[0].replace(" ","")
-            password = info[1].replace(" ","")
+
+            info = login_account_info.replace(" ", "\t")
+            info = info.split("\t")
+
+            username = info[0].replace(" ", "")
+            password = info[1].replace(" ", "")
             filter = {"username": username}
             update_data = {
                             # "$unset":

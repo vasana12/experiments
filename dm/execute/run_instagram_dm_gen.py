@@ -27,7 +27,7 @@ def select_user(username,max_messages_per_day):
 #
 def run():
     ### 0. 세팅 : 프로젝트, 발송 텍스트, 프록시
-    project = "puzzle"
+    project = "rounded"
     start_date = "2022-08-26"
     project_info = {"project_name": project, "start_date": start_date}
     collection_name = "user_checkpoint"
@@ -47,7 +47,7 @@ def run():
     search_filter = {
                         "user_followed_by":
                     {
-                        "$gte": 20000, "$lte":100000
+                        "$gte": 1000, "$lte": 10000
                     },
 
                         "$text":
@@ -60,7 +60,7 @@ def run():
                     }
     }
 
-    file_name, skip, limit, only_username,  =  search_hashtag, 0, 2000, False
+    file_name, skip, limit, only_username,  =  search_hashtag, 0, 1000, False
     target_username_list = get_influencer.main(search_filter=search_filter, file_name=file_name, skip=skip, limit=limit, only_username=only_username, collection_name=collection_name)
 
     target_username_list = list(map(lambda x: x["username"], target_username_list))

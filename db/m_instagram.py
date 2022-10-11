@@ -564,16 +564,21 @@ class InstaAccount(InstaDB):
         available_account = self.account_collection.find(filter={"status": "available"},  projection=projection, sort=[('last_login', 1)]).limit(total_required_account)
         return available_account
 
-    def select_and_update_user(self, username=None):
-        filter = {"status":"available"}
+    def select_and_update_user(self, username=None, client_name=None, max_messages_per_day = None):
+        max_messages_per_day = 50 if max_messages_per_day is None else max_messages_per_day
+        filter = {"status":"available", "usage.dm": {"$lt": max_messages_per_day}}
         if username:
-            filter.update(username=username)
-        projection = {"username": 1,
-                      "password":1,
-                      "_id": 0}
+            filter = {"username":username}
+        # projection = {"username": 1,
+        #               "password":1,
+        #               "usage":1,
+        #               "_id": 0,
+        #               "device_settings":1}
+        if client_name:
+            filter.update(client_name=client_name)
         available_account = self.account_collection.find_one_and_update(filter=filter,
                                                                         update={"$set": {"status": "login", "last_login": datetime.now()}},
-                                                                        projection=projection,
+                                                                        # projection=projection,
                                                                         sort=[('last_login', 1)]
                                                                         )
 
@@ -622,7 +627,7 @@ class InstaAccount(InstaDB):
             }
         if username:
 
-            filter_plus.update(username=username)
+            filter_plus= {"username":username}
 
 
         if self.client_name:

@@ -206,6 +206,20 @@ def get_geotag_users(self, geotag):
     pass
 
 
+def send_request(username):
+    url = "https://instagram-scraper-2022.p.rapidapi.com/ig/web_profile_info/"
+
+    querystring = {"user": username}
+
+    headers = {
+        "X-RapidAPI-Key": "49247615ccmshcd5a0d0e8ddb542p1ae266jsnb64d93ff541c",
+        "X-RapidAPI-Host": "instagram-scraper-2022.p.rapidapi.com"
+    }
+
+    response = requests.request("GET", url, headers=headers, params=querystring)
+    # params = {"username": username, "access_key": "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"}
+    # response = requests.get(url="https://api.lamadava.com/a1/user", params=params)
+    return response
 def get_user_id_from_username(self, username):
     ###username is in cache
     if username in self._usernames:
@@ -222,9 +236,12 @@ def get_user_id_from_username(self, username):
         #     return self._usernames[username]
         # else:
         try:
-            self.api.session.headers.update(config.REQUEST_HEADERS)
-            self.api.session.headers.update({"User-Agent": self.api.user_agent})
-            response = self.api.session.get(url=f"https://i.instagram.com/api/v1/users/web_profile_info/?username={username}")
+
+            # self.api.session.headers.update(config.REQUEST_HEADERS)
+            # self.api.session.headers.update({"User-Agent": self.api.user_agent})
+            # response = self.api.session.get(url=f"https://i.instagram.com/api/v1/users/web_profile_info/?username={username}")
+            response = send_request(username)
+            print(response.text)
             json_data = json.loads(response.text)
             data = json_data["data"]["user"]
             userid = data["id"]

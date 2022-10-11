@@ -44,6 +44,7 @@ def insert_account():
 
         username = None
         password = None
+        client_name = "admin_test"
 
         if login_account_info == "":
             continue
@@ -52,22 +53,20 @@ def insert_account():
             info = login_account_info.split(":")
             username = info[0].replace(" ", "")
             password = info[1].replace(" ", "")
-            password = password.split("||")[0]
+            password = password.split(":")[0]
             filter = {"username": username}
             update_data = {
                             "$set":
                                 {
                                     "last_login": datetime.now(),
                                     "seller": seller,
-                                    "status": "new",
-                                    "client_name": "admin_test",
+                                    "status": "available",
+                                    "client_name": client_name,
                                    "password": password,
                                 },
                                     "$setOnInsert":
                                 {
                                     "username": username,
-
-
                                     "channel": "instagram",
                                     "limit":
                                         {
