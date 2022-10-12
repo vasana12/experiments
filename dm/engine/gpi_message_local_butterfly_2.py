@@ -3,11 +3,13 @@ import math
 import sys
 import requests
 import time
+
+from dm.engine.user import user_split
 from instagrapi import Client
 from instagrapi.types import User
 import logging
 from instagrapi.types import DirectMessage
-from instagrapi.exceptions import UserNotFound
+from instagrapi.exceptions import UserNotFound, ClientForbiddenError, ClientError
 from db import m_instagram
 from dm.engine import completed_target_influencer
 from dm.engine.exceptions import *
@@ -15,7 +17,7 @@ from dm.execute.run_select_influencer import get_influnecer_info_by_project, sea
     get_influnecer_user_id_by_project
 from dm.prepare import get_dm_source, get_influencer
 
-FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
+FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s %(lineno)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 if logger.hasHandlers():
@@ -23,9 +25,9 @@ if logger.hasHandlers():
     logger.handlers = []
 logger.setLevel(logging.INFO)
 
-host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
-# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
-# host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-30", "awR4Sad2t"
+# host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
+host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
+# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
 proxy = f"http://{proxy_username}:{proxy_password}@{host}:{port}"
 
 db_conn = m_instagram.InstaDB().conn
@@ -34,6 +36,7 @@ INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(channel_name="instagram")
 INSTA_ACCOUNT_OBJ.client_name = "admin_test"
 USER_CHECKPOINT = SERVICE_INSTAGRAM["user_checkpoint"]
 ITEM_USER_COLLECTION = SERVICE_INSTAGRAM["user"]
+PROXY_COLLECTION = SERVICE_INSTAGRAM["proxy"]
 
 max_login_try_num = 2
 max_messages_per_day = 100
@@ -42,8 +45,8 @@ client = Client()
 client.set_proxy(dsn=proxy)
 check_valid_user = True
 
-def select_user(username=None, max_messages_per_day=None):
-    account_setting_info = INSTA_ACCOUNT_OBJ.select_and_update_user(username=username)
+def select_user(username=None, client_name=None, max_messages_per_day=None):
+    account_setting_info = INSTA_ACCOUNT_OBJ.select_and_update_user(username=None, client_name=None)
     if account_setting_info is None:
         logger.info("no account available")
         return None
@@ -109,6 +112,7 @@ def login(username, password, sessionid = None):
 
         try:
             is_login = client.login(username=username, password=password)
+
         except Exception as e:
             try_num += 1
             logger.warning(f" 로그인 시도 {try_num} 번째 실패함 {e}// {e.__class__.__name__}- username:{username} password:{password}")
@@ -121,11 +125,45 @@ def login(username, password, sessionid = None):
         logger.info(f"로그인 성공 username:{username} password:{password}")
         return True
 
+def get_user_id_by_username_rapid_api(username):
+    max_try_num_get_user = 5
+    try_num_get_user = 0
 
-def infinite_login(username, max_messages_per_day, session_id=None):
+    while True:
+        if try_num_get_user > max_try_num_get_user:
+            logger.warning(f"RapidApiError")
+            raise RapidApiError
+        try:
+
+            url = "https://instagram-scraper-2022.p.rapidapi.com/ig/web_profile_info/"
+
+            querystring = {"user": username}
+
+            headers = {
+                "X-RapidAPI-Key": "49247615ccmshcd5a0d0e8ddb542p1ae266jsnb64d93ff541c",
+                "X-RapidAPI-Host": "instagram-scraper-2022.p.rapidapi.com"
+            }
+            response = requests.request("GET", url, headers=headers, params=querystring)
+            # params = {"username": username, "access_key": "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"}
+            # response = requests.get(url="https://api.lamadava.com/a1/user", params=params)
+            json_data= json.loads(response.text)
+        except Exception as e:
+            logger.warning(f"user_id:{username}/error:{e}")
+            try_num_get_user += 1
+            continue
+        else:
+            if json_data.get("data") is None:
+                logger.warning(f"username:{username}/error:{json_data}")
+                try_num_get_user += 1
+                continue
+            else:
+                id = json_data["data"]["user"]["id"]
+                return id
+
+def infinite_login(username, max_messages_per_day, client_name=None, session_id=None):
     while True:
         ##1. 사용할 계정 DB 에서 가져오기
-        account_setting_info = select_user(username=None, max_messages_per_day=max_messages_per_day)
+        account_setting_info = select_user(username=None, client_name=client_name, max_messages_per_day=max_messages_per_day)
 
         if account_setting_info is None:
             logger.error("사용가능한 계정이 없습니다 infinite login 을 종료합니다.")
@@ -202,9 +240,22 @@ def get_user_by_id_lamadava(user_id, check_valid_user=check_valid_user):
 def get_user_by_id_gpi(userid):
     client = Client()
     client.set_proxy(dsn=proxy)
-    response = client.user_info_v1(user_id=userid)
 
-    return int(response.pk)
+    try:
+        response = client.user_info_v1(user_id=userid)
+        userid = response.pk
+    except Exception as e:
+        if e.__class__.__name__ == UserNotFound.__name__:
+            raise e
+        elif e.__class__.__name__ == ClientError.__name__:
+            response = get_user_by_id_lamadava(userid)
+            userid = response.get("pk")
+
+    return int(userid)
+
+def get_user_id_by_db(username):
+    doc = USER_CHECKPOINT.find_one({"username": username})
+    return doc["userid"]
 
 def get_valid_user_ids(user_ids):
     valid_user_ids = []
@@ -223,6 +274,24 @@ def get_valid_user_ids(user_ids):
     # user_ids = list(filter(lambda x: x is not None, user_ids))
     return valid_user_ids
 
+def get_valid_user_ids_by_names(user_name_list):
+    valid_user_ids = []
+    for username in user_name_list:
+        try:
+            user_id = get_user_id_by_db(username)
+            valid_user_id = get_user_by_id_gpi(user_id)
+        except Exception as e:
+            logger.warning(f"{e}//user_id-{username} is not valid_username,{e.__class__.__name__}")
+            if e.__class__.__name__ == UserNotFound.__name__:
+                ITEM_USER_COLLECTION.delete_many(filter={"$or": [{"username": str(username)}]})
+                USER_CHECKPOINT.delete_many(filter={"$or": [{"username": str(username)}]})
+            continue
+        else:
+            valid_user_ids.append(valid_user_id)
+    # user_ids = list(filter(lambda x: get_user_by_id_lamadava(x), user_ids))
+    # user_ids = list(filter(lambda x: x is not None, user_ids))
+    return valid_user_ids
+
 
 def send_message(user_infos, text, next_account_info=None, project_name=None):
     max_account_retry_num = 2
@@ -231,7 +300,8 @@ def send_message(user_infos, text, next_account_info=None, project_name=None):
     account_retry_num = 0
 
     ###next_account_info 가 없으면 계정을 가져오기 있으면 해당 계정을 사용한다.
-    account_info = infinite_login(username=None, max_messages_per_day=max_messages_per_day,
+
+    account_info = infinite_login(username=None, max_messages_per_day=max_messages_per_day, client_name=None,
                                   session_id=None) if next_account_info is None else next_account_info
 
     # try:
@@ -247,8 +317,8 @@ def send_message(user_infos, text, next_account_info=None, project_name=None):
 
     user_ids = list(map(lambda x: int(x["userid"]), user_infos))
     logger.info(f"user_ids:{user_ids}")
+    user_ids = get_valid_user_ids(user_ids=user_ids)
 
-    user_ids = get_valid_user_ids(user_ids)
     if len(user_ids) == 0:
         logger.error(f"len(user_ids)==0//{user_ids}")
         return account_info
@@ -257,11 +327,8 @@ def send_message(user_infos, text, next_account_info=None, project_name=None):
     # user_ids = []
     # user_ids.append(33873703194)
 
-    logger.info(f"get_valid_user_ids:{user_ids}")
-
+    logger.info(f"get_valid_user_names:{user_infos}/{user_ids}")
     while True:
-        if account_retry_num >= max_account_retry_num:
-            raise AccountRetryExcessException
 
         sessionid = account_info.get('graph_session')
         username = account_info.get('username')
@@ -271,13 +338,16 @@ def send_message(user_infos, text, next_account_info=None, project_name=None):
         try:
             response = client.direct_send(text=text, user_ids=user_ids)
         except Exception as e:
-            logger.error(f"response 타입 에러:{e.__class__.__name__},{e}")
+            logger.error(f"response 에러:{e.__class__.__name__},{e}")
+
             request_retry_num += 1
             ### request 가 max retry 를 초과했을 때 다른 아이디로 로그인 해준다. request_retry_num -> 0 , account_retry_num += 1
             if request_retry_num >= max_request_retry_num:
                 logger.error(f"client error:{e}, retry login //request 횟수 초과({request_retry_num}) 다른아이디로 로그인 해줍니다. // account_retry_num :{account_retry_num}")
                 request_retry_num = 0
                 account_retry_num += 1
+                if account_retry_num >= max_account_retry_num:
+                    raise AccountRetryExcessException
                 account_info = infinite_login(username=None, max_messages_per_day=max_messages_per_day, session_id=None)
                 continue
             logger.error(f"client error:{e}, retry request // request_retry_num :{request_retry_num}")
@@ -295,6 +365,8 @@ def send_message(user_infos, text, next_account_info=None, project_name=None):
                     f"client error:{e}, retry login //request 횟수 초과({request_retry_num}) 다른아이디로 로그인 해줍니다. // account_retry_num :{account_retry_num}")
                 request_retry_num = 0
                 account_retry_num += 1
+                if account_retry_num >= max_account_retry_num:
+                    raise AccountRetryExcessException
                 account_info = infinite_login(username=None, max_messages_per_day=max_messages_per_day, session_id=None)
                 continue
 
@@ -348,11 +420,11 @@ def send_total_message(total_user_infos_group, text, project_name=None):
             logger.info(f"디엠 발송 완료")
             break
 
-        if count_send_message != 0 and count_send_message%200==0:
+        if count_send_message != 0 and count_send_message%250==0:
+
             logger.info(f"쉽니다 5분")
             time.sleep(300)
             pass
-
         target_user_infos = total_user_infos_group.pop(0)
         logger.info(f"target_user_infos:{target_user_infos}")
 
@@ -361,12 +433,14 @@ def send_total_message(total_user_infos_group, text, project_name=None):
                                              next_account_info=next_account_info, project_name=project_name)
             count_send_message+=1
         except Exception as e:
+            count_send_message += 1
             if e.__class__.__name__ == AccountException.__name__:
                 logger.error(f"{e.__class__.__name__}")
                 logger.error(f"simal")
                 return
             if e.__class__.__name__ == AccountRetryExcessException.__name__:
                 logger.error(f"{e.__class__.__name__}")
+                logger.error(f"sibul")
                 next_account_info = None
                 continue
             else:
@@ -399,12 +473,11 @@ if __name__ == "__main__":
     ##파일이름
     filename = f"a_{project}"
 
-    project_start_date = "2022-10-07"
-
+    project_start_date = "2022-10-12"
     ##제외할 단어 유저이름, 프로젝트 설정
     exclude_word = None
     # exclude_word =
-    exclude_end_date = "2022-10-10"
+    exclude_end_date = "2022-10-12"
     exclude_start_date = "2022-10-01"
     exclude_userid_list = completed_target_influencer.find_completed_influencer(project_name=project, start_date=exclude_start_date, end_date=exclude_end_date)
     exclude_userid_list_int = list(map(lambda x: int(x), exclude_userid_list))
@@ -418,15 +491,16 @@ if __name__ == "__main__":
     # search_hashtag = "물광피부 효소 모델 나들이 카페 가을 뷰티"
 
     search_hashtag = get_dm_source.get_source_hashtag(f"butterfly.txt")
+    search_hashtag = "릴스꿈나무 릴스챌린지"
     text = get_dm_source.get_source_message(f"butterfly.txt")
 
     ##몇개 가져올지
-    skip, limit = 1200, 300
+    skip, limit = 0, 1000000
 
     ##서치 필터플
-    user_followed_by_gte = 3000
+    user_followed_by_gte = 2000
     user_followed_by_lte = 30000
-    avg_like_gte = 50
+    avg_like_gte = 100
 
     search_filter = {"$text": {"$search": search_hashtag, },
                      "user_followed_by": {"$gte": int(user_followed_by_gte), "$lte": int(user_followed_by_lte)},
