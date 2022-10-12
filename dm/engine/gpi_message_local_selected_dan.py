@@ -7,7 +7,7 @@ from instagrapi import Client
 from instagrapi.types import User
 import logging
 from instagrapi.types import DirectMessage
-from instagrapi.exceptions import UserNotFound
+from instagrapi.exceptions import UserNotFound, ClientForbiddenError, ClientError
 from db import m_instagram
 from dm.engine import completed_target_influencer
 from dm.engine.exceptions import *
@@ -23,9 +23,9 @@ if logger.hasHandlers():
     logger.handlers = []
 logger.setLevel(logging.INFO)
 
-# host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-30", "awR4Sad2t"
-# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
-host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
+# host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
+host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
+# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
 proxy = f"http://{proxy_username}:{proxy_password}@{host}:{port}"
 
 db_conn = m_instagram.InstaDB().conn
@@ -43,7 +43,7 @@ client.set_proxy(dsn=proxy)
 check_valid_user = True
 
 def select_user(username=None, client_name=None, max_messages_per_day=None):
-    account_setting_info = INSTA_ACCOUNT_OBJ.select_and_update_user(username=username, client_name=None)
+    account_setting_info = INSTA_ACCOUNT_OBJ.select_and_update_user(username="barbaraturnerfhrdgpxled", client_name=None)
     if account_setting_info is None:
         logger.info("no account available")
         return None
@@ -109,6 +109,7 @@ def login(username, password, sessionid = None):
 
         try:
             is_login = client.login(username=username, password=password)
+
         except Exception as e:
             try_num += 1
             logger.warning(f" 로그인 시도 {try_num} 번째 실패함 {e}// {e.__class__.__name__}- username:{username} password:{password}")
@@ -236,19 +237,46 @@ def get_user_by_id_lamadava(user_id, check_valid_user=check_valid_user):
 def get_user_by_id_gpi(userid):
     client = Client()
     client.set_proxy(dsn=proxy)
-    response = client.user_info_v1(user_id=userid)
 
-    return int(response.pk)
+    try:
+        response = client.user_info_v1(user_id=userid)
+        userid = response.pk
+    except Exception as e:
+        if e.__class__.__name__ == UserNotFound.__name__:
+            raise e
+        elif e.__class__.__name__ == ClientError.__name__:
+            response = get_user_by_id_lamadava(userid)
+            userid = response.get("pk")
+
+    return int(userid)
 
 def get_user_id_by_db(username):
     doc = USER_CHECKPOINT.find_one({"username": username})
     return doc["userid"]
 
-def get_valid_user_names(user_name_list):
-    valid_user_names = []
+def get_valid_user_ids(user_ids):
+    valid_user_ids = []
+    for user_id in user_ids:
+        try:
+            valid_user_id = get_user_by_id_gpi(user_id)
+        except Exception as e:
+            logger.warning(f"{e}//user_id-{user_id} is not valid_user_id,{e.__class__.__name__}")
+            if e.__class__.__name__ == UserNotFound.__name__:
+                ITEM_USER_COLLECTION.delete_many(filter={"$or": [{"pk": str(user_id)}, {"pk": int(user_id)}]})
+                USER_CHECKPOINT.delete_many(filter={"$or": [{"userid": str(user_id)}, {"userid": int(user_id)}]})
+            continue
+        else:
+            valid_user_ids.append(valid_user_id)
+    # user_ids = list(filter(lambda x: get_user_by_id_lamadava(x), user_ids))
+    # user_ids = list(filter(lambda x: x is not None, user_ids))
+    return valid_user_ids
+
+def get_valid_user_ids_by_names(user_name_list):
+    valid_user_ids = []
     for username in user_name_list:
         try:
-            valid_user_name = get_user_id_by_db(username)
+            user_id = get_user_id_by_db(username)
+            valid_user_id = get_user_by_id_gpi(user_id)
         except Exception as e:
             logger.warning(f"{e}//user_id-{username} is not valid_username,{e.__class__.__name__}")
             if e.__class__.__name__ == UserNotFound.__name__:
@@ -256,10 +284,10 @@ def get_valid_user_names(user_name_list):
                 USER_CHECKPOINT.delete_many(filter={"$or": [{"username": str(username)}]})
             continue
         else:
-            valid_user_names.append(valid_user_name)
+            valid_user_ids.append(valid_user_id)
     # user_ids = list(filter(lambda x: get_user_by_id_lamadava(x), user_ids))
     # user_ids = list(filter(lambda x: x is not None, user_ids))
-    return valid_user_names
+    return valid_user_ids
 
 
 def send_message(user_infos, text, next_account_info=None, project_name=None):
@@ -284,14 +312,16 @@ def send_message(user_infos, text, next_account_info=None, project_name=None):
     #     raise AccountException
 
 
-    user_ids = get_valid_user_names(user_name_list=user_infos)
+    user_ids = get_valid_user_ids_by_names(user_name_list=user_infos)
+    if len(user_ids) == 0:
+        logger.error(f"len(user_ids)==0//{user_ids}")
+        return account_info
 
     ###dummy
     # user_ids = []
     # user_ids.append(33873703194)
 
-    logger.info(f"get_valid_user_names:{user_ids}")
-
+    logger.info(f"get_valid_user_names:{user_infos}/{user_ids}")
     while True:
         if account_retry_num >= max_account_retry_num:
             raise AccountRetryExcessException
@@ -304,7 +334,8 @@ def send_message(user_infos, text, next_account_info=None, project_name=None):
         try:
             response = client.direct_send(text=text, user_ids=user_ids)
         except Exception as e:
-            logger.error(f"response 타입 에러:{e.__class__.__name__},{e}")
+            logger.error(f"response 에러:{e.__class__.__name__},{e}")
+
             request_retry_num += 1
             ### request 가 max retry 를 초과했을 때 다른 아이디로 로그인 해준다. request_retry_num -> 0 , account_retry_num += 1
             if request_retry_num >= max_request_retry_num:
@@ -457,7 +488,7 @@ if __name__ == "__main__":
     # user_followed_by_lte = 900000000
     avg_like_gte = 0
 
-    user_infos_list = ['juliastoryroom', 'miniming.90', 'deng.cook', 'kihyun__23', 'riya_yoo', 'aileen.ejk', 'chase.hjs', 'onjjun', 'party_lespetits', 'seowon_mom0922', 'lazy_mom_o', 'namji_b', 'binini_5', 'bbo__bebe', 'lovely__rindo', 'thinkeco_official', 'hyoju9487', 'mimignon_', 'dadavely_1004', 'miuhanbok', 'i.yuseul', 'at.her_', 'cherishbebe', 'kivaparty', 'smile.home_', 'hansookjun', 'bonnie.myel', 'hohomoms', 'bomnal_s2', 'eunhye714', 'koongkoong2_', 'turningpointgym_ceo', 'imhaeji', 'pastel_bubble_official', 'ji_young0608', 'lovely_sh0250', 'moyou2u', 'duranduran1119', 'ysongvv', 'm_h91_24', 'kko_mance', 'misssim._', 'dalbit_table_official', '__ji._.hee', 'jo_eji', 'dk_jj', 'elsir_premium_living', 'yullvely', 'bo_ssami', 'jins__jk', '_ohyohan', 'dadamama__', 'vienna.foot', 'rangfilm_', 'osena1381', '100mihwi', 'aroshop486', '____i_na_', '_joymama', 'gonogono_story', 'olympic_ttuckjip', 'balloon_de_j', 'heejin.kang', '__im_ceo', '___hyo_0714', 'pinksmell2', 'o__oxox', 'myspecialhealer', '89s90s16s', 'jiyul___vely', 'baegotdaek', 'hwan__ma', 'influencer_tei', 'keenz_lebere', 'kkonnnjeong', 'hosun_', 'jeh777love', 'plafarm', 'coach_koo', '_byeorrri', 'mj_pooya', 'jane__aus', 'feelsogood_h', 'sisoballoon', 'cooking_ohha', 'hi_lottomom', 'haha__y', 'k_ahran_m', 'yeong_graceyaksa', 'kamin_closet', 'masta502_', 'by_jenny83', 'rona._.mom_', 'kiki.yaong', 'atti__j', 'dear.jye', 'yooja_family', 'six.zzal', 'luv_mom_0429', 'hello.little.sol', 'orange.zzal', 'to_naeunbaby', 'happydana_', 'kkalkkal.enter', 'three.zzal', 'ggomoosin', 'mimi1121_', 'loveyoolucy', '48000_flower', 'i.dol_love', '_king_enter', 'goseokbin_', 'artistic.thu', 'norang.zzal', '_chu_eu', 's2_umnal', 'enter_lulu', 'songckzzang', 'kikipoint_55', 'kkuhankku', 'kkokko_tiger', 'ain__mm', 'bibim121', 'insight_celeb', 'nicklee_.dk', 'vertblanc.official', '9194_eun', 'ogoo._.59', '__jjinvely', 'bebefitplus', 'limongbebe', 'ji.sunny__', 'dda_ami', 'sissysally2', 'byulingya', 'beige._.n', 'suumung', 'hana.bong', 'woong.daon', 'sujin_sue', 'duri.official', 'yeoni.e', 'im.juyoung', 'jiwoo__0802', 'luv___mini', 'chanjongi_life', 'misotable123', 'seony_lim', 'eerae_', 'jinky2011', 'itsme_hjy', 'sils_handmade', 'suna._.nk', 'roencoco_official', 'betvogi_kor', 'onjeonhanharu', '5a_rin', 'khjangell', '16.1.31', 'isunyeong901', 'seogaonuri', '__arles', 'iyumom', 'totory1503', 'my_daeon.ria', '__kimsaebom', 'woo______a', 'vilang_official', 'yul_mam727', 'vividyooni_', 'ggosirang_table', 's0n9_b0k', 'creamsafari.official', 'homemadefood_recipes', '2bin_mom', '9wol_enfj', 'mint_dress', 'bodyprogramer', 'powamung0921', 'liseo__._.__', 'jin_11xx', 'up_sunsun', 'baebae_0205', '85.amy', 'luv__ayooni', 'bbbbichaa', 'yallelee', 'sonsoogarden', 'have3_11', 'taekyeong_food', '0807jiyu', 'orzin_n', 'yeoshin_0415', 'hwanggirl_', 'happy.euntto', 'yoontree15', 'k_commu_archive', 'bbamma287', 'misslovelycloset', '2daaam__2', 'kimis_market', 'judy_happylife', 'ssongi__h', 'gil.life84', 'bebeyule', 'waniyun_', 'makingn__', 'blooming_jjsy31', 'daldal_vv', 'baby_roh_', 'narae_grim', 'dalkom.sweet', 'ujoo_uha_luv', 'yeyul_luv', 'hong_carol', 'danbiko_', 'starbebe__', 'jeong._.jihun', 'jenie_sss', 'haedeenee', 'sarahktravel', 'da_eun_mami', 'design2dainn', 'd3_twoseul_mom', 'rara_____n.n', 'gina__jeong', 'yeonwoo_ya', 'ddbb1004', 'piopiomommy', 'ggomsmom', 'angolo_milano', 'woo.a_mom', 'soooon_0.0', 'cake_space_', 'sandiblossom', 'ji_angtteu', 'happyhobin', 'jian._.mom_', '_love.jooo', 'ha___na_o', 'bebibebi_', 'ladydessert_', 'toooooori_', 'kmj1004m', 'kil_84', 'fraisbellon.official', 'our.eunyul', '_xxkwak_', 'cledor.montessori', '__tae_ri', 'yuju_vely_', '_hamnammae', 'mosmos719', 'sarang._.2022', 'log_sunwoo', 'mmmina007', 'k._.sun', 'rayul_mom_1117', 'soogguri_94', '1025___bubu', 'arin__vely_', 'cclim.j', 'jammuk.project', '_royday_', 'deepnap_19', 'kkul.doyul', 'm.hajuuun', 'bellahjkang', 'kwon._.yul', 'gyeom.3', 'jane__ttt', 'double_dragon2', 'hy_moms', 'silverdragone', 'play_read_grow', '00mi0mi', 'baby_josieun', 'hye.wonder', 'bebe_soyoon', 'hi.wooye_', 'hr_yisol', 'snsao', 'bbbo_ye', '_jiiiiii_baby_', 'onziya_', 'rachelmj_shin', 'aumom811920', 'kkomzi_closet', 'euns5', 'kirikiri_mk', 'rod_a26', 'calilifeoc', 'destinyjin37', 'su_.min1004', 'bossmaeng', 'yd._.yoon', 'papadal_insta', 'su_kky', 'nooneelselikeme_', 'sarah1004k', 'layday_y', 'wannabeys_jm', 'etre_sso9', 'dam1_1oo4', '_danb_b', 'kkong.0110', 'mini921121', 'aokiay', 'hoo__1116', 'bebe_108_206', 'ejae_echan', 'little.inno', 'alicia_jihyun', 'hello_beenbeen', 'eumyoungeun', 'nanana113', 'rachel_ky_cho', '2dam2jun2som', 'seraphic_arami_', 'raonbebebe', 'in_ah.love', 'ww_design', 'yangsoois', 'lovely_s02', 'my____hana', 'tae.___.vely', 'eugenefarm', 'hahahoho12180', 'woorin__house', '___s___e___o', 'lime_bella', 'soi____mam', 'ggostar_baby', 'h_yujoo_______', 'lovely_____suzy', 'bumimummy', 'siaa1004', 'j_yun.u', 'duswn9005', 'mc_chars', 'yun_jae.c', '_jjjneoy_', 'today_bambi', 'jco._.jco', 'sihoo210821', 'sso_jung26', 'like._.yoon', 'si__ne.chuu', 'jjokkomom', 'cotyledon2021', 'janey_paterson', 'haeon_haesol_luv', 'yedam_hkc', 'wowowow_0520', '_woobin0831', '_jayi_jayi_', 'yuhyun_si', 'lululala707', 'jangyuna_chanel', 'universe_c_', 'by_mijoo', 'jung._ej', 'smscucu_10', '__yul_mom', 'night_sky1115', 'oro_ily', 'luv._.jaeha', 'carol_bykorea', 'dmkcurtain', 'jjun___u', 'about_ojh', 'dahyelee.32', 'thewoomije', 'from_bobo', 'tnickle_bookclub', 'kwak_danb', 'h.inhosoyoon', 'hanakang0503', 'luv9min', 'nkm3378', 'welcome_blessing', '_isolbebe', 'hhhhh.a__', 'sunrise_mmmin', 'janenstory', 'banila27', '925h5', 'wanimom_2021', 'statice_', 'ssu_luda', 'sonjjirung', '_je._.rry_', 'dohane__', 'ssm.5105', 'lulululu_woobrother', 'bae_so_yul', '_jenny._.vely_', 'maehwa9148', '1stdreamers', 'especially00', 'jinsune1', 'jjjiyoniii', 'dabro_story', 'davidk.7', '86.j', 'jessica_201511', 'reo_0825', 'hih_i333', 'hi._.yunbebe', 'mozzi__o.o', 'yoonsdaily_', 'the.bridge_iany', 'bombom0322', 'i__luv__yul', 'ddongji_m.m', 'yeon_yeseo.lee', 'for__uuu', 'woojin113012', 'yoona_papa_0822', 'ginny_bb', 'picturebook_curation_for_u', 'bkpuroon', 'chlsuzeng', 'wngml715', 'nobel1220', 'baby_hero.tg', 'zzumez_couple', 'soojin5949', '__rin.woo', 'havely_0102', 'joo._.mom', 'doyul__mom', 'doctor__saran', 'ra._.mmi__', 'one2log_', 'imlash_sun_', 'j123_mom', 'to.jungeun', 'heo.sudal', 'ddudi.jjongs', 'nahee__20160216', 'dasomi___iiiii', 'lhj4742017', 'seohyeon__papa', '___hermoso_', 'by_ssun2', 'ha_yul_pop', 'chan_daddy_gram', 'sangyeongcha', '2w.mom', 'k_hee_eun', 'seha521', 'bebedog1', 'icrayon_miae', 'yoona11066', 'icyrain798', 'lii100331iil', 'alalxx0822', 'bbaeck_ia_b', 'woo.love__', 'raddo_bebe', 'b9toon', 'tamimamang', 'soso_ppp_p', 'hyun2ne1', 'himom__2', 'sky_22222', 'leegajin', 'latte_yul', 'otter88yun', 'eunseol_mom', 'rumi.jj', 'teddymom_ahsol', 'its_kareni', 'jun._.baby', 'siaseoamom__em', 'sook_420', 'okipark', 'modseunji_', 'ppu_daily', 'babelkimm', 'kyung_a_choi', 'jwonny._.b.c.mom', 'd0nghye0n_lim', 'sukkyungmill', 'kkoma.ato']
+    user_infos_list = ['soi____mam', 'bumimummy', 'siaa1004', 'j_yun.u', 'duswn9005', 'mc_chars', 'yun_jae.c', '_jjjneoy_', 'today_bambi', 'jco._.jco', 'sihoo210821', 'sso_jung26', 'like._.yoon', 'si__ne.chuu', 'jjokkomom', 'cotyledon2021', 'janey_paterson', 'haeon_haesol_luv', 'yedam_hkc', 'wowowow_0520', '_woobin0831', '_jayi_jayi_', 'yuhyun_si', 'lululala707', 'jangyuna_chanel', 'universe_c_', 'by_mijoo', 'jung._ej', 'smscucu_10', '__yul_mom', 'night_sky1115', 'oro_ily', 'luv._.jaeha', 'carol_bykorea', 'dmkcurtain', 'jjun___u', 'about_ojh', 'dahyelee.32', 'thewoomije', 'from_bobo', 'tnickle_bookclub', 'kwak_danb', 'h.inhosoyoon', 'hanakang0503', 'luv9min', 'nkm3378', 'welcome_blessing', '_isolbebe', 'hhhhh.a__', 'sunrise_mmmin', 'janenstory', 'banila27', '925h5', 'wanimom_2021', 'statice_', 'ssu_luda', 'sonjjirung', '_je._.rry_', 'dohane__', 'ssm.5105', 'lulululu_woobrother', 'bae_so_yul', '_jenny._.vely_', 'maehwa9148', '1stdreamers', 'especially00', 'jinsune1', 'jjjiyoniii', 'dabro_story', 'davidk.7', '86.j', 'jessica_201511', 'reo_0825', 'hih_i333', 'hi._.yunbebe', 'mozzi__o.o', 'yoonsdaily_', 'the.bridge_iany', 'bombom0322', 'i__luv__yul', 'ddongji_m.m', 'yeon_yeseo.lee', 'for__uuu', 'woojin113012', 'yoona_papa_0822', 'ginny_bb', 'picturebook_curation_for_u', 'bkpuroon', 'chlsuzeng', 'wngml715', 'nobel1220', 'baby_hero.tg', 'zzumez_couple', 'soojin5949', '__rin.woo', 'havely_0102', 'joo._.mom', 'doyul__mom', 'doctor__saran', 'ra._.mmi__', 'one2log_', 'imlash_sun_', 'j123_mom', 'to.jungeun', 'heo.sudal', 'ddudi.jjongs', 'nahee__20160216', 'dasomi___iiiii', 'lhj4742017', 'seohyeon__papa', '___hermoso_', 'by_ssun2', 'ha_yul_pop', 'chan_daddy_gram', 'sangyeongcha', '2w.mom', 'k_hee_eun', 'seha521', 'bebedog1', 'icrayon_miae', 'yoona11066', 'icyrain798', 'lii100331iil', 'alalxx0822', 'bbaeck_ia_b', 'woo.love__', 'raddo_bebe', 'b9toon', 'tamimamang', 'soso_ppp_p', 'hyun2ne1', 'himom__2', 'sky_22222', 'leegajin', 'latte_yul', 'otter88yun', 'eunseol_mom', 'rumi.jj', 'teddymom_ahsol', 'its_kareni', 'jun._.baby', 'siaseoamom__em', 'sook_420', 'okipark', 'modseunji_', 'ppu_daily', 'babelkimm', 'kyung_a_choi', 'jwonny._.b.c.mom', 'd0nghye0n_lim', 'sukkyungmill', 'kkoma.ato']
 
     ##2. 유저 분할
     total_user_infos_group = divide_user_infos_list(user_infos_list, group_size=1)

@@ -121,6 +121,7 @@ def send_messages(session_id, user_ids, text, max_messages_per_day):
         if idx == max_messages_per_day:
             broken_items = user_ids[user_ids.index(user_id):]
             return broken_items
+
 def get_user_by_id(user_id):
     try:
         access_key = "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"

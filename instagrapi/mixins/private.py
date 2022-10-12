@@ -48,7 +48,7 @@ def manual_input_code(self, username: str, choice=None):
     """
     code = None
     while True:
-        # code = input(f"Enter code (6 digits) for {username} ({choice}): ").strip()
+        #code = input(f"Enter code (6 digits) for {username} ({choice}): ").strip()
         code = 66666
         if code and code.isdigit():
             break
