@@ -1,6 +1,10 @@
+import math
+
 import logging
 import requests
 import json
+
+from dm import config
 from instagrapi.types import User
 from dm.engine.exceptions import LamadavaServerError, NoUserIdException
 from dm.execute.run_select_influencer import search_influencer_info
@@ -17,55 +21,6 @@ def user_split(username_list):
     k = username_list.split("\n")
     return k
 
-def get_user_by_id_lamadava(user_id):
-    max_try_num_get_user = 5
-    try_num_get_user = 0
-
-    while True:
-        if try_num_get_user > max_try_num_get_user:
-            logger.warning(f"LamadavaServerError")
-            raise LamadavaServerError
-
-        try:
-            access_key = "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"
-            headers = {"x-access-key": access_key}
-            params = {"id": user_id}
-            response = requests.get(url="https://api.lamadava.com/v1/user/by/id", params=params, headers=headers)
-            json_data = json.loads(response.text)
-        except Exception as e:
-            logger.warning(f"user_id:{user_id}/error:{e}")
-            try_num_get_user += 1
-            continue
-        else:
-            exc_type = json_data.get("exc_type")
-            if exc_type == "NoFreeAccounts":
-                try_num_get_user += 1
-                logger.warning(f"json_data:{json_data} retry-{try_num_get_user}/{max_try_num_get_user}")
-                continue
-
-            if exc_type == "InstagramServerError":
-                try_num_get_user += 1
-                logger.warning(f"json_data:{json_data} retry-{try_num_get_user}/{max_try_num_get_user}")
-                continue
-
-            if exc_type == "UserNotFound":
-                logger.warning(f"존재하지 않는 userid")
-                raise NoUserIdException
-
-            if json_data.get("pk") is None:
-                logger.error(f"user_id:{user_id}/{json_data}")
-                try_num_get_user += 1
-                continue
-            ###response type check(User Validation)
-            else:
-                try:
-                    User(**json_data)
-                except Exception as e:
-                    logger.warning(f"json_data:{json_data}/{e} retry-{try_num_get_user}/{max_try_num_get_user}")
-                    try_num_get_user += 1
-                    continue
-
-            return json_data
 
 # s = get_user_by_id_lamadava(user_id="9278045993")
 # print(s)
@@ -81,3 +36,20 @@ def get_user(skip, limit, search_filter, filename, exclude_word):
 
     target_username_list = list(filter(lambda x: x is not None, target_username_list))
     return target_username_list
+
+
+def divide_user_infos_list(user_infos_list, group_size):
+    # user_infos_list = list(map(lambda x: [x] if type(x) is not list else x, user_infos_list))
+    total_user_infos_group = []
+    group_size = min(config.max_group_size, group_size)
+
+    total_user_infos_group_count = len(user_infos_list) / group_size
+    total_user_infos_group_count = math.ceil(total_user_infos_group_count)
+
+    logger.info(f"total_user_infos_group_count:{total_user_infos_group_count}")
+
+    for i in range(0, total_user_infos_group_count):
+        prev_page = group_size * i
+        next_page = group_size * (i + 1)
+        total_user_infos_group.append(user_infos_list[prev_page:next_page])
+    return total_user_infos_group

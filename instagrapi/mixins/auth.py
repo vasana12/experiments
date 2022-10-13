@@ -583,44 +583,16 @@ class LoginMixin(PreLoginFlowMixin, PostLoginFlowMixin):
 
     def set_device(self, device: Dict = None, reset: bool = False) -> bool:
         """
-        Helper to set a device for login test
-
+        Helper to set a device for login
         Parameters
         ----------
         device: Dict, optional
             Dict of device settings, default is None
-
         Returns
         -------
         bool
             A boolean value
         """
-        base_2_device = {
-            "app_version": "117.0.0.28.123",
-            "android_version": "28",
-            "android_release": "9.0",
-            "dpi": "420dpi",
-            "resolution": "1080x1920",
-            "manufacturer": "OnePlus",
-            "device": "ONEPLUS A3003",
-            "model": "OnePlus3",
-            "cpu": "qcom",
-            "version_code": "180322800"
-        }
-        base_1_device = {
-            "app_version": "203.0.0.29.118",
-            "android_version": 26,
-            "android_release": "8.0.0",
-            "dpi": "480dpi",
-            "resolution": "1080x1920",
-            "manufacturer": "Xiaomi",
-            "device": "capricorn",
-            "model": "MI 5s",
-            "cpu": "qcom",
-            "version_code": "314665256",
-        }
-        device_choice = [base_1_device, base_2_device]
-
         self.device_settings = device or {
             "app_version": "203.0.0.29.118",
             "android_version": 26,
@@ -633,9 +605,6 @@ class LoginMixin(PreLoginFlowMixin, PostLoginFlowMixin):
             "cpu": "qcom",
             "version_code": "314665256",
         }
-        self.device_settings = random.choice(device_choice)
-        # self.device_settings = base_2_device
-
         self.settings["device_settings"] = self.device_settings
         if reset:
             self.set_uuids({})

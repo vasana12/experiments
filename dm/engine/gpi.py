@@ -5,13 +5,17 @@ import sys
 
 import requests
 import time
+
+from dm.engine.exceptions import RapidApiError, LamadavaServerError, NoUserIdException
 from instagrapi import Client
 import logging
 
-
+from db.model import *
 from db import m_instagram
 from dm.execute.run_select_influencer import get_influnecer_info_by_project, search_influencer_info
 from dm.prepare import get_dm_source, get_influencer
+from instagrapi.exceptions import UserNotFound, ClientError
+from instagrapi.types import User
 
 FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
 logging.basicConfig(format=FORMAT)
@@ -28,15 +32,113 @@ INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(channel_name="instagram")
 INSTA_ACCOUNT_OBJ.client_name = "admin_test"
 
 
-def select_user(username=None, max_messages_per_day=None):
-    account_setting_info = INSTA_ACCOUNT_OBJ.select_and_update_user(username=username)
-    if not account_setting_info:
-        logger.info("no account available")
-        return None
-    else:
-        logger.info(f"account is selected:{account_setting_info['username']}/{account_setting_info['password']}")
-        return account_setting_info
+def get_user_id_by_db(username):
+    doc = USER_CHECKPOINT.find_one({"username": username})
+    return doc["userid"]
 
+def get_user_by_id_lamadava(user_id):
+    max_try_num_get_user = 5
+    try_num_get_user = 0
+
+    while True:
+        if try_num_get_user > max_try_num_get_user:
+            logger.warning(f"LamadavaServerError")
+            raise LamadavaServerError
+
+        try:
+            access_key = "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"
+            headers = {"x-access-key": access_key}
+            params = {"id": user_id}
+            response = requests.get(url="https://api.lamadava.com/v1/user/by/id", params=params, headers=headers)
+            json_data = json.loads(response.text)
+        except Exception as e:
+            logger.warning(f"user_id:{user_id}/error:{e}")
+            try_num_get_user += 1
+            continue
+        else:
+            exc_type = json_data.get("exc_type")
+            if exc_type == "NoFreeAccounts":
+                try_num_get_user += 1
+                logger.warning(f"json_data:{json_data} retry-{try_num_get_user}/{max_try_num_get_user}")
+                continue
+
+            if exc_type == "InstagramServerError":
+                try_num_get_user += 1
+                logger.warning(f"json_data:{json_data} retry-{try_num_get_user}/{max_try_num_get_user}")
+                continue
+
+            if exc_type == "UserNotFound":
+                logger.warning(f"존재하지 않는 userid")
+                raise NoUserIdException
+
+            if json_data.get("pk") is None:
+                logger.error(f"user_id:{user_id}/{json_data}")
+                try_num_get_user += 1
+                continue
+            ###response type check(User Validation)
+            else:
+                try:
+                    User(**json_data)
+                except Exception as e:
+                    logger.warning(f"json_data:{json_data}/{e} retry-{try_num_get_user}/{max_try_num_get_user}")
+                    try_num_get_user += 1
+                    continue
+
+            return json_data
+
+def get_user_id_by_username_rapid_api(username):
+    max_try_num_get_user = 5
+    try_num_get_user = 0
+
+    while True:
+        if try_num_get_user > max_try_num_get_user:
+            logger.warning(f"RapidApiError")
+            raise RapidApiError
+        try:
+
+            url = "https://instagram-scraper-2022.p.rapidapi.com/ig/web_profile_info/"
+
+            querystring = {"user": username}
+
+            headers = {
+                "X-RapidAPI-Key": "49247615ccmshcd5a0d0e8ddb542p1ae266jsnb64d93ff541c",
+                "X-RapidAPI-Host": "instagram-scraper-2022.p.rapidapi.com"
+            }
+            response = requests.request("GET", url, headers=headers, params=querystring)
+            # params = {"username": username, "access_key": "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"}
+            # response = requests.get(url="https://api.lamadava.com/a1/user", params=params)
+            json_data= json.loads(response.text)
+        except Exception as e:
+            time.sleep(20)
+            logger.warning(f"user_id:{username}/error:{e}")
+            try_num_get_user += 1
+            continue
+        else:
+            if json_data.get("data") is None:
+                logger.warning(f"username:{username}/error:{json_data}")
+                if json_data.get("message") is not None and "Page not found":
+                    raise UserNotFound
+                try_num_get_user += 1
+                continue
+            else:
+                id = json_data["data"]["user"]["id"]
+                return id
+
+def get_user_by_id_gpi(userid, proxy):
+    client = Client()
+    client.set_proxy(dsn=proxy)
+
+    try:
+        response = client.user_info_v1(user_id=userid)
+        userid = response.pk
+    except Exception as e:
+        if e.__class__.__name__ == UserNotFound.__name__:
+            raise e
+        elif e.__class__.__name__ == ClientError.__name__:
+            response = get_user_by_id_lamadava(userid)
+            userid = response.get("pk")
+
+    return int(userid)
 
 def get_user_by_id(user_id):
     params = {"id": user_id}
@@ -44,52 +146,6 @@ def get_user_by_id(user_id):
     json_data = json.loads(response.text)
     return json_data
 
-def login_by_session(session_id, username=None, password=None):
-    pass
-    access_key = "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"
-    headers = {"x-access-key": access_key}
-    data = {"sessionid": session_id}
-    url = "https://api.lamadava.com/s1/auth/login/by/sessionid"
-    response = requests.post(url=url, data=data, headers=headers)
-    data = json.loads(response.text)
-    try_num = 0
-    while True:
-        if try_num >=5:
-            return None
-        if type(data) is not str:
-            print(data)
-            logger.error(f"session return error - username:{username}/password:{password}, session_id:{session_id}")
-            try_num += 1
-            continue
-        logger.info(f"session return success - username:{username}/password:{password}, session_id:{session_id}")
-        return response
-
-def login(username,password):
-    try_num = 0
-    while True:
-        if try_num >= 20:
-            logger.error(f"lamada - login max_try_num:{try_num}")
-            return None
-        access_key = "PHqrL750D4xvF5h27UdWDMTnXs8fhTPx"
-        headers = {"x-access-key": access_key}
-        data = {"username": username, "password": password}
-        url = "https://api.lamadava.com/s1/auth/login"
-        response = requests.post(url=url, data=data, headers=headers)
-
-        try:
-            data = json.loads(response.text)
-        except Exception as e:
-
-            logger.error(f"{e}/try_num:{try_num}")
-            continue
-
-        if type(data) is not str:
-            try_num += 1
-            logger.error(f"{data}/try_num:{try_num}")
-            continue
-
-        logger.fatal(f"login:{username}/{password}/ sessionid - {data}")
-        return data
 
 def send_messages(session_id, user_ids, text, max_messages_per_day):
     access_key = "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"

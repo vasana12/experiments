@@ -44,7 +44,8 @@ def get_user_info_by_name(username):
             params = {"username": username}
             response = requests.get(url="https://api.lamadava.com/a1/user", params=params, headers=headers)
             data = json.loads(response.text)
-            json_data = json_value(data, "graphql", "user")
+            # json_data = json_value(data, "graphql", "user")
+            json_data = data
         except Exception as e:
             logger.warning(f"username:{username}/error:{e}")
             try_num_get_user += 1

@@ -1,8 +1,7 @@
 import json
 import math
-import sys
 import requests
-import time
+from dm.engine.gpi import get_user_id_by_username_rapid_api
 from instagrapi import Client
 from instagrapi.types import User
 import logging
@@ -194,6 +193,26 @@ def get_user_by_id_lamadava(user_id):
                     try_num_get_user += 1
                     continue
             return json_data
+
+def get_valid_user_ids_by_names(user_name_list):
+    valid_user_ids = []
+    for username in user_name_list:
+        try:
+            # user_id = get_user_id_by_db(username)
+            # valid_user_id = get_user_by_id_gpi(user_id)
+            valid_user_id = get_user_id_by_username_rapid_api(username)
+
+        except Exception as e:
+            logger.warning(f"{e}//user_id-{username} is not valid_username,{e.__class__.__name__}")
+            if e.__class__.__name__ == UserNotFound.__name__:
+                ITEM_USER_COLLECTION.delete_many(filter={"$or": [{"username": str(username)}]})
+                USER_CHECKPOINT.delete_many(filter={"$or": [{"username": str(username)}]})
+            continue
+        else:
+            valid_user_ids.append(valid_user_id)
+    # user_ids = list(filter(lambda x: get_user_by_id_lamadava(x), user_ids))
+    # user_ids = list(filter(lambda x: x is not None, user_ids))
+    return valid_user_ids
 
 def get_user_by_id_gpi(userid):
     client = Client()
