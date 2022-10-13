@@ -27,7 +27,7 @@ def get_source(source_type, filename):
     """source_type : ['hashtag', 'message']"""
     project_dir = Path.cwd().parent
     filepath = project_dir.joinpath("source", source_type, filename)
-    return filepath.read_text()
+    return filepath.read_text(encoding="utf-8")
 
 
 def get_source_message(filename):
