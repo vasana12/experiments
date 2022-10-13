@@ -473,7 +473,7 @@ if __name__ == "__main__":
     ##파일이름
     filename = f"a_{project}"
 
-    project_start_date = "2022-10-12"
+    project_start_date = "2022-10-13"
     ##제외할 단어 유저이름, 프로젝트 설정
     exclude_word = None
     # exclude_word =
@@ -491,7 +491,7 @@ if __name__ == "__main__":
     # search_hashtag = "물광피부 효소 모델 나들이 카페 가을 뷰티"
 
     search_hashtag = get_dm_source.get_source_hashtag(f"butterfly.txt")
-    search_hashtag = "릴스꿈나무 릴스챌린지"
+    search_hashtag = "릴스챌린지"
     text = get_dm_source.get_source_message(f"butterfly.txt")
 
     ##몇개 가져올지
@@ -512,7 +512,6 @@ if __name__ == "__main__":
     user_infos_list = get_user(skip=skip, limit=limit, search_filter=search_filter, filename=filename,
                                exclude_word=exclude_word
                                )
-
     ##2. 유저 분할
     total_user_infos_group = divide_user_infos_list(user_infos_list, group_size=1)
     ##3. db 발송

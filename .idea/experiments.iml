@@ -12,6 +12,5 @@
     <orderEntry type="module" module-name="insta_bot" />
     <orderEntry type="module" module-name="memory_check" />
     <orderEntry type="module" module-name="apify" />
-    <orderEntry type="module" module-name="gpi" />
   </component>
 </module>
