@@ -85,7 +85,8 @@ def get_user_by_id_lamadava(user_id):
                     continue
 
             return json_data
-
+# s = get_user_by_id_lamadava(20916388771)
+# print(s)
 def get_user_id_by_username_rapid_api(username):
     max_try_num_get_user = 5
     try_num_get_user = 0

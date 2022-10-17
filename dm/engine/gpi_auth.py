@@ -162,7 +162,11 @@ def login_v_lamadava(username,password):
         logger.fatal(f"login:{username}/{password}/ sessionid - {data}")
         return data
 def select_user(username=None, client_name=None, max_messages_per_day=None):
-    account_setting_info = INSTA_ACCOUNT_OBJ.select_and_update_user(username=None, client_name=None)
+    if username:
+        account_setting_info = INSTA_ACCOUNT_OBJ.select_and_update_user(username=username, client_name=None)
+    else:
+        account_setting_info = INSTA_ACCOUNT_OBJ.select_and_update_user(username=None, client_name=None)
+
     if account_setting_info is None:
         logger.info("no account available")
         return None

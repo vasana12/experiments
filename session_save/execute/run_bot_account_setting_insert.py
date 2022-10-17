@@ -60,7 +60,7 @@ def insert_account():
                                 {
                                     "last_login": datetime.now(),
                                     "seller": seller,
-                                    "status": "available",
+                                    "status": "new",
                                     "client_name": client_name,
                                    "password": password,
                                 },

@@ -565,7 +565,7 @@ class InstaAccount(InstaDB):
         return available_account
 
     def select_and_update_user(self, username=None, client_name=None, max_messages_per_day = None):
-        max_messages_per_day = 50 if max_messages_per_day is None else max_messages_per_day
+        max_messages_per_day = 200 if max_messages_per_day is None else max_messages_per_day
         filter = {"status":"available", "usage.dm": {"$lt": max_messages_per_day}}
         if username:
             filter = {"username":username}

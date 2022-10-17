@@ -48,8 +48,8 @@ def read_account_info_from_db():
 
 def read_accoun_info_from_db_one(client_name=None):
     filter_new = {"status": "new"}
-    # if client_name:
-    #     filter_new.update(client_name=client_name)
+    if client_name:
+        filter_new.update(client_name=client_name)
     #
     # filter_new_login = {"status": "available", "checkpoint": {"$exists": False}, "client_name": "admin_test",
     #                         "last_login": {"$gte": calcuate_check_point_deadline(days=3)}}
@@ -140,7 +140,7 @@ def save_uuid_and_session_info(setting_info, seller=None, client_name=None, acco
                     "usage.hashtag": 0,
                     "usage.dm": 0,
                     "last_login": datetime.now(),
-                    "status": "new",
+                    "status": "available",
                     "client_name":client_name,
                     "uuids": setting_info["uuids"],
                     "timing_value.last_login": time.time(),
@@ -163,7 +163,7 @@ def save_uuid_and_session_info(setting_info, seller=None, client_name=None, acco
         "password": setting_info["password"],
         "client_name": client_name,
         "channel": "instagram",
-        "status": "new",
+        "status": "available",
         "limit": {
             "dm": setting_info["limit"]["dm"],
             "hashtag": setting_info["limit"]["hashtag"]

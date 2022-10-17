@@ -593,6 +593,19 @@ class LoginMixin(PreLoginFlowMixin, PostLoginFlowMixin):
         bool
             A boolean value
         """
+        "Instagram 255.0.0.17.102 Android (24/7.0; 320dpi; 1440x2392; Mito; A10_sprout; MITO_A10; h1; ru_RU; 289692181)"
+        # self.device_settings = device or {
+        #     "app_version": "255.0.0.17.102",
+        #     "android_version": 24,
+        #     "android_release": "7.0",
+        #     "dpi": "320dpi",
+        #     "resolution": "1440x2392",
+        #     "manufacturer": "Mito",
+        #     "device": "A10_sprout",
+        #     "model": "MITO_A10",
+        #     "cpu": "h1",
+        #     "version_code": "289692181",
+        # }
         self.device_settings = device or {
             "app_version": "203.0.0.29.118",
             "android_version": 26,
@@ -628,7 +641,9 @@ class LoginMixin(PreLoginFlowMixin, PostLoginFlowMixin):
         data = dict(self.device_settings, locale=self.locale)
         self.user_agent = user_agent or config.USER_AGENT_BASE.format(**data)
         # self.private.headers.update({"User-Agent": self.user_agent})  # changed in base_headers
+        # self.user_agent = "Instagram 254.0.0.19.109 Android (25/7.1.2; 80dpi; 240x320; google; G011A; msm8998; qcom; ru_RU; 324500927)"
         self.settings["user_agent"] = self.user_agent
+
         if reset:
             self.set_uuids({})
             # self.settings = self.get_settings()

@@ -469,37 +469,37 @@ def divide_user_infos_list(user_infos_list, group_size):
 
 if __name__ == "__main__":
     ##project 이름 과 제외할 프로젝트 이름
-    project = "dan"
+    project = "present"
 
     ##파일이름
     filename = f"a_{project}"
 
-    project_start_date = "2022-10-12"
+    project_start_date = "2022-10-17"
 
     ##제외할 단어 유저이름, 프로젝트 설정
     exclude_word = None
     # exclude_word =
     exclude_end_date = "2022-10-01"
-    exclude_start_date = "2022-10-12"
-    # exclude_userid_list = completed_target_influencer.find_completed_influencer(project_name=project, start_date=exclude_start_date, end_date=exclude_end_date)
+    exclude_start_date = "2022-10-17"
+    exclude_userid_list = completed_target_influencer.find_completed_influencer(project_name=project, start_date=exclude_start_date, end_date=exclude_end_date)
 
-    # exclude_userid_list = exclude_userid_list[1396:]
-    # exclude_userid_list_int = list(map(lambda x: int(x), exclude_userid_list))
-    # exclude_userid_list = exclude_userid_list + exclude_userid_list_int
-    exclude_userid_list = []
+    exclude_userid_list = exclude_userid_list
+    exclude_userid_list_int = list(map(lambda x: int(x), exclude_userid_list))
+    exclude_userid_list = exclude_userid_list + exclude_userid_list_int
+    # exclude_userid_list = []
     # exclude_username_list = ['iayoung077', 'hyun_ha_zzoo', 'm_minju_', 'lee_beautysalon', 'choi_r_im', 'min.sooa', 'sukyung__k', 'h._.raning', 'im_ssong1201', 'lovely._.gamoong', 'drmyskin', 'barbieunni', 'ss__ming_', 'mino_riza_', 'm.e.pilaa', 'je_j8816', 'lovely.___.su', 'hyongjookwon', 'mootn.go', 'remain_rin', 'moi_bom', 'daily.hyeon__', 'rosa_mylovelydays', 'nanicho__nancho', '116zzzzz', 'soojung0407', 'wootgosalza', '_bambaya_', 'jaehyuk_wkp/', 'hyunjudal', 'chae_min_0824', 'seullv___', 'eun__kkk', '__joo79', 'ej.day', 'hi._.tamna/', 'ddooo_sports', 'hyunihyun87', 'Jinny_0811', 'sienna___j', 'aliceisalluring', '1_aang', 'wjddk_s', '0rorimarket0', 'ppickssary', 'hyongjookwon', 'do_na_vely', 'julialuvyoi', 'miss___bling_bling', 'hyelaan', 'lgl_master_han', 'jessica__dailylife', 'bebebo8787', 'shslike40', 'iameve1222', 'mycrystal007', 'remember._.bt', 'adela__j', 'js___leeee', 'bnr.kim', 'songloves22', 'ka_hwi', 'coy.min', 'yulyuri.k', 'jiii_home', 'strawberry_min809', 'nxyxxo2', 'happy_panda_story', 'doyoumommy', 'heeju_style', 'da0123da', 'amateurgolfer_luckyguy', 'siyu_an_', 'bo_ora_golf', 'shannon_ryu', 'charlezfit', 'js___leeee/', 'muse_golfpilates', 'moon.fit_', 'airfamjjin', 'dreampharm.jennymin', 'enoughgarden', 'js5288', '___e.you', 'aimee.hello', 'thanks_two5', 'ji_hyun_diet', 'noonaistory', 'havelycloset', 'duttalmom', '___byann', 'here.j', '1am.rane', 'mom_house', 'saeron_queen', 'luvjemma', 'j_and_view', 'nana_showroom_', '181213_hy', 'f.our.l', '_itsawesome', 'e_ddoll', 'namystar__', 'jjenny_jeong', 'victoriahoom', 'kelley_mk_kim', 'jazzzzzeee', 'uyyunx', 'relovebyis', 'beta_mom0208', 'louvre1004', '_jinuary_', 'Kkamang__cherry', '_vely_j__', 'jjoom20', 'me.suebin', 'pinkrabbit012', 'suji_gram', '52_ne', 'kimyonggwan5003', '_woobin0831', 'Joovelyyy', 'helloranyy', 'sweet_label_', 'blancmoon0', 'haileyy___k', 'ljueun._', '053_life', 'k_raheee', 'jennet_pilates', 'ggomagom85', '2___zzzu', 'danlyun', 'ok_unni.2014']
     exclude_username_list = []
     ##타겟 해시태그 설정 해시태그 설정하지 않으면 프로젝트 이름이 default 로 들어감.
     # search_hashtag = "물광피부 효소 모델 나들이 카페 가을 뷰티"
 
-    search_hashtag = get_dm_source.get_source_hashtag(f"dan.txt")
-    text = get_dm_source.get_source_message(f"dan.txt")
+    search_hashtag = get_dm_source.get_source_hashtag(f"{project}.txt")
+    text = get_dm_source.get_source_message(f"{project}.txt")
 
     ##몇개 가져올지
-    skip, limit = 0, 500
+    skip, limit = 1000, 1000
 
     ##서치 필터플
-    user_followed_by_gte = 1000
+    user_followed_by_gte = 50
     user_followed_by_lte = 50000
     avg_like_gte = 0
 
@@ -514,6 +514,7 @@ if __name__ == "__main__":
                                exclude_word=exclude_word
                                )
 
+    print(len(user_infos_list))
 
     ##2. 유저 분할
     total_user_infos_group = divide_user_infos_list(user_infos_list, group_size=1)

@@ -118,9 +118,13 @@ def check_spam_image(self):
 
 def check_login_success(self):
     try:
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "//span[@class='coreSpriteKeyhole']")))
+        # input()
+        # WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "//span[@class='coreSpriteKeyhole']")))
+        '//div[@class="some-class"]/*[name()="svg"][@aria-label="Search"]'
+        WebDriverWait(self.driver, 15).until(EC.presence_of_element_located((By.XPATH, "div[@class='_aa57']/*[name()='svg'][@class='_ab6-'] | //div[text()='로그인 정보를 저장하시겠어요?']")))
+        # WebDriverWait(self.driver, 15).until(EC.presence_of_element_located((By.XPATH, "//div[text()='로그인 정보를 저장하시겠어요?']")))
     except Exception as e:
-        self.logger.debug(f"coreSpriteKeyhole:{e}")
+        self.logger.error(f"로그인 클릭 버튼 찾지 못함:{e}")
         # if check_spam_image(self):
         #     return True
         # else:
@@ -134,6 +138,7 @@ def check_login_success(self):
         else:
             self.logger.info("selenium login process failed")
             return False
+
 def is_detected_robot_red(self):
     try:
         WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "//button[@class='_5f5mN       jIbKX KUBKM      yZn4P   ']")))
@@ -197,12 +202,14 @@ def success_bot_account_cookie_check(self):
 
 def success_bot_account_logout(self):
     try:
-        WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//img[@class='_6q-tv'] | //*[@id='react-root']/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img | //*[@id='react-root']/div/div/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img")))
+        self.logger.info("로그아웃 버튼 찾기")
+        WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//img[contains(@alt, '프로필 사진') and @class = '_aa8j'] | //div[@class='x9f619 xxk0z11 xvy4d1p x11xpdln xii2z7h x19c4wfv']/*[name()='svg'][@aria-label='설정'] | //img[@class='_6q-tv'] | //*[@id='react-root']/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img | //*[@id='react-root']/div/div/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img")))
     except Exception as e:
-        self.logger.debug(f"error_message:{e}")
+        self.logger.info(f"로그아웃 버튼 찾기 실패 error_message:{e}")
+        WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//img[contains(@alt, '프로필 사진') and @class = '_aa8j'] | //div[@class='x9f619 xxk0z11 xvy4d1p x11xpdln xii2z7h x19c4wfv']/*[name()='svg'][@aria-label='설정'] | //img[@class='_6q-tv'] | //*[@id='react-root']/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img | //*[@id='react-root']/div/div/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img")))
         return False
     else:
-        self.driver.find_element(By.XPATH, "//img[@class='_6q-tv'] | //*[@id='react-root']/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img | //*[@id='react-root']/div/div/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img").click()
+        self.driver.find_element(By.XPATH, "//img[contains(@alt, '프로필 사진') and @class = '_aa8j'] | //div[@class='x9f619 xxk0z11 xvy4d1p x11xpdln xii2z7h x19c4wfv']/*[name()='svg'][@aria-label='설정'] | //img[@class='_6q-tv'] | //*[@id='react-root']/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img | //*[@id='react-root']/div/div/section/nav/div[2]/div/div/div[3]/div/div[6]/span/img").click()
         return True
 
 def authorize_cookie(self):
@@ -227,14 +234,20 @@ def weird_account(self):
 
 def success_bot_account_logout_click(self):
 
-
     try:
         WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//div[text()='로그아웃']")))
         # WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH,
         #                                                                  "//*[@id='react-root']/section/nav/div[2]/div/div/div[3]/div/div[6]/div[2]/div[2]/div[2]/div[2] | //*[@id='react-root']/div/div/section/nav/div[2]/div/div/div[3]/div/div[6]/div[2]/div[2]/div[2]/div[2]")))
     except Exception as e:
-        self.logger.debug(f"error_message:{e}")
-        return False
+        self.logger.error(f"maybe this is app version")
+        try:
+            WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//div[@class='_abm0']/*[name()='svg'][@aria-label='옵션']"))).click()
+        except Exception as e:
+            self.logger.error(f"weird account")
+            return False
+        else:
+            self.driver.find_element(By.XPATH, "//button[text()='로그아웃']").click()
+            return True
     else:
         self.driver.find_element(By.XPATH, "//div[text()='로그아웃']").click()
         return True
