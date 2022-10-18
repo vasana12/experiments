@@ -123,7 +123,9 @@ def send_message(client, user_infos, text, next_account_info=None, project_name=
     else:
         account_info = next_account_info
 
-    user_ids = get_valid_user_ids_by_names(user_name_list=user_infos)
+    user_ids = list(map(lambda x: int(x["userid"]), user_infos))
+    logger.info(f"user_ids:{user_ids}")
+    user_ids = get_valid_user_ids(user_ids)
     if len(user_ids) == 0:
         logger.error(f"len(user_ids)==0//{user_ids}")
         return account_info
