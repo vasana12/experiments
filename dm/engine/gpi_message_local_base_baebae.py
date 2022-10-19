@@ -31,8 +31,8 @@ if logger.hasHandlers():
     logger.handlers = []
 logger.setLevel(logging.INFO)
 
-host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
-# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
+# host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
+host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
 # host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
 proxy = f"http://{proxy_username}:{proxy_password}@{host}:{port}"
 max_login_try_num = 2
@@ -257,7 +257,7 @@ def send_total_message(total_user_infos_group, text, project_name=None, proxy=No
 if __name__ == "__main__":
 
     ##1. project 이름 시작 기간 설정
-    project = "baebae"
+    project = "bbaebbae"
     project_start_date = "2022-10-19"
 
     ##2. 파일이름 설정
@@ -276,9 +276,9 @@ if __name__ == "__main__":
     skip, limit = 0, 500
 
     ##5. 검색 조건 필터
-    user_followed_by_gte = 10000
+    user_followed_by_gte = 7000
     user_followed_by_lte = 30000
-    avg_like_gte = 10
+    avg_like_gte = 30
 
     ##6. 타겟 해시태그 설정 해시태그 설정하지 않으면 프로젝트 이름이 default 로 들어감.
     # search_hashtag = "일산핫플 일산맛집 일산카페 파주카페"
