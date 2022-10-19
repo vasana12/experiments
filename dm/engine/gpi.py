@@ -14,8 +14,8 @@ from db.model import *
 from db import m_instagram
 from dm.execute.run_select_influencer import get_influnecer_info_by_project, search_influencer_info
 from dm.prepare import get_dm_source, get_influencer
-from instagrapi.exceptions import UserNotFound, ClientError
-from instagrapi.types import User
+from instagrapi.exceptions import UserNotFound, ClientError, HashtagNotFound
+from instagrapi.types import User, Hashtag
 
 FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
 logging.basicConfig(format=FORMAT)
@@ -83,10 +83,11 @@ def get_user_by_id_lamadava(user_id):
                     logger.warning(f"json_data:{json_data}/{e} retry-{try_num_get_user}/{max_try_num_get_user}")
                     try_num_get_user += 1
                     continue
+            return
 
-            return json_data
-# s = get_user_by_id_lamadava(20916388771)
+# s = get_user_by_id_lamadava(7864477994)
 # print(s)
+# input()
 def get_user_id_by_username_rapid_api(username):
     max_try_num_get_user = 5
     try_num_get_user = 0
@@ -165,6 +166,57 @@ def send_messages(session_id, user_ids, text, max_messages_per_day):
         if idx == max_messages_per_day:
             broken_items = user_ids[user_ids.index(user_id):]
             return broken_items
+
+def get_hashtag_by_name_lamadava(name):
+    max_try_num_get_user = 5
+    try_num_get_user = 0
+
+    while True:
+        if try_num_get_user > max_try_num_get_user:
+            logger.warning(f"LamadavaServerError")
+            raise LamadavaServerError
+
+        try:
+            access_key = "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"
+            headers = {"x-access-key": access_key}
+            params = {"name": name}
+            response = requests.get(url="https://api.lamadava.com/a1/hashtag", params=params, headers=headers)
+            json_data = json.loads(response.text)
+        except Exception as e:
+            logger.warning(f"name:{name}/error:{e}")
+            try_num_get_user += 1
+            continue
+        else:
+            exc_type = json_data.get("exc_type")
+            if exc_type == "NoFreeAccounts":
+                try_num_get_user += 1
+                logger.warning(f"json_data:{json_data} retry-{try_num_get_user}/{max_try_num_get_user}")
+                continue
+
+            if exc_type == "InstagramServerError":
+                try_num_get_user += 1
+                logger.warning(f"json_data:{json_data} retry-{try_num_get_user}/{max_try_num_get_user}")
+                continue
+
+            if exc_type == "HashtagNotFound":
+                logger.warning(f"존재하지 않는 hashtag")
+                raise HashtagNotFound
+
+            if json_data.get("data") is None:
+                logger.error(f"name:{name}/{json_data}")
+                try_num_get_user += 1
+                continue
+            ###response type check(Hashtag Validation)
+            # else:
+            #     try:
+            #         Hashtag(**json_data)
+            #     except Exception as e:
+            #         logger.warning(f"json_data:{json_data}/{e} retry-{try_num_get_user}/{max_try_num_get_user}")
+            #         try_num_get_user += 1
+            #         continue
+            return json_data
+# d = get_hashtag_by_name_lamadava("감자")
+# print(d)
 
 def send_message(account_info, user_info_list):
     max_retry_num=1

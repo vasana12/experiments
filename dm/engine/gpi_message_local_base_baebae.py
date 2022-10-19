@@ -31,13 +31,12 @@ if logger.hasHandlers():
     logger.handlers = []
 logger.setLevel(logging.INFO)
 
-# host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
-host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
+host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
+# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
 # host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
 proxy = f"http://{proxy_username}:{proxy_password}@{host}:{port}"
-
 max_login_try_num = 2
-max_messages_per_day = 100
+max_messages_per_day = 200
 max_group_size = 30
 
 
@@ -258,32 +257,32 @@ def send_total_message(total_user_infos_group, text, project_name=None, proxy=No
 if __name__ == "__main__":
 
     ##1. project 이름 시작 기간 설정
-    project = "ddok"
-    project_start_date = "2022-10-14"
+    project = "baebae"
+    project_start_date = "2022-10-19"
 
     ##2. 파일이름 설정
     filename = f"a_{project}"
 
     ##3. 제외할 단어 유저이름, 프로젝트 설정
     exclude_word = None
-    exclude_end_date = "2022-10-15"
-    exclude_start_date = "2022-10-01"
+    exclude_end_date = "2022-10-19"
+    exclude_start_date = "2022-09-01"
     exclude_userid_list = completed_target_influencer.find_completed_influencer(project_name=project, start_date=exclude_start_date, end_date=exclude_end_date)
     exclude_userid_list_int = list(map(lambda x: int(x), exclude_userid_list))
     exclude_userid_list = exclude_userid_list + exclude_userid_list_int
     exclude_username_list = []
 
     ##4. 몇개 가져올지 설정
-    skip, limit = 0, 1000
+    skip, limit = 0, 500
 
     ##5. 검색 조건 필터
-    user_followed_by_gte = 1000
+    user_followed_by_gte = 10000
     user_followed_by_lte = 30000
-    avg_like_gte = 50
+    avg_like_gte = 10
 
     ##6. 타겟 해시태그 설정 해시태그 설정하지 않으면 프로젝트 이름이 default 로 들어감.
-    search_hashtag = "피트니스 필라테스"
-    # search_hashtag = get_dm_source.get_source_hashtag(f"cat_goods.txt")
+    # search_hashtag = "일산핫플 일산맛집 일산카페 파주카페"
+    search_hashtag = get_dm_source.get_source_hashtag(f"{project}.txt")
 
     ##7. 텍스트 설정
     text = get_dm_source.get_source_message(f"{project}.txt")

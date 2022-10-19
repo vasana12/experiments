@@ -31,13 +31,12 @@ if logger.hasHandlers():
     logger.handlers = []
 logger.setLevel(logging.INFO)
 
-# host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
+host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
 # host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
-host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
+# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
 proxy = f"http://{proxy_username}:{proxy_password}@{host}:{port}"
-
 max_login_try_num = 2
-max_messages_per_day = 100
+max_messages_per_day = 200
 max_group_size = 30
 
 
@@ -115,7 +114,6 @@ def send_message(client, user_infos, text, next_account_info=None, project_name=
     account_retry_num = 0
 
     ###next_account_info 가 없으면 계정을 가져오기 있으면 해당 계정을 사용한다.
-    logger.info(f"next_account_info:{next_account_info}")
 
     if not next_account_info:
         account_info = infinite_login(client, username=None, max_messages_per_day=max_messages_per_day, client_name=None,
@@ -275,15 +273,15 @@ if __name__ == "__main__":
     exclude_username_list = []
 
     ##4. 몇개 가져올지 설정
-    skip, limit = 500, 600
+    skip, limit = 0, 300
 
     ##5. 검색 조건 필터
-    user_followed_by_gte = 500
-    user_followed_by_lte = 10000
-    avg_like_gte = 50
+    user_followed_by_gte = 50
+    user_followed_by_lte = 30000
+    avg_like_gte = 30
 
     ##6. 타겟 해시태그 설정 해시태그 설정하지 않으면 프로젝트 이름이 default 로 들어감.
-    search_hashtag = "일산디비"
+    search_hashtag = "일산핫플 일산맛집 일산카페 파주카페"
     # search_hashtag = get_dm_source.get_source_hashtag(f"cat_goods.txt")
 
     ##7. 텍스트 설정

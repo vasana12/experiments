@@ -144,7 +144,8 @@ def run(name, max_amount, tab_key):
     max_id = None
     while True:
         medias, max_id = get_posts(name=name, max_amount=max_amount,  tab_key=tab_key, max_id=max_id)
-        print("max_id:", max_id)
+
+
         if max_id is None:
             break
         for media in medias:

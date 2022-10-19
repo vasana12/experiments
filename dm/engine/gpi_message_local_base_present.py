@@ -32,8 +32,8 @@ if logger.hasHandlers():
 logger.setLevel(logging.INFO)
 
 # host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
-# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
-host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
+host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
+# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
 proxy = f"http://{proxy_username}:{proxy_password}@{host}:{port}"
 
 max_login_try_num = 2
@@ -267,19 +267,19 @@ if __name__ == "__main__":
 
     ##3. 제외할 단어 유저이름, 프로젝트 설정
     exclude_word = None
-    exclude_end_date = "2022-10-12"
-    exclude_start_date = "2022-10-17"
+    exclude_end_date = "2022-10-18"
+    exclude_start_date = "2022-10-12"
     exclude_userid_list = completed_target_influencer.find_completed_influencer(project_name=project, start_date=exclude_start_date, end_date=exclude_end_date)
     exclude_userid_list_int = list(map(lambda x: int(x), exclude_userid_list))
     exclude_userid_list = exclude_userid_list + exclude_userid_list_int
     exclude_username_list = []
 
     ##4. 몇개 가져올지 설정
-    skip, limit = 0, 1000000
+    skip, limit = 0, 1000
 
     ##5. 검색 조건 필터
-    user_followed_by_gte = 100
-    user_followed_by_lte = 50000
+    user_followed_by_gte = 50
+    user_followed_by_lte = 1000
     avg_like_gte = 0
 
     ##6. 타겟 해시태그 설정 해시태그 설정하지 않으면 프로젝트 이름이 default 로 들어감.
