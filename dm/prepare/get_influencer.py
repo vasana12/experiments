@@ -128,9 +128,9 @@ def main(search_filter=None, file_name=None, skip=None, limit=None, only_usernam
         #     filtered_influencer_data_list.append(influencer)
         #
         # 필터1
-        # if user_followed_by>user_follow:
+        if user_followed_by>user_follow:
             # print(user_follow, user_followed_by)
-            # filtered_influencer_data_list.append(influencer)
+            filtered_influencer_data_list.append(influencer)
     filtered_influencer_data_list = influencer_data_list
     if file_name:
         save_file(filtered_influencer_data_list, f"{file_name}_인플루언서_{limit}")

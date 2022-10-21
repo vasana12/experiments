@@ -32,8 +32,8 @@ if logger.hasHandlers():
 logger.setLevel(logging.INFO)
 
 # host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
-host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
-# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
+# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
+host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
 proxy = f"http://{proxy_username}:{proxy_password}@{host}:{port}"
 max_login_try_num = 2
 max_messages_per_day = 200
@@ -273,10 +273,10 @@ if __name__ == "__main__":
     exclude_username_list = []
 
     ##4. 몇개 가져올지 설정
-    skip, limit = 0, 500
+    skip, limit = 0, 200
 
     ##5. 검색 조건 필터
-    user_followed_by_gte = 7000
+    user_followed_by_gte = 5000
     user_followed_by_lte = 30000
     avg_like_gte = 30
 

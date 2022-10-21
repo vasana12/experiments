@@ -32,8 +32,8 @@ if logger.hasHandlers():
 logger.setLevel(logging.INFO)
 
 # host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
-# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
-host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
+host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
+# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
 proxy = f"http://{proxy_username}:{proxy_password}@{host}:{port}"
 max_login_try_num = 2
 max_messages_per_day = 200
@@ -277,8 +277,8 @@ if __name__ == "__main__":
 
     ##5. 검색 조건 필터
     user_followed_by_gte = 10000
-    user_followed_by_lte = 100000
-    avg_like_gte = 30
+    user_followed_by_lte = 200000
+    avg_like_gte = 100
 
     ##6. 타겟 해시태그 설정 해시태그 설정하지 않으면 프로젝트 이름이 default 로 들어감.
     # search_hashtag = "일산핫플 일산맛집 일산카페 파주카페"
@@ -299,8 +299,8 @@ if __name__ == "__main__":
     user_infos_list = get_user(skip=skip, limit=limit, search_filter=search_filter, filename=filename,
                                exclude_word=exclude_word
                                )
-
+    print(len(user_infos_list))
     ##2. 유저 분할
-    total_user_infos_group = divide_user_infos_list(user_infos_list, group_size=1)
+    # total_user_infos_group = divide_user_infos_list(user_infos_list, group_size=1)
     ##3. db 발송
-    send_total_message(total_user_infos_group, text, project_name=project)
+    # send_total_message(total_user_infos_group, text, project_name=project)
