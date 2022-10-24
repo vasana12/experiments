@@ -51,6 +51,7 @@ def insert_account():
 
             sessionid = login_account_info.split("sessionid=")[1]
             sessionid = sessionid.split(";")[0]
+            sessionid = sessionid.split("||")[0]
 
             # rur = login_account_info.split("rur=")[1]
             # rur = rur.split(";")[0]

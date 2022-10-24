@@ -36,6 +36,55 @@ def get_user_id_by_db(username):
     doc = USER_CHECKPOINT.find_one({"username": username})
     return doc["userid"]
 
+def get_user_by_username_lamadava(username):
+    max_try_num_get_user = 5
+    try_num_get_user = 0
+
+    while True:
+        if try_num_get_user > max_try_num_get_user:
+            logger.warning(f"LamadavaServerError")
+            raise LamadavaServerError
+
+        try:
+            access_key = "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"
+            headers = {"x-access-key": access_key}
+            params = {"username": username}
+            response = requests.get(url="https://api.lamadava.com/v1/user/by/username", params=params, headers=headers)
+            json_data = json.loads(response.text)
+        except Exception as e:
+            logger.warning(f"username:{username}/error:{e}")
+            try_num_get_user += 1
+            continue
+        else:
+            exc_type = json_data.get("exc_type")
+            if exc_type == "NoFreeAccounts":
+                try_num_get_user += 1
+                logger.warning(f"json_data:{json_data} retry-{try_num_get_user}/{max_try_num_get_user}")
+                continue
+
+            if exc_type == "InstagramServerError":
+                try_num_get_user += 1
+                logger.warning(f"json_data:{json_data} retry-{try_num_get_user}/{max_try_num_get_user}")
+                continue
+
+            if exc_type == "UserNotFound":
+                logger.warning(f"존재하지 않는 user")
+                raise NoUserIdException
+
+            if json_data.get("pk") is None:
+                logger.error(f"username:{username}/{json_data}")
+                try_num_get_user += 1
+                continue
+            ###response type check(User Validation)
+            else:
+                try:
+                    User(**json_data)
+                except Exception as e:
+                    logger.warning(f"json_data:{json_data}/{e} retry-{try_num_get_user}/{max_try_num_get_user}")
+                    try_num_get_user += 1
+                    continue
+            return json_data["pk"]
+
 def get_user_by_id_lamadava(user_id):
     max_try_num_get_user = 5
     try_num_get_user = 0
@@ -83,11 +132,12 @@ def get_user_by_id_lamadava(user_id):
                     logger.warning(f"json_data:{json_data}/{e} retry-{try_num_get_user}/{max_try_num_get_user}")
                     try_num_get_user += 1
                     continue
-            return
+            return json_data
 
 # s = get_user_by_id_lamadava(7864477994)
 # print(s)
 # input()
+
 def get_user_id_by_username_rapid_api(username):
     max_try_num_get_user = 5
     try_num_get_user = 0

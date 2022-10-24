@@ -33,6 +33,7 @@ logger.setLevel(logging.INFO)
 
 # host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
 # host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
+
 host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
 proxy = f"http://{proxy_username}:{proxy_password}@{host}:{port}"
 
@@ -45,17 +46,17 @@ def infinite_login(client: Client, username, max_messages_per_day, client_name=N
 
     while True:
         ##1. 사용할 계정 DB 에서 가져오기
-        account_setting_info = select_user(username=username, client_name=client_name, max_messages_per_day=max_messages_per_day)
+        account_setting_info = select_user(username=None, client_name=client_name, max_messages_per_day=max_messages_per_day)
 
         if account_setting_info is None:
             logger.error("사용가능한 계정이 없습니다 infinite login 을 종료합니다.")
             raise AccountException
 
         ##2. 가져온 계정으로 로그인 시도. session 받아오기
+        session_id = account_setting_info["session"]["sessionid"]
         if session_id:
             login_session = login_by_sessionid_v_gpi(client, session_id)
         else:
-
             login_session = login_v_gpi(client, account_setting_info["username"], account_setting_info["password"])
 
 
@@ -151,6 +152,10 @@ def send_message(client, user_infos, text, next_account_info=None, project_name=
                 logger.error(f"client error:{e}, retry login //request 횟수 초과({request_retry_num}) 다른아이디로 로그인 해줍니다. // account_retry_num :{account_retry_num}")
                 request_retry_num = 0
                 account_retry_num += 1
+
+                if e.__class__.__name__ == "ChallengeRequired":
+                    INSTA_ACCOUNT_OBJ.account_collection.update_one({"username": account_info["username"]},
+                                                                    {"$set": {"status": "unavailable"}})
                 if account_retry_num >= max_account_retry_num:
                     raise AccountRetryExcessException
 
@@ -211,7 +216,6 @@ def send_total_message(total_user_infos_group, text, project_name=None, proxy=No
 
     client = Client()
     client.set_proxy(dsn=proxy)
-
     count_send_message = 0
     while True:
         logger.info(f"디엠 발송 시작")
@@ -231,7 +235,8 @@ def send_total_message(total_user_infos_group, text, project_name=None, proxy=No
         try:
             next_account_info = send_message(client, user_infos=target_user_infos, text=text,
                                              next_account_info=next_account_info, project_name=project_name, proxy=proxy)
-            count_send_message+=1
+            count_send_message += 1
+            logger.info(f"count_send_message: 총 {count_send_message}개의 DM 발송")
         except Exception as e:
             count_send_message += 1
             if e.__class__.__name__ == AccountException.__name__:
@@ -302,4 +307,4 @@ if __name__ == "__main__":
     ##2. 유저 분할
     total_user_infos_group = divide_user_infos_list(user_infos_list, group_size=1)
     ##3. db 발송
-    send_total_message(total_user_infos_group, text, project_name=project)
+    send_total_message(total_user_infos_group, text, project_name=project, proxy=proxy)
