@@ -241,7 +241,6 @@ def get_user_id_from_username(self, username):
             # self.api.session.headers.update({"User-Agent": self.api.user_agent})
             # response = self.api.session.get(url=f"https://i.instagram.com/api/v1/users/web_profile_info/?username={username}")
             response = send_request(username)
-            print(response.text)
             json_data = json.loads(response.text)
             data = json_data["data"]["user"]
             userid = data["id"]

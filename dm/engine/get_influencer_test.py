@@ -45,8 +45,8 @@ def get_user(skip, limit, search_filter, filename, exclude_word):
 
 if __name__ == "__main__":
     ##project 이름 과 제외할 프로젝트 이름
-    project = "butterfly"
-    start_date = "2022-10-08"
+    project = "puzzle"
+    start_date = "2022-10-30"
 
     ##제외할 단어 유저이름, 프로젝트 설정
     exclude_word = None
@@ -59,7 +59,7 @@ if __name__ == "__main__":
                                                                                 end_date=exclude_end_date)
     exclude_userid_list_int = list(map(lambda x: int(x), exclude_userid_list))
     exclude_userid_list = exclude_userid_list + exclude_userid_list_int
-
+    exclude_userid_list = []
     ##타겟 해시태그 설정 해시태그 설정하지 않으면 프로젝트 이름이 default 로 들어감.
     # search_hashtag = "관리하는여자 헬스녀 여자헬스 폴댄스 헬스하는여자 러닝하는여자"
     # search_hashtag = "촬영문의 여자모델 여성모델 촬영 여자메이크업"
@@ -75,14 +75,14 @@ if __name__ == "__main__":
     filename = f"a_{project}_{search_hashtag[0:20]}_{start_date}"
     # text = get_dm_source.get_source_message(f"{project}.txt")
     ##몇개 가져올지
-    skip, limit = 0, 3000
+    skip, limit = 0, 40000
     """
     rang_mommy, 95.yeon, cola_b.mom, ham_hyeonju, ZZANGYOOOU, jy_312n, sortie2017, boon._.ddo, nna_young_
     """
     ##서치 필터플
-    user_followed_by_gte = 3000
-    user_followed_by_lte = 30000
-    # avg_like_gte = 100
+    user_followed_by_gte = 30
+    user_followed_by_lte = 20000
+    avg_like_gte = 40
     # avg_comment = 10
     # user_follow_by_gte = 0
     # user_follow_by_lte = 15000
@@ -98,16 +98,16 @@ if __name__ == "__main__":
                     #     {
                     #         "$gte": int(user_follow_by_gte), "$lte": int(user_follow_by_lte)
                     #     },
-                     # "avg_like":
-                     #     {
-                     #         "$gte": int(avg_like_gte)
-                     #     },
+                     "avg_like":
+                         {
+                             "$gte": int(avg_like_gte)
+                         },
                     # "avg_comment":
                     #     {
                     #         "$gte": int(avg_comment)
                     #     },
         # "userid": {"$nin": exclude_userid_list},
-        "userid": {"$in": include_userid_list}
+        #"userid": {"$in": include_userid_list}
     }
 
     user_infos_list = get_user(skip=skip, limit=limit, search_filter=search_filter, filename=filename, exclude_word=exclude_word)

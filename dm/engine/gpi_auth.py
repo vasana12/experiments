@@ -74,9 +74,6 @@ def login_v_gpi(client:Client, username, password):
         # data = {"username": username, "password": password}
 
         try:
-            host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
-            proxy = f"http://{proxy_username}:{proxy_password}@{host}:{port}"
-            client.set_proxy(dsn=proxy)
             is_login = client.login(username=username, password=password)
 
         except Exception as e:

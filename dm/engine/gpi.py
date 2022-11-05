@@ -179,9 +179,8 @@ def get_user_id_by_username_rapid_api(username):
 def get_user_by_id_gpi(userid, proxy):
     client = Client()
     client.set_proxy(dsn=proxy)
-
     try:
-        response = client.user_info_v1(user_id=userid)
+        response = client.user_short_gql(user_id=userid)
         userid = response.pk
     except Exception as e:
         if e.__class__.__name__ == UserNotFound.__name__:

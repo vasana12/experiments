@@ -21,7 +21,7 @@ INSTA_ACCOUNT_OBJ.client_name = "admin_test"
 
 
 def select_user(username,max_messages_per_day):
-    account_setting_info = INSTA_ACCOUNT_OBJ.select_and_update_user(username=username, max_messages_per_day= max_messages_per_day)
+    account_setting_info = INSTA_ACCOUNT_OBJ.select_and_update_user(username="josephlee8111", max_messages_per_day= max_messages_per_day)
     return account_setting_info
 
 #

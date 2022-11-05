@@ -27,8 +27,8 @@ def select_user(username,max_messages_per_day):
 #
 def run():
     ### 0. 세팅 : 프로젝트, 발송 텍스트, 프록시
-    project = "branding"
-    start_date = "2022-09-13"
+    project = "wallet"
+    start_date = "2022-11-05"
     project_info = {"project_name": project, "start_date": start_date}
     collection_name = "user_checkpoint"
 
@@ -47,7 +47,7 @@ def run():
     search_filter = {
                         "user_followed_by":
                     {
-                        "$gte": 7000, "$lte": 70000
+                        "$gte": 100, "$lte": 70000
                     },
                         "$text":
                             {
@@ -59,13 +59,13 @@ def run():
                     }
     }
 
-    file_name, skip, limit, only_username,  =  search_hashtag, 0, 1100, False
+    file_name, skip, limit, only_username,  =  search_hashtag, 0, 3000, False
     target_username_list = get_influencer.main(search_filter=search_filter, file_name=file_name, skip=skip, limit=limit, only_username=only_username, collection_name=collection_name)
 
     target_username_list = list(map(lambda x: x["username"], target_username_list))
     logger.info(f"총 {len(target_username_list)} 명에게 dm 발송 시작 target_username_list:{target_username_list}")
     while True:
-        max_messages_per_day = 10
+        max_messages_per_day = 100
         account_setting_info = select_user(username=None, max_messages_per_day= max_messages_per_day)
         if not account_setting_info:
             logger.info("no account available")

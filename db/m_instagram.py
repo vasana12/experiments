@@ -566,7 +566,7 @@ class InstaAccount(InstaDB):
 
     def select_and_update_user(self, username=None, client_name=None, max_messages_per_day = None):
         max_messages_per_day = 200 if max_messages_per_day is None else max_messages_per_day
-        filter = {"status":"available", "usage.dm": {"$lt": max_messages_per_day}}
+        filter = {"mobile_session":True, "status":"available", "usage.dm": {"$lt": max_messages_per_day}}
         if username:
             filter = {"username":username}
         # projection = {"username": 1,
@@ -609,32 +609,32 @@ class InstaAccount(InstaDB):
 
         if self.client_name != "admin":
             filter_plus = {
-            "session" : {"$exists":1},
-            "mobile_session" : True,
+            #"session" : {"$exists":1},
+            "session.csrftoken" : {"$exists": True},
             "status": "available",
-            "client_name": self.client_name,
-            "channel": self.channel_name,
-            "checkpoint": {"$exists": False}
+            #"client_name": self.client_name,
+            #"channel": self.channel_name,
+            #"checkpoint": {"$exists": False}
             }
 
         else:
             filter_plus = {
-                "mobile_session": True,
-                "session": {"$exists": 1},
+                #"mobile_session": True,
+                #"session": {"$exists": 1},
                 "status": "available",
-                "channel": self.channel_name,
-                "checkpoint": {"$exists": False}
+                #"channel": self.channel_name,
+                #"checkpoint": {"$exists": False}
             }
         if username:
 
             filter_plus= {"username":username}
 
 
-        if self.client_name:
-            filter_plus.update(client_name=self.client_name)
+        #if self.client_name:
+        #    filter_plus.update(client_name=self.client_name)
 
         # self.logger.info(f"filter_raw:{filter_plus}")
-        available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_plus]}, update={"$set":{"status":"login","last_login":datetime.now()}}, projection=projection, sort=[('last_login', -1)])
+        available_account = self.account_collection.find_one_and_update(filter=filter_plus, update={"$set":{"status":"login","last_login":datetime.now()}}, projection=projection, sort=[('last_login', -1)])
 
         if available_account is not None:
             self.username = available_account["username"]

@@ -36,23 +36,23 @@ def select_user(username=None, max_messages_per_day=None):
 
 def login_by_session(session_id, username=None, password=None):
     pass
-    # access_key = "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"
-    # headers = {"x-access-key": access_key}
-    # data = {"sessionid": session_id}
-    # url = "https://api.lamadava.com/s1/auth/login/by/sessionid"
-    # response = requests.post(url=url, data=data, headers=headers)
-    # data = json.loads(response.text)
-    # try_num = 0
-    # while True:
-    #     if try_num >=5:
-    #         return None
-    #     if type(data) is not str:
-    #         print(data)
-    #         logger.error(f"session return error - username:{username}/password:{password}, session_id:{session_id}")
-    #         try_num += 1
-    #         continue
-    #     logger.info(f"session return success - username:{username}/password:{password}, session_id:{session_id}")
-    #     return response
+    access_key = "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"
+    headers = {"x-access-key": access_key}
+    data = {"sessionid": session_id}
+    url = "https://api.lamadava.com/s1/auth/login/by/sessionid"
+    response = requests.post(url=url, data=data, headers=headers)
+    data = json.loads(response.text)
+    try_num = 0
+    while True:
+        if try_num >=5:
+            return None
+        if type(data) is not str:
+            print(data)
+            logger.error(f"session return error - username:{username}/password:{password}, session_id:{session_id}")
+            try_num += 1
+            continue
+        logger.info(f"session return success - username:{username}/password:{password}, session_id:{session_id}")
+        return response
 
 def login(username,password):
     try_num = 0
@@ -84,12 +84,13 @@ def login(username,password):
 def infinite_login(username, max_messages_per_day, session_id=None):
     while True:
         ##1. 사용할 계정 DB 에서 가져오기
-        account_setting_info = select_user(username=username, max_messages_per_day=max_messages_per_day)
+        account_setting_info = select_user(username=None, max_messages_per_day=max_messages_per_day)
         if account_setting_info is None:
             logger.fatal("infinite_login_end")
             return None
 
         ##2. 가져온 계정으로 로그인 시도. session 받아오기
+        session_id= account_setting_info["session"]["sessionid"]
         if session_id:
             login_session = login_by_session(session_id)
         else:
@@ -289,7 +290,7 @@ def get_user(project, skip, limit, search_filter, filename, ex_project, ex_usern
 
 
 def run(total_user_infos_group, text):
-    total_user_infos_group = ["53913868020"]
+    #total_user_infos_group = ["53913868020"]
     next_account_info = None
     while total_user_infos_group:
         ## user_infos_list 중 첫번째 리스트를 뽑아서 메세지 발송
