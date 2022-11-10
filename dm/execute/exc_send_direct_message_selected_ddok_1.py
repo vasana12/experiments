@@ -3,22 +3,25 @@ from dm.service.gpi_service import *
 from dm.engine.user import *
 from instagrapi import Client
 from dm.filter.influencer import get_influencer_list_by_task
+from dm.config import *
 # host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
 # host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
-host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
+# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
 proxy = f"http://{proxy_username}:{proxy_password}@{host}:{port}"
 
+project_name = "ddok"
 
-project_name = "링블체험단"
-task = get_dm_source.get_source(source_type="task", filename="puzzle_paper")
+### 1. 소스파일 가져오기
+task = get_dm_source.get_source(source_type="task", filename=f"{project_name}")
 task = json.loads(task)
 task = Task(**task)
-print(task)
 
-text = get_dm_source.get_source_message(f"puzzle_paper.txt")
+### 2. 텍스트 가져오기
+text = get_dm_source.get_source_message(f"{task.project.text_file_name}")
+logger.info(f"소스파일을 가져왔습니다\n-프로젝트:{task.project.name}\n-타겟해시태그: {task.search_hashtag}\n-필터링기준:{task.user_followed_by_gte}\n-디엠내용:{text[0:10]}")
+
 total_user_infos_group = get_influencer_list_by_task(task)
-print(total_user_infos_group)
-input()
+
 next_account_info = None
 
 client = Client()

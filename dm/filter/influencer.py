@@ -3,6 +3,8 @@ from dm.prepare import get_dm_source
 from dm.engine import user
 from src.utils import get_project_root
 from dm.model import Task
+from dm.log import logger
+
 project_dir = get_project_root()
 
 def get_influencer_list_by_task(task:Task):
@@ -48,9 +50,8 @@ def get_influencer_list_by_task(task:Task):
                      "username": {"$nin": exclude_username_list},
                      # "$where": "this.user_followed_by > this.user_follow"
                      }
-
     user_infos_list = user.get_user(search_filter=search_filter, file_name=filename, skip=skip, limit=limit, only_username=only_username, collection_name=None)
-
+    logger.info(search_filter)
     ##2. 유저 분할
     total_user_infos_group = user.divide_user_infos_list(user_infos_list, group_size=1)
     return total_user_infos_group

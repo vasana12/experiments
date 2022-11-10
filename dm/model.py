@@ -16,9 +16,16 @@ class Project(BaseModel):
     def set_exclude_project_name(cls, v, values, **kwargs):
         return v or values["name"]
 
-    @validator('start_date', always=True)
+    @validator('start_date', always=True, pre=True)
     def set_start_date(cls, v, values, **kwargs):
-        return v or datetime.now().date()
+        if type(v) is str:
+            return datetime.strptime(v, "%Y-%m-%d")
+        if v is None:
+            return datetime.now()
+        if type(v) is datetime:
+            return v
+        else:
+            raise ValidationError
 
     @validator('exclude_project_start_date', always=True)
     def set_exclude_project_start_date(cls, v, values, **kwargs):
