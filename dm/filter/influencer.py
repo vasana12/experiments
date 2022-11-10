@@ -54,6 +54,7 @@ def get_influencer_list_by_task(task:Task):
     logger.info(search_filter)
     ##2. 유저 분할
     total_user_infos_group = user.divide_user_infos_list(user_infos_list, group_size=1)
+
     return total_user_infos_group
 
 if __name__ == "__main__":

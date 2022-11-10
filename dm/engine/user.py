@@ -38,7 +38,7 @@ def get_user(search_filter=None, file_name=None, skip=None, limit=None, only_use
     cursor = USER_CHECKPOINT.find(search_filter, field_exclude).skip(skip).limit(limit).sort([('analyzed_date_time', pymongo.DESCENDING)])
 
     influencer_data_list = list(cursor)
-    influencer_data_list = list(map(lambda x:
+    save_data_list = list(map(lambda x:
                                     {
                                         "username": x["username"],
                                         "mediacount": x["mediacount"],
@@ -50,13 +50,19 @@ def get_user(search_filter=None, file_name=None, skip=None, limit=None, only_use
                                         "search_content": x["search_content"]
                                               },
                                     influencer_data_list))
+
     if spam_filter:
         influencer_data_list = get_user_by_spam_filter(influencer_data_list)
 
     if file_name:
-        save_file(influencer_data_list, f"{file_name}_인플루언서_{limit}")
-
-    return influencer_data_list
+        save_file(save_data_list, f"{file_name}_인플루언서_{limit}")
+    return_data_list = list(map(lambda x:
+                                {
+                                    "username": x["username"],
+                                    "userid": x["userid"]
+                                },
+                                influencer_data_list))
+    return return_data_list
 
 def get_user_by_spam_filter(influencer_data_list):
     filtered_influencer_data_list = []
