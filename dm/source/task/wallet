@@ -1,0 +1,18 @@
+{
+    "project":
+        {
+            "name": "wallet",
+            "start_date": null,
+            "exclude_project_name": null,
+            "exclude_project_start_date": null,
+            "exclude_project_end_date": null,
+            "text_file_name" : "wallet.txt"
+        },
+    "search_hashtag": ["적셔", "골프", "외제차", "한잔해", "형님들", "좋은사람좋은시간", "한사바리", "해운대", "아이유산균"],
+    "exclude_hashtag": [],
+    "user_followed_by_gte": null,
+    "user_followed_by_lte": null,
+    "avg_like_gte": 10,
+    "size": 11000,
+    "spam_filter": true
+}

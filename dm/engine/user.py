@@ -102,7 +102,6 @@ def find_completed_influencer(project_name, start_date=None, end_date=None):
 
     field_entered = {"_id": 0, "influencer": 1}
     cursor = PROJECT_DM.find({"project": project_name, "start_date": filter_date}, field_entered)
-    print(filter_date)
     project_list = list(cursor)
     influencer_list = []
     for project in project_list:

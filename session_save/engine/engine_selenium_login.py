@@ -80,24 +80,25 @@ def click_login_button(self):
 
 def check_ssfErrorAlert(self):
     "//*[@id='slfErrorAlert']"
-
     try:
         WebDriverWait(self.driver, 5).until(
             EC.presence_of_element_located((By.XPATH, "//*[@id='slfErrorAlert']")))
         message = self.driver.find_element(By.XPATH, "//*[@id='slfErrorAlert']").text
         self.logger.debug(f"ssfErrorAlert message:{message}")
         if "https://help.instagram.com/521372114683554" in str(message):
-            self.logger.debug(f"viloation")
+            self.logger.error(f"viloation")
             return "violation"
         if "잘못된 비밀번호입니다" or "입력한 사용자 이름을 사용하는 계정을 찾을 수 없습니다." in str(message):
-            self.logger.debug(f"not vaild account")
+            self.logger.error(f"not vaild account")
             return "invaild account"
+
         if "Instagram에 로그인하는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요." in str(message):
-            self.logger.info(f"bad_proxy")
+            self.logger.error(f"bad_proxy")
             return "bad_proxy"
 
     except Exception as e:
-        self.logger.debug(f"not ssfErrorAlert")
+
+        self.logger.error(f"not ssfErrorAlert:{e}")
         return False
     else:
         self.logger.debug(f"ssfErrorAlert")
@@ -105,6 +106,8 @@ def check_ssfErrorAlert(self):
 
 def check_cache_modal(self):
     try:
+        self.logger.info(f"check_cache_modal")
+
         WebDriverWait(self.driver, 15).until(EC.presence_of_element_located(
             (By.XPATH, "//button[@class='aOOlW  bIiDR  ']")))
     except Exception as e:
@@ -132,7 +135,7 @@ def check_login_success(self):
         WebDriverWait(self.driver, 15).until(EC.presence_of_element_located((By.XPATH, "div[@class='_aa57']/*[name()='svg'][@class='_ab6-'] | //div[text()='로그인 정보를 저장하시겠어요?']")))
         # WebDriverWait(self.driver, 15).until(EC.presence_of_element_located((By.XPATH, "//div[text()='로그인 정보를 저장하시겠어요?']")))
     except Exception as e:
-        self.logger.error(f"로그인 클릭 버튼 찾지 못함:{e}")
+        self.logger.error(f"로그인 클릭 버튼 찾지 못함")
         # if check_spam_image(self):
         #     return True
         # else:
@@ -249,7 +252,6 @@ def weird_account(self):
         return True
 
 def success_bot_account_logout_click(self):
-
     try:
         WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//div[text()='로그아웃']")))
         # WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH,

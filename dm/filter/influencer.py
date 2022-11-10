@@ -23,9 +23,10 @@ def get_influencer_list_by_task(task:Task):
     exclude_end_date = task.project.exclude_project_end_date
     exclude_start_date = task.project.exclude_project_start_date
     exclude_userid_list = user.find_completed_influencer(project_name=project, start_date=exclude_start_date, end_date=exclude_end_date)
-    exclude_userid_list_int = list(map(lambda x: int(x), exclude_userid_list))
+    #exclude_userid_list_int = list(map(lambda x: int(x), exclude_userid_list))
+    exclude_userid_list_int = []
     exclude_userid_list = exclude_userid_list + exclude_userid_list_int
-    exclude_username_list = []
+    exclude_username_list = exclude_userid_list
 
     ##4. 몇개 가져올지 설정
     skip, limit = 0, task.size
@@ -46,7 +47,7 @@ def get_influencer_list_by_task(task:Task):
     search_filter = {"$text": {"$search": f"{search_hashtag} -{exclude_hashtag}", },
                      "user_followed_by": {"$gte": int(user_followed_by_gte), "$lte": int(user_followed_by_lte)},
                      "avg_like": {"$gte": int(avg_like_gte)},
-                     "userid": {"$nin": exclude_userid_list},
+                     "userid": {"$nin": []},
                      "username": {"$nin": exclude_username_list},
                      # "$where": "this.user_followed_by > this.user_follow"
                      }

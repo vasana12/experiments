@@ -92,7 +92,9 @@ class botAccountSetting():
                 return self.send_driver_cookie()
 
             ### check is_ssfErrorAlert
+            self.logger.info(f"check is_ssfErrorAlert")
             is_ssfErrorAlert = engine_selenium_login.check_ssfErrorAlert(self)
+            self.logger.info(f"is_ssfErrorAlert:{is_ssfErrorAlert}")
 
             if is_ssfErrorAlert == "password_error":
                 self.login_page_redirect = False
