@@ -8,7 +8,7 @@ from instagrapi.types import DirectMessage
 def infinite_login(client: Client, username, max_messages_per_day, client_name=None, session_id=None):
     while True:
         ##1. 사용할 계정 DB 에서 가져오기
-        account_setting_info = select_user(username="fokinag_9ww68", client_name=client_name, max_messages_per_day=max_messages_per_day)
+        account_setting_info = select_user(username=None, client_name=client_name, max_messages_per_day=max_messages_per_day)
 
         if account_setting_info is None:
             logger.error("사용가능한 계정이 없습니다 infinite login 을 종료합니다.")
