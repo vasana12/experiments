@@ -310,3 +310,53 @@ total_user_infos_group_count:1198
 -디엠내용:안녕하세요 체험단 
 {'$text': {'$search': "['링블체험단', '레뷰체험단'] -[]"}, 'user_followed_by': {'$gte': 0, '$lte': 99999999}, 'avg_like': {'$gte': 0}, 'userid': {'$nin': []}, 'username': {'$nin': []}}
 total_user_infos_group_count:1198
+{'$text': {'$search': "['테니스치는여자', '레쉬가드', '레깅스핏', '오오티디', '오늘룩', '섹시걸', '훈녀', '요가', '요가녀', '플라잉댄스'] -[]"}, 'user_followed_by': {'$gte': 0, '$lte': 99999999}, 'avg_like': {'$gte': 10}, 'userid': {'$nin': []}, 'username': {'$nin': []}}
+total_user_infos_group_count:11000
+{'$text': {'$search': "['테니스치는여자', '레쉬가드', '레깅스핏', '오오티디', '오늘룩', '섹시걸', '훈녀', '요가', '요가녀', '플라잉댄스'] -[]"}, 'user_followed_by': {'$gte': 0, '$lte': 99999999}, 'avg_like': {'$gte': 10}, 'userid': {'$nin': []}, 'username': {'$nin': []}}
+total_user_infos_group_count:11000
+{'$text': {'$search': "['테니스치는여자', '레쉬가드', '레깅스핏', '오오티디', '오늘룩', '섹시걸', '훈녀', '요가', '요가녀', '플라잉댄스'] -[]"}, 'user_followed_by': {'$gte': 0, '$lte': 99999999}, 'avg_like': {'$gte': 10}, 'userid': {'$nin': []}, 'username': {'$nin': []}}
+total_user_infos_group_count:11000
+{'$text': {'$search': "['테니스치는여자', '레쉬가드', '레깅스핏', '오오티디', '오늘룩', '섹시걸', '훈녀', '요가', '요가녀', '플라잉댄스'] -[]"}, 'user_followed_by': {'$gte': 0, '$lte': 99999999}, 'avg_like': {'$gte': 10}, 'userid': {'$nin': []}, 'username': {'$nin': []}}
+total_user_infos_group_count:11000
+소스파일을 가져왔습니다
+-프로젝트:hclass
+-타겟해시태그: ['테니스치는여자', '레쉬가드', '레깅스핏', '오오티디', '오늘룩', '섹시걸', '훈녀', '요가', '요가녀', '플라잉댄스']
+-필터링기준:0
+-디엠내용:협찬 제안 드립니다
+{'$text': {'$search': "['테니스치는여자', '레쉬가드', '레깅스핏', '오오티디', '오늘룩', '섹시걸', '훈녀', '요가', '요가녀', '플라잉댄스'] -[]"}, 'user_followed_by': {'$gte': 0, '$lte': 99999999}, 'avg_like': {'$gte': 10}, 'userid': {'$nin': []}, 'username': {'$nin': []}}
+total_user_infos_group_count:11000
+디엠 발송 시작
+target_user_infos:[{'username': 'lolo_yoga', 'userid': '3147113617'}]
+account is selected:stormrsg.zk9a36/qnt2327b
+ 로그인 시도 1 번째 실패함 'int' object has no attribute 'isdigit'// AttributeError- username:stormrsg.zk9a36 password:qnt2327b
+ 로그인 시도 2 번째 실패함 'int' object has no attribute 'isdigit'// AttributeError- username:stormrsg.zk9a36 password:qnt2327b
+로그인 실패 다른 아이디로 로그인
+error:, type(e): <class 'dm.engine.exceptions.InstagramLoginError'>
+디엠 발송 시작
+target_user_infos:[{'username': 'selftherapy_official', 'userid': '2952297662'}]
+account is selected:ggrasee__83qr12/pbj5336w
+ 로그인 시도 1 번째 실패함 'int' object has no attribute 'isdigit'// AttributeError- username:ggrasee__83qr12 password:pbj5336w
+{'$text': {'$search': "['테니스치는여자', '레쉬가드', '레깅스핏', '오오티디', '오늘룩', '섹시걸', '훈녀', '요가', '요가녀', '플라잉댄스'] -[]"}, 'user_followed_by': {'$gte': 0, '$lte': 99999999}, 'avg_like': {'$gte': 10}, 'userid': {'$nin': []}, 'username': {'$nin': []}}
+total_user_infos_group_count:11000
+ make new project hclass/ and insert :_
+{'$text': {'$search': "['링블체험단', '레뷰체험단'] -[]"}, 'user_followed_by': {'$gte': 0, '$lte': 99999999}, 'avg_like': {'$gte': 0}, 'userid': {'$nin': []}, 'username': {'$nin': []}}
+total_user_infos_group_count:1224
+{'$text': {'$search': "['링블체험단', '레뷰체험단'] -[]"}, 'user_followed_by': {'$gte': 0, '$lte': 99999999}, 'avg_like': {'$gte': 0}, 'userid': {'$nin': []}, 'username': {'$nin': []}}
+total_user_infos_group_count:1224
+{'$text': {'$search': "['링블체험단', '레뷰체험단'] -[]"}, 'user_followed_by': {'$gte': 0, '$lte': 99999999}, 'avg_like': {'$gte': 0}, 'userid': {'$nin': []}, 'username': {'$nin': []}}
+total_user_infos_group_count:1224
+ make new project ddok/ and insert :j
+push :i
+push :k
+push :0
+push :y
+push :b
+push :j
+push :_
+push :h
+push :z
+push :m
+push :e
+push :a
+push :3
+push :s

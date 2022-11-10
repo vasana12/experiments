@@ -635,7 +635,7 @@ class InstaAccount(InstaDB):
             filter_plus.update(client_name=self.client_name)
 
         # self.logger.info(f"filter_raw:{filter_plus}")
-        available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_plus]}, update={"$set":{"status":"login","last_login":datetime.now()}}, projection=projection, sort=[('last_login', -1)])
+        available_account = self.account_collection.find_one_and_update(filter={"$or": [filter_plus]}, update={"$set":{"status":"available","last_login":datetime.now()}}, projection=projection, sort=[('last_login', 1)])
 
         if available_account is not None:
             self.username = available_account["username"]
