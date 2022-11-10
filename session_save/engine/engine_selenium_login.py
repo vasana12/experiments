@@ -76,7 +76,7 @@ def click_login_button(self):
 
             return False
         return True
-    
+
 
 def check_ssfErrorAlert(self):
     "//*[@id='slfErrorAlert']"
@@ -92,6 +92,9 @@ def check_ssfErrorAlert(self):
         if "잘못된 비밀번호입니다" or "입력한 사용자 이름을 사용하는 계정을 찾을 수 없습니다." in str(message):
             self.logger.debug(f"not vaild account")
             return "invaild account"
+        if "Instagram에 로그인하는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요." in str(message):
+            self.logger.info(f"bad_proxy")
+            return "bad_proxy"
 
     except Exception as e:
         self.logger.debug(f"not ssfErrorAlert")

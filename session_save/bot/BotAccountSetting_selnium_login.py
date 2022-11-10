@@ -106,6 +106,11 @@ class botAccountSetting():
                 self.login_page_redirect = False
                 return False
 
+            if is_ssfErrorAlert == "bad_proxy":
+                self.logger.info(f"selenium login - {login_status} : is_ssfErrorAlert, we recur instagram_selenium_login ")
+                self.is_ssfErrorAlert = True
+                self.instagram_selenium_login()
+
             if is_ssfErrorAlert:
                 self.logger.info(f"selenium login - {login_status} : is_ssfErrorAlert, we recur instagram_selenium_login ")
                 self.is_ssfErrorAlert = True
