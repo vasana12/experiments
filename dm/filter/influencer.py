@@ -13,7 +13,7 @@ def get_influencer_list_by_task(task:Task):
     project_start_date = task.project.start_date
 
     ##2. 파일이름 설정
-    filename = f"{task.project.name}_{task.search_hashtag[0:15]}_{task.project.start_date}"
+    filename = f"{task.project.name}_{task.search_hashtag[0:15]}_{task.project.start_date.strftime('%Y-%m-%d')}"
 
     ##3. 제외할 단어 유저이름, 프로젝트 설정
     exclude_word_list = task.exclude_hashtag
