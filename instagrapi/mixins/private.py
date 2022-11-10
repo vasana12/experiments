@@ -285,6 +285,7 @@ class PrivateRequestMixin:
                 response = self.private.post(
                     api_url, data=data, params=params
                 )
+
             else:  # GET
                 self.private.headers.pop('Content-Type', None)
                 response = self.private.get(api_url, params=params)

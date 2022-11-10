@@ -41,7 +41,7 @@ REQUEST_HEADERS = {
 
 PROXY_HOST = 'resi3.ipb.cloud'  # rotating proxy or host
 PROXY_PORT = 9000  # port
-PROXY_USER = 'MrIlCvzYImHc0I3t'  # username
+PROXY_USER = 'AX7S3xZk5L9RF1So'  # username
 PROXY_PASS = 'wifi;us;;;;'  # password
 
 # PROXY_HOST = 'residential.ipb.cloud'  # rotating proxy or host

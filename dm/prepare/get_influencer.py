@@ -1,42 +1,22 @@
-import logging
+from dm.log import logger
 import uuid
 import logging
 from pathlib import Path
 import bson
 import pandas as pd
 import pymongo
+from db.model import *
 
-from db import m_instagram
-from dm.prepare import get_dm_source
 
-FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
-logging.basicConfig(format=FORMAT)
-logger = logging.getLogger(__name__)
-if logger.hasHandlers():
-    # Logger is already configured, remove all handlers
-    logger.handlers = []
-logger.setLevel(logging.INFO)
-SERVICE_INSTAGRAM = m_instagram.InstaDB(db_name="service_instagram").db
-ACCOUNT_COLLECTION = m_instagram.InstaDB(db_name="account").account_collection
-INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(channel_name="instagram")
-INSTA_ACCOUNT_OBJ.client_name = "admin_test"
-
-USER_CHECKPOINT, CLIENT_COLLECTION, HASHTAG_AND_USER_SEARCH, PROJECT_DM_COLLECTION, ITEM_HASHTAG_COLLECTION, ITEM_USER_COLLECTION, ITEM_LOCATION_COLLECTION, INFO_COLLECTION, TASK_COLLECTION, POST_COLLECTION, SEARCH_COLLECTION = \
-    SERVICE_INSTAGRAM["user_checkpoint"],SERVICE_INSTAGRAM["client"], SERVICE_INSTAGRAM["hashtag_and_user_search"], SERVICE_INSTAGRAM["project_dm"], \
-    SERVICE_INSTAGRAM["hashtag"], SERVICE_INSTAGRAM["user"], SERVICE_INSTAGRAM["location"], \
-    SERVICE_INSTAGRAM["info"], SERVICE_INSTAGRAM["task"], SERVICE_INSTAGRAM["post"], SERVICE_INSTAGRAM["search"]
-
-HASHTAG_AND_USER_SEARCH.with_options(codec_options = bson.CodecOptions(unicode_decode_error_handler="ignore"))
-
-def save_file(data:list,file_name =None):
+def save_file(data:list, file_name =None):
     project_path = Path.cwd().parent
-    result_path = project_path.joinpath("result","target_influencer_list")
+    result_path = project_path.joinpath("result", "target_influencer_list")
     df = pd.DataFrame(data)
     file_name = uuid.uuid4() if file_name is None else file_name
     df.to_excel(f"{result_path}/{file_name}.xlsx")
 
 def get_userinfo_by_project(project_name, only_username = None, file_name = None):
-    projects = list(PROJECT_DM_COLLECTION.find({"project": {"$regex": project_name}}))
+    projects = list(PROJECT_DM.find({"project": {"$regex": project_name}}))
     influencer_list = []
     for project_info in projects:
         influencer_list.extend(project_info["influencer"])
@@ -52,9 +32,9 @@ def get_userinfo_by_project(project_name, only_username = None, file_name = None
 
 def get_userid_by_project(project_name, ex_project_start_date=None, only_userid = None, file_name = None):
     if ex_project_start_date is None:
-        projects = list(PROJECT_DM_COLLECTION.find({"project": {"$regex": project_name}}))
+        projects = list(PROJECT_DM.find({"project": {"$regex": project_name}}))
     else:
-        projects = list(PROJECT_DM_COLLECTION.find({"project": {"$regex": project_name, "$lte":ex_project_start_date}}))
+        projects = list(PROJECT_DM.find({"project": {"$regex": project_name, "$lte":ex_project_start_date}}))
 
     influencer_list = []
     for project_info in projects:
@@ -131,7 +111,7 @@ def main(search_filter=None, file_name=None, skip=None, limit=None, only_usernam
         if user_followed_by>user_follow:
             # print(user_follow, user_followed_by)
             filtered_influencer_data_list.append(influencer)
-    filtered_influencer_data_list = influencer_data_list
+    # filtered_influencer_data_list = influencer_data_list
     if file_name:
         save_file(filtered_influencer_data_list, f"{file_name}_인플루언서_{limit}")
-    return influencer_data_list
+    return filtered_influencer_data_list

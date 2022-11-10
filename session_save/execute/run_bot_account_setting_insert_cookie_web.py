@@ -45,7 +45,8 @@ def insert_account():
 
             csrftoken = login_account_info.split("csrftoken=")[1]
             csrftoken = csrftoken.split(";")[0]
-
+            mid = login_account_info.split("mid=")[1]
+            mid = mid.split(";")[0]
             ds_user_id = login_account_info.split("ds_user_id=")[1]
             ds_user_id = ds_user_id.split(";")[0]
 
@@ -53,17 +54,19 @@ def insert_account():
             sessionid = sessionid.split(";")[0]
             sessionid = sessionid.split("||")[0]
 
-            # rur = login_account_info.split("rur=")[1]
-            # rur = rur.split(";")[0]
+            rur = login_account_info.split("rur=")[1]
+            rur = rur.split(";")[0]
+            rur = rur.split(",")[0]
             setting_info = read_account_setting_info_from_db(username=username, password=password)
 
             setting_info["username"] = username
             setting_info["password"] = password
             setting_info["cookie"] = {}
+            setting_info["cookie"]["mid"] = mid
             setting_info["cookie"]["csrftoken"] = csrftoken
             setting_info["cookie"]["sessionid"] = sessionid
             setting_info["cookie"]["ds_user_id"] = ds_user_id
-            setting_info["cookie"]["rur"] = "AG"
+            setting_info["cookie"]["rur"] = rur
         except Exception as e:
             try:
                 logger.info(f"{idx} - username:{username}/password:{password} error registered error!")
@@ -86,7 +89,7 @@ def insert_account():
 
                 rur = cookie_info.split("rur=")[1]
                 rur = rur.split(";")[0]
-
+                rur = rur.split(",")[0]
                 setting_info = read_account_setting_info_from_db(username=username, password=password)
                 setting_info["username"] = username
                 setting_info["password"] = password
@@ -119,6 +122,7 @@ def insert_account():
 
                 rur = login_account_info.split("rur=")[1]
                 rur = rur.split(";")[0]
+
                 setting_info = read_account_setting_info_from_db(username=username, password=password)
 
                 setting_info["username"] = username
@@ -133,6 +137,7 @@ def insert_account():
                 logger.info(f"{idx} - username:{username}/password:{password} error registered new!")
         else:
             logger.info(f"here 3 {idx} - username:{username}/password:{password} registered new!")
+
             save_uuid_and_session_info(setting_info=setting_info, seller=seller, client_name=client_name, account_collection=account_collection)
 if __name__ == "__main__":
     insert_account()

@@ -241,8 +241,8 @@ class DirectMixin:
         assert self.user_id, "Login required"
         assert (user_ids or thread_ids) and not (user_ids and thread_ids), "Specify user_ids or thread_ids, but not both"
         method = "text"
-        # token = self.generate_mutation_token()
-        token = self.generate_UUID(True)
+        token = self.generate_mutation_token()
+        #token = self.generate_UUID(True)
         # token_list = [token_1]
         # token = random.choice(token_list)
         kwargs = {

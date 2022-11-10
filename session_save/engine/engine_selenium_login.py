@@ -59,16 +59,16 @@ def input_login_info(self:BotAccountSetting):
 
 def click_login_button(self):
     try:
-        button = WebDriverWait(self.driver, 20).until(
-            EC.element_to_be_clickable((By.XPATH, "//*[@id='loginForm']/div/div[3]/button")))
+        button = WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//*[@id='loginForm']/div/div[3]/button")))
     except Exception as e:
         self.logger.debug(f"error_message:{e}")
         return False
     else:
         try:
             self.driver.execute_script('arguments[0].click()', button)
-            #self.driver.find_element(By.XPATH, "//*[@id='loginForm']/div/div[3]/button").click()
         except Exception as e:
+            WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//div[text()='로그인']")))
+            self.driver.find_element(By.XPATH, "//div[text()='로그인']").click()
             self.logger.debug(f"error_message click_login_button:{e}")
             return False
         return True

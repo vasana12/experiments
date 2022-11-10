@@ -69,6 +69,7 @@ class PublicRequestMixin:
         assert retries_timeout <= 600, "Retries timeout is too high"
         for iteration in range(retries_count):
             try:
+
                 if self.delay_range:
                     random_delay(delay_range=self.delay_range)
                 return self._send_public_request(url, **kwargs)

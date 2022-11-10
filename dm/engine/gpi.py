@@ -1,29 +1,15 @@
 import json
-import math
-
-import sys
-
 import requests
 import time
-
 from dm.engine.exceptions import RapidApiError, LamadavaServerError, NoUserIdException
 from instagrapi import Client
-import logging
-
+from dm.log import logger
 from db.model import *
 from db import m_instagram
-from dm.execute.run_select_influencer import get_influnecer_info_by_project, search_influencer_info
-from dm.prepare import get_dm_source, get_influencer
+from dm.prepare import get_dm_source
 from instagrapi.exceptions import UserNotFound, ClientError, HashtagNotFound
-from instagrapi.types import User, Hashtag
+from instagrapi.types import User
 
-FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
-logging.basicConfig(format=FORMAT)
-logger = logging.getLogger(__name__)
-if logger.hasHandlers():
-    # Logger is already configured, remove all handlers
-    logger.handlers = []
-logger.setLevel(logging.INFO)
 access_key = "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"
 headers = {"x-access-key": access_key}
 
@@ -176,12 +162,10 @@ def get_user_id_by_username_rapid_api(username):
                 id = json_data["data"]["user"]["id"]
                 return id
 
-def get_user_by_id_gpi(userid, proxy):
+def get_user_by_id_gpi(userid):
     client = Client()
-    client.set_proxy(dsn=proxy)
-
     try:
-        response = client.user_info_v1(user_id=userid)
+        response = client.user_short_gql(user_id=userid)
         userid = response.pk
     except Exception as e:
         if e.__class__.__name__ == UserNotFound.__name__:
@@ -189,7 +173,6 @@ def get_user_by_id_gpi(userid, proxy):
         elif e.__class__.__name__ == ClientError.__name__:
             response = get_user_by_id_lamadava(userid)
             userid = response.get("pk")
-
     return int(userid)
 
 def get_user_by_id(user_id):
@@ -204,7 +187,7 @@ def send_messages(session_id, user_ids, text, max_messages_per_day):
     headers = {"x-access-key": access_key}
     user_ids = list(map(lambda x: str(x), user_ids))
     user_ids = list(set(user_ids))
-    print(f"user_ids : {len(user_ids)}")
+
 
     for idx, user_id in enumerate(user_ids):
         data = {"sessionid": session_id, "user_ids": [user_id], "text": f"{text}", }
@@ -265,8 +248,7 @@ def get_hashtag_by_name_lamadava(name):
             #         try_num_get_user += 1
             #         continue
             return json_data
-# d = get_hashtag_by_name_lamadava("감자")
-# print(d)
+
 
 def send_message(account_info, user_info_list):
     max_retry_num=1

@@ -67,14 +67,15 @@ def insert_account():
                             "$set":
                                 {
                                     "last_login": datetime.now(),
-                                    "client_name": client_name
+                                    "client_name": client_name,
+                                    "status": "unavailable"
                                 },
                                     "$setOnInsert":
                                 {
                                     "seller": seller,
                                     "username": username,
                                     "password": password,
-                                    "status": "available",
+
                                     "channel": "instagram",
                                     "limit":
                                         {

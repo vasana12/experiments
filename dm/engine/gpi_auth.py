@@ -1,37 +1,10 @@
 import json
-import math
-
-import sys
 
 import requests
-import time
-
-from dm.engine.exceptions import RapidApiError, LamadavaServerError, NoUserIdException, InstagramLoginError, \
-    AccountException
+from dm.engine.exceptions import InstagramLoginError
 from instagrapi import Client
-import logging
-
-
-from db import m_instagram
-from dm.execute.run_select_influencer import get_influnecer_info_by_project, search_influencer_info
-from dm.prepare import get_dm_source, get_influencer
-from instagrapi.exceptions import UserNotFound
-from instagrapi.types import User
-
-FORMAT = '%(module)s.%(funcName)s - %(message)s - %(levelname)s - %(asctime)s'
-logging.basicConfig(format=FORMAT)
-logger = logging.getLogger(__name__)
-if logger.hasHandlers():
-    # Logger is already configured, remove all handlers
-    logger.handlers = []
-logger.setLevel(logging.INFO)
-access_key = "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"
-headers = {"x-access-key": access_key}
-
-db_conn = m_instagram.InstaDB().conn
-INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(channel_name="instagram")
-INSTA_ACCOUNT_OBJ.client_name = "admin_test"
-
+from dm.log import logger
+from db.model import *
 
 
 def login_by_lamadava(username,password):
@@ -60,6 +33,8 @@ def login_by_lamadava(username,password):
 
         logger.fatal(f"login:{username}/{password}/ sessionid - {data}")
         return data
+def login_test(client:Client, username, password):
+    pass
 
 def login_v_gpi(client:Client, username, password):
     try_num = 0

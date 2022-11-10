@@ -2,8 +2,7 @@ import os
 import json
 from datetime import datetime, timedelta, timezone
 import boto3
-import MeCab
-from engine import m_instagram_util
+from db import m_instagram
 from collections import Counter
 import pymongo
 import re
@@ -32,8 +31,8 @@ logger.setLevel(logging.DEBUG)
 #                              aws_secret_access_key='NsmOhH2qZAUouHCg8xY1+djq28qXl75ugifGD8ay',
 #                              region_name='ap-northeast-2')
 
-SERVICE_INSTAGRAM = m_instagram_util.InstaDB(db_name="service_instagram").db
-INSTA_ACCOUNT_OBJ = m_instagram_util.InstaAccount(client_name="admin", channel_name="instagram").db
+SERVICE_INSTAGRAM = m_instagram.InstaDB(db_name="service_instagram").db
+INSTA_ACCOUNT_OBJ = m_instagram.InstaAccount(client_name="admin", channel_name="instagram").db
 ACCOUNT_COLLECTION = INSTA_ACCOUNT_OBJ['account']
 USER_CHECKPOINT, HASHTAG_AND_USER_SEARCH, HASHTAG_AND_USER, PROJECT_COLLECTION, ITEM_HASHTAG_COLLECTION, ITEM_USER_COLLECTION, ITEM_LOCATION_COLLECTION, INFO_COLLECTION, TASK_COLLECTION, POST_COLLECTION, SEARCH_COLLECTION = \
     SERVICE_INSTAGRAM["user_checkpoint"], SERVICE_INSTAGRAM["hashtag_and_user_search"], SERVICE_INSTAGRAM[
@@ -45,7 +44,6 @@ USER_CHECKPOINT, HASHTAG_AND_USER_SEARCH, HASHTAG_AND_USER, PROJECT_COLLECTION, 
 
 dicdir = os.path.join("/opt/python", 'local', 'lib', 'mecab', 'dic', 'mecab-ko-dic')
 rcfile = os.path.join("/opt/python", 'local', 'etc', 'mecabrc')
-Tagger = MeCab.Tagger(f"-r {rcfile} -d {dicdir}")
 
 stopKeywordList = ['likeforlikes', 'insta', '데일리룩', '셀스타그램', 'sale', '오오티디', 'ootdfashion', 'daily', 'instadaily',
                    'instagood', 'secla', '오피',
@@ -172,10 +170,10 @@ def lambda_handler(event, context):
                 continue
             caption = caption[0]["node"]["text"]
             caption = caption.replace("\n", "")
-            noun = Tagger.nouns(caption)
-            adjective = Tagger.adjectives(caption)
-            noun_list.extend(noun)
-            adjective_list.extend(adjective)
+            # noun = Tagger.nouns(caption)
+            # adjective = Tagger.adjectives(caption)
+            # noun_list.extend(noun)
+            # adjective_list.extend(adjective)
         adjective_list = [a + "다" for a in adjective_list]
         return count(noun_list), count(adjective_list)
 
@@ -212,7 +210,24 @@ def lambda_handler(event, context):
                 return default
         return cur
 
-    def get_user_info_by_name(username):
+
+
+    def get_user_info_by_rapid_api(username):
+        url = "https://instagram-scraper-2022.p.rapidapi.com/ig/web_profile_info/"
+
+        querystring = {"user": username}
+
+        headers = {
+            "X-RapidAPI-Key": "49247615ccmshcd5a0d0e8ddb542p1ae266jsnb64d93ff541c",
+            "X-RapidAPI-Host": "instagram-scraper-2022.p.rapidapi.com"
+        }
+
+        response = requests.request("GET", url, headers=headers, params=querystring)
+        # params = {"username": username, "access_key": "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"}
+        # response = requests.get(url="https://api.lamadava.com/a1/user", params=params)
+        return response
+
+    def send_request(username):
         max_try_num_get_user = 5
         try_num_get_user = 0
         while True:
@@ -225,8 +240,10 @@ def lambda_handler(event, context):
                 headers = {"x-access-key": access_key}
                 params = {"username": username}
                 response = requests.get(url="https://api.lamadava.com/a1/user", params=params, headers=headers)
+
                 data = json.loads(response.text)
-                json_data = json_value(data, "graphql", "user")
+                # json_data = json_value(data, "graphql", "user")
+                json_data = data
             except Exception as e:
                 logger.warning(f"username:{username}/error:{e}")
                 try_num_get_user += 1
@@ -262,42 +279,14 @@ def lambda_handler(event, context):
                     #         continue
                     return json_data
 
-    def get_user_info_by_rapid_api(username):
-        url = "https://instagram-scraper-2022.p.rapidapi.com/ig/web_profile_info/"
-
-        querystring = {"user": username}
-
-        headers = {
-            "X-RapidAPI-Key": "49247615ccmshcd5a0d0e8ddb542p1ae266jsnb64d93ff541c",
-            "X-RapidAPI-Host": "instagram-scraper-2022.p.rapidapi.com"
-        }
-
-        response = requests.request("GET", url, headers=headers, params=querystring)
-        # params = {"username": username, "access_key": "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"}
-        # response = requests.get(url="https://api.lamadava.com/a1/user", params=params)
-        return response
-
-    def send_request(username):
-        url = "https://instagram-scraper-2022.p.rapidapi.com/ig/web_profile_info/"
-
-        querystring = {"user": username}
-
-        headers = {
-            "X-RapidAPI-Key": "49247615ccmshcd5a0d0e8ddb542p1ae266jsnb64d93ff541c",
-            "X-RapidAPI-Host": "instagram-scraper-2022.p.rapidapi.com"
-        }
-
-        response = requests.request("GET", url, headers=headers, params=querystring)
-        print(response.text)
-        # params = {"username": username, "access_key": "nTYC9RbjpV8axJ3I9OnKI9Z4QVu7hzrE"}
-        # response = requests.get(url="https://api.lamadava.com/a1/user", params=params)
-        return response
-
     def get_all_data(username):
+
         try:
-            user_info_response = send_request(username=username)
-            json_data = json.loads(user_info_response.text)
-            json_data = json_data["data"]["user"]
+            json_data = send_request(username=username)
+            try:
+                json_data = json_data["data"]["user"]
+            except:
+                json_data = json_data["graphql"]["user"]
         except Exception as e:
             raise e
 
@@ -309,8 +298,8 @@ def lambda_handler(event, context):
         mediacount = int(get_user_mediacount(json_data))
         user_biography = get_user_biograhpy(json_data)
         user_external_url = get_user_external_url(json_data)
-
         avg_like, avg_comment = 'null', 'null'
+
         if not is_private and mediacount > 0:
             avg_like, avg_comment = get_avg(json_data)
         try:
@@ -321,14 +310,14 @@ def lambda_handler(event, context):
             caption_hashtag = get_caption_hashtag(json_data)
         except:
             caption_hashtag = ''
-        return {"profile_url": profile_pic_url, "userid": str(userid), "mediacount": mediacount,
+        all_data = {"is_private": is_private,"profile_url": profile_pic_url, "userid": str(userid), "mediacount": mediacount,
                 "caption_hashtag": caption_hashtag, "nouns": nouns_ranked, "adjectives": adjectives_ranked,
                 "avg_comment": avg_comment, "avg_like": avg_like, "user_biography": user_biography,
                 "user_external_url": user_external_url, "user_follow": user_follow,
                 "user_followed_by": user_followed_by}
+        return all_data
 
     username = event.get("username")
-    print(username)
     hashtag = event.get("hashtag")
     headers = event.get("headers")
     cookies = event.get("cookies")
@@ -354,6 +343,7 @@ def lambda_handler(event, context):
 
             ## 1.1.1 user checkpoint 가 존재한다.
             if user_checkpoint_doc:
+                added_hashtag = user_checkpoint_doc["hashtag"]
                 logger.debug("## user checkpoint 가 존재한다.")
                 ### 한달 지낫는지 체크
                 logger.debug(f"## checkpoint 가 {checkpoint_update_term} 일 지낫는지 체크")
@@ -375,8 +365,14 @@ def lambda_handler(event, context):
                     #### user_checkpoint 에서 업데이트 시켜준다.
                     response_data = get_all_data(username)
                     response_data.update(username=username, hashtag=hashtag)
+
+                    ###added_hashtag
+                    added_hashtag = user_checkpoint_doc["hashtag"]
+                    response_caption_hashtag = response_data["caption_hashtag"]
+                    response_data["caption_hashtag"] = f"{response_caption_hashtag}, #{added_hashtag}"
                     last_response_data = response_data.copy()
                     update_db(response_data)
+
                     return {'statusCode': 200, 'body': last_response_data}
 
                 ### 1.1.1.2 텀이 안된 게시물인 경우 업데이트 하지 않는다.
@@ -399,6 +395,10 @@ def lambda_handler(event, context):
                 response_data.update(username=username, hashtag=hashtag)
                 last_response_data = response_data.copy()
 
+                ###added_hashtag
+                added_hashtag = user_checkpoint_doc["hashtag"]
+                response_caption_hashtag = last_response_data["caption_hashtag"]
+                last_response_data["caption_hashtag"] = f"{response_caption_hashtag}, #{added_hashtag}"
                 insert_db(response_data)
                 return {'statusCode': 200, 'body': last_response_data}
 
@@ -426,6 +426,6 @@ def lambda_handler(event, context):
             'body': f"error:{e}"
         }
 
-# event = {"hashtag":"모노키니", "username":"bami_0806"}
-# lambda_handler(event=event,context=None)
+event = {"hashtag":"레뷰체험단", "username":"ddo.review", "checkpoint_update_term":-5}
+lambda_handler(event=event,context=None)
 
