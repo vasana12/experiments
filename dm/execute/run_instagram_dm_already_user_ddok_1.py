@@ -35,14 +35,14 @@ def run():
     proxy = config.proxy
 
     project_name = "ddok"
-    start_date = "2022-11-10"
+    start_date = "2022-11-11"
     project_info = {"project_name": project_name, "start_date": start_date}
 
     ### 1. 소스파일 가져오기
     task = get_dm_source.get_source(source_type="task", filename=f"{project_name}")
     task = json.loads(task)
     task = Task(**task)
-    black_list = find_completed_influencer(project_name=project_name)
+    black_list = find_completed_influencer(project_name=project_name, start_date= task.project.exclude_project_start_date, end_date=task.project.exclude_project_end_date)
 
     target_username_list = get_influencer_list_by_task(task)
 

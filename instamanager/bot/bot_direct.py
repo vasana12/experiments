@@ -146,7 +146,7 @@ def send_messages(self:instamanager.Bot, text, user_ids):
 
         if self.api.project_info:
             self.logger.info(f"{project_name}/{project_start_date}/{user}")
-            push_influencer_completed(project_name=project_name , start_date= project_start_date,influencer_completed=user)
+            push_influencer_completed(project_name=project_name , start_date=project_start_date, influencer_completed=user)
 
     save_checkpoint(self)
     return broken_items

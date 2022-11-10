@@ -29,11 +29,12 @@ class Project(BaseModel):
 
     @validator('exclude_project_start_date', always=True)
     def set_exclude_project_start_date(cls, v, values, **kwargs):
-        return v or datetime.now().date().strftime("%Y-%m-%d")
+        start_date = datetime.now().date() - timedelta(days=365)
+        return v or start_date.strftime("%Y-%m-%d")
 
     @validator('exclude_project_end_date', always=True)
     def set_exclude_project_end_date(cls, v, values, **kwargs):
-        end_date = datetime.now().date() - timedelta(days=365)
+        end_date = datetime.now().date()
         return v or end_date.strftime("%Y-%m-%d")
 
 class Task(BaseModel):

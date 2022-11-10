@@ -9,7 +9,6 @@ from tqdm import tqdm
 
 from dm.engine.gpi import get_user_by_username_lamadava
 from instamanager.api import config
-from dm.engine import get_target_user_info
 # STORY
 
 

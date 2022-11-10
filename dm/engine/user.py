@@ -102,7 +102,7 @@ def find_completed_influencer(project_name, start_date=None, end_date=None):
 
     field_entered = {"_id": 0, "influencer": 1}
     cursor = PROJECT_DM.find({"project": project_name, "start_date": filter_date}, field_entered)
-
+    print(filter_date)
     project_list = list(cursor)
     influencer_list = []
     for project in project_list:
@@ -122,6 +122,9 @@ def push_influencer_completed(project_name, start_date=None, influencer_complete
     filter.update(start_date=start_date)
 
     ### when project already exist
+    if influencer_completed is not list:
+        influencer_completed = [influencer_completed]
+
     for influencer in influencer_completed:
         if PROJECT_DM.find_one_and_update(filter=filter, update={"$push": {"influencer": str(influencer)}}):
             logger.info(f"push :{influencer}")

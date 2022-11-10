@@ -56,22 +56,27 @@ def input_login_info(self:BotAccountSetting):
         return False
     else:
         return True
-
 def click_login_button(self):
     try:
         button = WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//*[@id='loginForm']/div/div[3]/button")))
     except Exception as e:
-        self.logger.debug(f"error_message:{e}")
-        return False
+        self.logger.debug(f"first method to login button find failed:{e}")
+        try:
+            WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//div[text()='로그인']")))
+            self.driver.find_element(By.XPATH, "//div[text()='로그인']").click()
+        except:
+            self.logger.error(f"error_message click_login_button:{e}")
+            return False
+        else:
+            return True
     else:
         try:
             self.driver.execute_script('arguments[0].click()', button)
         except Exception as e:
-            WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//div[text()='로그인']")))
-            self.driver.find_element(By.XPATH, "//div[text()='로그인']").click()
-            self.logger.debug(f"error_message click_login_button:{e}")
+
             return False
         return True
+    
 
 def check_ssfErrorAlert(self):
     "//*[@id='slfErrorAlert']"
