@@ -58,7 +58,7 @@ def input_login_info(self:BotAccountSetting):
         return True
 def click_login_button(self):
     try:
-        button = WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//*[@id='loginForm']/div/div[3]/button")))
+        button = WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//div[text()='로그인'] | //*[@id='loginForm']/div/div[3]/button")))
     except Exception as e:
         self.logger.debug(f"first method to login button find failed:{e}")
         try:
