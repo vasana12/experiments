@@ -1,0 +1,16 @@
+{
+    "project":
+        {
+            "name": "puzzle_paer",
+            "start_date": null,
+            "exclude_project_name": null,
+            "exclude_project_start_date": "2022-10-01",
+            "exclude_project_end_date": null
+        },
+    "search_hashtag": ["필라테스강사", "등산하는여자", "등산", "등산복" ,"데이트", "헬린이", "릴스타그램" ,"식단" ,"화장품", "운동하는여자", "요가", "필라테스" , "레깅스", "브라탑", "룰루레몬", "등산하는여자", "관리하는여자" , "키작녀" ," 여자스포츠모델" ,"여자모델", "여자골프" ,"붓기차", "디톡스" ,"효소", "다이어트"],
+    "exclude_hashtag": [],
+    "user_followed_by_gte": 10000,
+    "user_followed_by_lte": 50000,
+    "avg_like_gte": 10,
+    "size": 2000
+}

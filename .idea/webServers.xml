@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="17ac9142-c72e-4826-a3ea-8022e7a560ae" name="supertag_splabs">
+        <fileTransfer rootFolder="/home/ec2-user/project/splabs" accessType="SFTP" host="ec2-3-38-49-152.ap-northeast-2.compute.amazonaws.com" port="22" sshConfigId="ee5f4700-04b1-443f-b862-7ea2a50be366" sshConfig="supertag" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="6cb6e7d0-199c-42ca-b306-c5489fad752a" name="supertag_mecab_test">
+        <fileTransfer rootFolder="/home/ec2-user/project/mecab_test" accessType="SFTP" host="ec2-3-38-49-152.ap-northeast-2.compute.amazonaws.com" port="22" sshConfigId="ee5f4700-04b1-443f-b862-7ea2a50be366" sshConfig="supertag" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="78831810-bd8d-4086-9381-9220ef1f12f8" name="hpe">
+        <fileTransfer rootFolder="/var/project/memory_check" accessType="SFTP" host="218.153.187.100" port="22" sshConfigId="3136afe3-2fb1-45d1-bc0e-04553c0610a0" sshConfig="datacast@218.153.187.100:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

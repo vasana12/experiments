@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
+    <option name="confirmBeforeUploading" value="false" />
+    <serverData>
+      <paths name="hpe">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$/../memory_check" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="supertag_mecab_test">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$/../mecab_test" web="" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="supertag_splabs">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$/../splabs" web="" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>

@@ -1,0 +1,16 @@
+task = {
+    "project":
+        {
+            "name": "hclass",
+            "start_date": None,
+            "exclude_project_name": None,
+            "exclude_project_start_date": "2022-10-01",
+            "exclude_project_end_date": None
+        },
+    "search_hashtag": ["필라테스강사"],
+    "exclude_hashtag": ["효소"],
+    "user_followed_by_gte": None,
+    "user_followed_by_lte": None,
+    "avg_like_gte": 10,
+    "size": None
+}

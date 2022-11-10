@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$" />
+    <orderEntry type="jdk" jdkName="Python 3.9 (sns_pyqt5)" jdkType="Python SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="sns_pyqt5" />
+    <orderEntry type="module" module-name="i_login_post" />
+    <orderEntry type="module" module-name="splabs" />
+    <orderEntry type="module" module-name="DAlmaden" />
+    <orderEntry type="module" module-name="crawler" />
+    <orderEntry type="module" module-name="insta_bot" />
+    <orderEntry type="module" module-name="memory_check" />
+    <orderEntry type="module" module-name="apify" />
+  </component>
+</module>
