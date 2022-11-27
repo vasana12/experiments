@@ -72,7 +72,7 @@ def get_user_by_username_lamadava(username):
             return json_data["pk"]
 
 def get_user_by_id_lamadava(user_id):
-    max_try_num_get_user = 5
+    max_try_num_get_user = 10
     try_num_get_user = 0
 
     while True:
@@ -120,10 +120,6 @@ def get_user_by_id_lamadava(user_id):
                     continue
             return json_data
 
-# s = get_user_by_id_lamadava(7864477994)
-# print(s)
-# input()
-
 def get_user_id_by_username_rapid_api(username):
     max_try_num_get_user = 5
     try_num_get_user = 0
@@ -162,11 +158,30 @@ def get_user_id_by_username_rapid_api(username):
                 id = json_data["data"]["user"]["id"]
                 return id
 
+def get_user_profile_by_id_gpi(userid, proxy=None):
+    host, port, proxy_username, proxy_password = "residential.ipb.cloud", "7777", "customer-cbzh21909501-asn-20057-sessid-BIRQ-sesstime-1", "Q31n7pniF"
+    proxy = f"http://{proxy_username}:{proxy_password}@{host}:{port}"
+    # if proxy
+    client = Client(proxy=proxy)
+
+    try:
+        response = client.user_short_gql(user_id=userid)
+    except Exception as e:
+        logger.debug("short 실패")
+        if e.__class__.__name__ == UserNotFound.__name__:
+            raise e
+        elif e.__class__.__name__ == ClientError.__name__:
+            response = get_user_by_id_lamadava(userid)
+            return response.get("profile_pic_url")
+    else:
+        logger.debug("short 성공")
+        return response.profile_pic_url
+
 def get_user_by_id_gpi(userid):
     client = Client()
     try:
         response = client.user_short_gql(user_id=userid)
-        userid = response.pk
+        print(response)
     except Exception as e:
         if e.__class__.__name__ == UserNotFound.__name__:
             raise e
@@ -174,6 +189,8 @@ def get_user_by_id_gpi(userid):
             response = get_user_by_id_lamadava(userid)
             userid = response.get("pk")
     return int(userid)
+
+
 
 def get_user_by_id(user_id):
     params = {"id": user_id}
@@ -282,3 +299,7 @@ def send_message(account_info, user_info_list):
         logger.info(f"username:{username} /password:{password}/ sessionid:{sessionid} -> user_info:{user_info_list} /response:{response.text}")
         return 200
 
+
+if __name__ == "__main__":
+    s = get_user_profile_by_id_gpi(userid=25010806859)
+    print(s)

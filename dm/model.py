@@ -43,6 +43,8 @@ class Task(BaseModel):
     exclude_hashtag: Optional[List]
     user_followed_by_gte: Optional[int] = None
     user_followed_by_lte: Optional[int] = None
+    user_follow_by_gte: Optional[int] = None
+    user_follow_by_lte: Optional[int] = None
     avg_like_gte: Optional[int] = None
     size: Optional[int] = None
     spam_filter: Optional[bool] = None
@@ -55,6 +57,14 @@ class Task(BaseModel):
 
     @validator('user_followed_by_lte', always=True)
     def set_user_followed_by_lte(cls, v, values, **kwargs):
+        return v or 99999999
+
+    @validator('user_follow_by_gte', always=True)
+    def set_user_follow_by_gte(cls, v, values, **kwargs):
+        return v or 0
+
+    @validator('user_follow_by_lte', always=True)
+    def set_user_follow_by_lte(cls, v, values, **kwargs):
         return v or 99999999
 
     @validator('avg_like_gte', always=True)

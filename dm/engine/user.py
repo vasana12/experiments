@@ -21,35 +21,39 @@ def user_split(username_list):
 
 
 def get_user(search_filter=None, file_name=None, skip=None, limit=None, only_username=None, collection_name=None, spam_filter=None):
-    field_exclude = {"profile_url": False, "collection_from": False, "status": False, "contact_phone": False,
+    field_exclude = {"collection_from": False, "status": False, "contact_phone": False,
                      "contact_email": False, "_id": False, "recent_posts": False, "search": False,
                      "thumbnail_url": False, "hashtag": False, "likes": False, "comments": False,
-                     "crawled_date_time": False, "analyzed_date_time": False, "dateField": False, "avg_point": False,
+                     "crawled_date_time": False, "dateField": False, "avg_point": False,
                      "activity_category": False, "brand": False, "expected_pay_photo": False,
                      "expected_pay_product": False, "sex": False, "sns_facebook": False, "sns_naver": False,
                      "sns_tiktok": False, "sns_youtube": False, "top_posts": False, "top_users": False}
 
-    only_username_field_exclude = {"_id": 0, "username": 1}
+    only_username_field_exclude = {"_id": 0, "username": 1, "profile_url": 1}
     field_exclude = only_username_field_exclude if only_username else field_exclude
 
     if collection_name == "user_checkpoint":
         search_filter.update(collection_from={"$exists": False})
 
-    cursor = USER_CHECKPOINT.find(search_filter, field_exclude).skip(skip).limit(limit).sort([('analyzed_date_time', pymongo.DESCENDING)])
+    # cursor = USER_CHECKPOINT.find(filter=search_filter, projection= field_exclude, ).skip(skip).limit(limit).sort([('analyzed_date_time', pymongo.DESCENDING)]).allow_disk_use(True)
+    cursor = USER_CHECKPOINT.find(filter=search_filter, projection=field_exclude, ).skip(skip).limit(limit).allow_disk_use(True)
 
     influencer_data_list = list(cursor)
     save_data_list = list(map(lambda x:
                                     {
                                         "username": x["username"],
+                                        "profile_url": x["profile_url"],
                                         "mediacount": x["mediacount"],
                                         "userid": x["userid"],
                                         "user_biography": x["user_biography"],
                                         "user_external_url": x["user_external_url"],
                                         "user_follow": x["user_follow"],
                                         "user_followed_by": x["user_followed_by"],
-                                        "search_content": x["search_content"]
+                                        "search_content": x["search_content"],
+                                        "analyzed_date_time": x["analyzed_date_time"]
                                               },
                                     influencer_data_list))
+
 
     if spam_filter:
         influencer_data_list = get_user_by_spam_filter(influencer_data_list)
@@ -59,7 +63,8 @@ def get_user(search_filter=None, file_name=None, skip=None, limit=None, only_use
     return_data_list = list(map(lambda x:
                                 {
                                     "username": x["username"],
-                                    "userid": x["userid"]
+                                    "userid": x["userid"],
+                                    "profile_url": x["profile_url"]
                                 },
                                 influencer_data_list))
     return return_data_list
@@ -111,7 +116,7 @@ def find_completed_influencer(project_name, start_date=None, end_date=None):
     return list(sorted(set(influencer_list),key=influencer_list.index))
 
 def push_influencer_completed(project_name, start_date=None, influencer_completed=None):
-    today = datetime.now().date()
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     filter = {"project": project_name}
     if start_date is None:
         start_date = today
@@ -126,7 +131,7 @@ def push_influencer_completed(project_name, start_date=None, influencer_complete
 
     for influencer in influencer_completed:
         if PROJECT_DM.find_one_and_update(filter=filter, update={"$push": {"influencer": str(influencer)}}):
-            logger.info(f"push :{influencer}")
+            logger.debug(f"push :{influencer}")
             return
 
         ### when project not exist

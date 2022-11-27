@@ -39,7 +39,7 @@ def insert_account():
     logger.debug("insert_account_start")
     login_account_info_list = read_account_info_from_text()
     seller = "insta_acc"
-    client_name = "admin_test"
+    client_name = "729e01"
 
     for idx, login_account_info in enumerate(login_account_info_list):
         if login_account_info == "":

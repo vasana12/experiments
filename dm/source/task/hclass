@@ -1,18 +1,20 @@
 {
     "project":
         {
-            "name": "hclass",
+            "name": "hclass_100000",
             "start_date": null,
             "exclude_project_name": null,
             "exclude_project_start_date": null,
             "exclude_project_end_date": null,
             "text_file_name" : "hclass_5.txt"
         },
-    "search_hashtag": ["테니스치는여자", "레쉬가드", "레깅스핏", "오오티디", "오늘룩", "섹시걸", "훈녀","요가", "요가녀", "플라잉댄스"],
+    "search_hashtag": ["모노키니", "콘치웨어", "비키니", "비키니화보", "뷰티화보", "하이레그", "뒷태", "헬스녀", "요가복", "안다르", "언더웨어", "요가", "필라테스", "오운완", "운동하는여자", "수영복", "폴댄스", "호캉스", "호텔", "레깅스", "등산하는여자", "승무원", "등산복", "엉덩이", "협찬"],
     "exclude_hashtag": [],
     "user_followed_by_gte": null,
     "user_followed_by_lte": null,
-    "avg_like_gte": 10,
-    "size": 11000,
+    "user_follow_by_gte" : null,
+    "user_follow_by_lte": null,
+    "avg_like_gte": null,
+    "size": 100000,
     "spam_filter": false
 }

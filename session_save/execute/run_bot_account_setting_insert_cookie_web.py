@@ -29,7 +29,7 @@ def insert_account():
     login_account_info_list = read_account_info_from_text()
 
     seller = "insta_web"
-    client_name = "admin_test"
+    client_name = "user"
     account_collection = None
     for idx, login_account_info in enumerate(login_account_info_list):
         username , password = None, None
@@ -137,7 +137,7 @@ def insert_account():
                 logger.info(f"{idx} - username:{username}/password:{password} error registered new!")
         else:
             logger.info(f"here 3 {idx} - username:{username}/password:{password} registered new!")
-
             save_uuid_and_session_info(setting_info=setting_info, seller=seller, client_name=client_name, account_collection=account_collection)
+
 if __name__ == "__main__":
     insert_account()

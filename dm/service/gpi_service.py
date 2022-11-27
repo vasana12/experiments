@@ -15,10 +15,10 @@ def infinite_login(client: Client, username, max_messages_per_day, client_name=N
             raise AccountException
 
         ##2. 가져온 계정으로 로그인 시도. session 받아오기
-        # try:
-        #     session_id = account_setting_info["session"]["sessionid"]
-        # except:
-        #     session_id = None
+        try:
+            session_id = account_setting_info["session"]["sessionid"]
+        except:
+            session_id = None
 
         if session_id:
             login_session = login_by_sessionid_v_gpi(client, session_id)

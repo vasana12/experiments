@@ -1,0 +1,18 @@
+{
+    "project":
+        {
+            "name": "plove",
+            "start_date": null,
+            "exclude_project_name": null,
+            "exclude_project_start_date": null,
+            "exclude_project_end_date": null,
+            "text_file_name" : "wallet.txt"
+        },
+    "search_hashtag": ["피트니스", "운동", "헬스", "음악", "노래", "댄스", "푸드", "먹방", "반려동물", "메이크업", "뷰티", "패션", "게임", "아트", "여행", "10대", "20대", "30대", "바디프로필", "다이어트", "협찬", "럽스타그램", "대학생", "오운완", "직장인", "눈바디", "개인화보", "강아지", "고양이", "카페"],
+    "exclude_hashtag": [],
+    "user_followed_by_gte": null,
+    "user_followed_by_lte": null,
+    "avg_like_gte": 30,
+    "size": 10000,
+    "spam_filter": true
+}

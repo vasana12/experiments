@@ -5,7 +5,7 @@ from instagrapi import Client
 from dm.filter.influencer import get_influencer_list_by_task
 from dm.config import *
 # host, port, proxy_username, proxy_password = "mobile.ipb.cloud", "7777", "customer-fydh21628401-asn-20057-sessid-RcPU-sesstime-1", "awR4Sad2t"
-# host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
+host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "AX7S3xZk5L9RF1So", "wifi;us;;;;"
 # host, port, proxy_username, proxy_password = "resi3.ipb.cloud", "9000", "MrIlCvzYImHc0I3t", "wifi;us;;;;"
 proxy = f"http://{proxy_username}:{proxy_password}@{host}:{port}"
 
@@ -22,7 +22,7 @@ text = get_dm_source.get_source_message(f"hclass_5.txt")
 logger.info(f"소스파일을 가져왔습니다\n-프로젝트:{task.project.name}\n-타겟해시태그: {task.search_hashtag}\n-필터링기준:{task.user_followed_by_gte}\n-디엠내용:{text[0:10]}")
 
 total_user_infos_group = get_influencer_list_by_task(task)
-total_user_infos_group = total_user_infos_group[1000:2000]
+total_user_infos_group = total_user_infos_group[1500:2000]
 
 next_account_info = None
 

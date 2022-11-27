@@ -13,7 +13,7 @@ def get_influencer_list_by_task(task:Task):
     project_start_date = task.project.start_date
 
     ##2. 파일이름 설정
-    filename = f"{task.project.name}_{task.search_hashtag[0:15]}_{task.project.start_date.strftime('%Y-%m-%d')}"
+    filename = f"{task.project.name}_{task.search_hashtag[0:6]}_{task.project.start_date.strftime('%Y-%m-%d')}"
 
     ##3. 제외할 단어 유저이름, 프로젝트 설정
     exclude_word_list = task.exclude_hashtag
@@ -34,6 +34,8 @@ def get_influencer_list_by_task(task:Task):
     ##5. 검색 조건 필터
     user_followed_by_gte = task.user_followed_by_gte
     user_followed_by_lte = task.user_followed_by_lte
+    user_follow_by_gte = task.user_follow_by_gte
+    user_follow_by_lte = task.user_follow_by_lte
     avg_like_gte = task.avg_like_gte
     only_username = False
     spam_filter = task.spam_filter
@@ -44,15 +46,20 @@ def get_influencer_list_by_task(task:Task):
     # search_hashtag = get_dm_source.get_source_hashtag(f"{project}.txt")
     # search_hashtag = f"{search_hashtag}"
 
-    search_filter = {"$text": {"$search": f"{search_hashtag} -{exclude_hashtag}", },
-                     "user_followed_by": {"$gte": int(user_followed_by_gte), "$lte": int(user_followed_by_lte)},
-                     "avg_like": {"$gte": int(avg_like_gte)},
-                     "userid": {"$nin": []},
-                     "username": {"$nin": exclude_username_list},
-                     # "$where": "this.user_followed_by > this.user_follow"
+    search_filter = {
+                    "$text": {"$search": f"{search_hashtag} -{exclude_hashtag}", },
+                     # "user_followed_by": {"$gte": int(user_followed_by_gte), "$lte": int(user_followed_by_lte)},
+                     # "user_follow": {"$gte": int(user_follow_by_gte), "$lte": int(user_follow_by_lte)},
+                     # "avg_like": {"$gte": int(avg_like_gte)},
+                     "userid": {"$nin": exclude_userid_list},
+                     "username": {"$nin": exclude_userid_list},
                      }
+    if spam_filter:
+        search_filter["$where"] = "this.user_followed_by > this.user_follow"
+
     user_infos_list = user.get_user(search_filter=search_filter, file_name=filename, skip=skip, limit=limit, only_username=only_username, collection_name=None)
     logger.info(search_filter)
+
     ##2. 유저 분할
     total_user_infos_group = user.divide_user_infos_list(user_infos_list, group_size=1)
 

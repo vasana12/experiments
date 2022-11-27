@@ -28,7 +28,7 @@ BAND_ACCOUNT, HASHTAG_AND_USER, PROJECT_COLLECTION, ITEM_HASHTAG_COLLECTION, ITE
 
 def read_account_info_from_text():
     parent = Path.cwd().parent
-    source_path = parent.joinpath("source", "login_test_account.txt")
+    source_path = parent.joinpath("source", "login_test_account_cookie.txt")
     login_account_file = source_path.open("r")
     login_account_info_list = login_account_file.read().splitlines()
 
@@ -44,7 +44,7 @@ def insert_account():
 
         username = None
         password = None
-        client_name = "admin_test"
+        client_name = "user"
 
         if login_account_info == "":
             continue
@@ -60,7 +60,7 @@ def insert_account():
                                 {
                                     "last_login": datetime.now(),
                                     "seller": seller,
-                                    "status": "new",
+                                    "status": "available",
                                     "client_name": client_name,
                                    "password": password,
                                 },
